@@ -16,6 +16,8 @@
             const CHUNK_SIZE = 1024 * 1024 * 10;
             const pairwiseDistances = new Map();
             const threshold = 0.015;
+            const TAB_ASCII = 9;
+            const NEWLINE_ASCII = 10;
 
             document.getElementById("read-file").addEventListener("click", async () => {
                 if (!document.getElementById("upload-file").files[0]) {
@@ -28,49 +30,47 @@
                 const reader = new FileReader();
                 let splitString = ""; 
 
-                const array = await readFileAsync(reader, file);
+                const array = new Uint8Array(await readFileAsync(reader, file));
                 console.log("Time taken to read file: " + (performance.now() - startTime) + "ms")
-                const decoder = new TextDecoder("utf-8");
 
-                let count = 0;
-                for (let i = 0; i < array.byteLength; i += CHUNK_SIZE) {
-                    const text = decoder.decode(array.slice(i, i + CHUNK_SIZE));
-                    const lines = text.split("\n")
-                    for (let j = 0; j < lines.length; ++j) {
-                        let line = lines[j];
-                        let columns = line.split("\t");
-                        
-                        // edge case: very first line of file
-                        if (i === 0 && j === 0) {
-                            continue;
-                        }
-
-                        // edge case: first line is split
-                        if (j === 0 && columns.length < 3) {
-                            
-                            line = splitString + line;
-                            splitString = "";
-                            columns = line.split("\t")
-                            console.log("Recombined line: " + line)
-                        }
-
-                        // edge case: last line is split
-                        // TODO: fixed since bugged (can be bad split even if column length isn't 3)
-                        if (j === lines.length - 1 && columns.length < 3) {
-                            splitString = line;
-                            continue;
-                        }
-
-                        if (parseFloat(columns[2]) < 10) {
-                            count++;
-                            // pairwiseDistances.set(columns[0] + '-' + columns[1], parseFloat(columns[2]));
-                        } else {
-                            console.log(line)
-                        }
+                let id = "";
+                let distance = "";
+                let state = 0;
+                // state 0: reading first seq of id
+                // state 1: reading second seq of id
+                // state 2: reading distance
+                for (let i = 0; i < array.length; ++i) {
+                    switch (state) {
+                        case 0: 
+                            if (array[i] === TAB_ASCII) {
+                                id += "-";
+                                state = 1;
+                                continue;
+                            }
+                            id += String.fromCharCode(array[i]);
+                            break;
+                        case 1:
+                            if (array[i] === TAB_ASCII) {
+                                state = 2;
+                                continue;
+                            }
+                            id += String.fromCharCode(array[i]);
+                            break;
+                        case 2:
+                            if (array[i] === NEWLINE_ASCII) {
+                                if (parseFloat(distance) <= threshold) {
+                                    pairwiseDistances.set(id, parseFloat(distance));
+                                }
+                                id = "";
+                                distance = "";
+                                state = 0;
+                                continue;
+                            }
+                            distance += String.fromCharCode(array[i]);
+                            break;
                     }
                 }
 
-                console.log(count);
                 console.log(pairwiseDistances);
                 console.log("Time taken: " + (performance.now() - startTime) + "ms")
             })
