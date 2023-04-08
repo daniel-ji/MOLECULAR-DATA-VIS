@@ -13,9 +13,15 @@
         <button id="read-file" class="btn btn-primary mt-3">Submit</button>
 
         <script type="module" async>
+            // ----------- GLOBAL VARIABLES ------------
+            // size of chunks to read from uploaded file
             const CHUNK_SIZE = 1024 * 1024 * 10;
-            const pairwiseDistances = new Map();
+            // threshold for pairwise distances to be added to map
             const threshold = 0.015;
+            // map of all pairwise distances
+            const pairwiseDistances = new Map();
+            // for logging time elapsed
+            let previousTime = performance.now();
 
             document.getElementById("read-file").addEventListener("click", async () => {
                 if (!document.getElementById("upload-file").files[0]) {
@@ -23,20 +29,30 @@
                     return;
                 }
 
-                const startTime = performance.now()
+                await getPairwiseDistances();
+            })
+
+
+            // ----------- PAIRWISE DISTANCE MAP GENERATION ------------
+
+            const getPairwiseDistances = async () => {
                 const file = document.getElementById("upload-file").files[0];
-                const reader = new FileReader();
+                log("Reading file...", false)
+                
+                const array = await readFileAsync(file);
+                log("Done reading file...")
+
+                const decoder = new TextDecoder("utf-8");
+                // for when the chunk_size split doesn't match a full line
                 let splitString = ""; 
 
-                const array = await readFileAsync(reader, file);
-                console.log("Time taken to read file: " + (performance.now() - startTime) + "ms")
-                const decoder = new TextDecoder("utf-8");
-
-                let count = 0;
+                // iterate over the file in chunks, readAsText can't read the entire file 
                 for (let i = 0; i < array.byteLength; i += CHUNK_SIZE) {
+                    // get individual pairwise distances
                     const text = decoder.decode(array.slice(i, i + CHUNK_SIZE));
                     const lines = text.split("\n")
                     for (let j = 0; j < lines.length; ++j) {
+                        // line represents a single pairwise distance entry
                         let line = lines[j];
                         let columns = line.split("\t");
                         
@@ -51,31 +67,26 @@
                             line = splitString + line;
                             splitString = "";
                             columns = line.split("\t")
-                            console.log("Recombined line: " + line)
                         }
 
                         // edge case: last line is split
-                        // TODO: fixed since bugged (can be bad split even if column length isn't 3)
-                        if (j === lines.length - 1 && columns.length < 3) {
+                        if (j === lines.length - 1 && lines[j].length > 0) {
                             splitString = line;
                             continue;
                         }
 
-                        if (parseFloat(columns[2]) < 10) {
-                            count++;
-                            // pairwiseDistances.set(columns[0] + '-' + columns[1], parseFloat(columns[2]));
-                        } else {
-                            console.log(line)
+                        // add to map of all pairwise distances if below threshold
+                        if (parseFloat(columns[2]) < threshold) {
+                            pairwiseDistances.set(columns[0] + '-' + columns[1], parseFloat(columns[2]));
                         }
                     }
                 }
+                log("Done parsing file...")
+            }
 
-                console.log(count);
-                console.log(pairwiseDistances);
-                console.log("Time taken: " + (performance.now() - startTime) + "ms")
-            })
-
-            const readFileAsync = async (reader, file) => {
+            // helper function to promise-fy file read  
+            const readFileAsync = async (file) => {
+                const reader = new FileReader();
                 return new Promise((resolve, reject) => {
                     reader.onload = (e) => {
                         resolve(e.target.result);
@@ -83,6 +94,14 @@
                     reader.onerror = reject;
                     reader.readAsArrayBuffer(file);
                 })
+            }
+
+            // ----------- GENERAL HELPER FUNCTIONS ------------ 
+            
+            const log = (message, showElapsed=true) => {
+                console.log(message);
+                showElapsed && console.log("Time elapsed: " + (performance.now() - previousTime) + "ms")
+                previousTime = performance.now();
             }
         </script>
     </body>
