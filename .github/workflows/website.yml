@@ -39,7 +39,7 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: dist
-        path: dist 
+        path: './dist' 
   # deploy job
   deploy:
     needs: build
@@ -54,6 +54,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: dist
+          path: './dist'
       - name: Display structure of downloaded files
         run: ls -R
       - name: Setup Pages
@@ -62,7 +63,7 @@ jobs:
         uses: actions/upload-pages-artifact@v1
         with:
           # Upload entire repository
-          path: 'dist'
+          path: './dist'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v2
