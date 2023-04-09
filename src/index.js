@@ -1,41 +1,24 @@
-import { Graph } from '@cosmograph/cosmos'
 import './styles/index.scss'
 
 // ----------- GLOBAL VARIABLES ------------
+// pairwise distance graph DOM element
+const pairwiseGraphDOM = document.getElementById("graph-container");
 // size of chunks to read from uploaded file
 const CHUNK_SIZE = 1024 * 1024 * 10;
 // threshold for pairwise distances to be added to map
-const threshold = 0.015;
+const threshold = 0.005;
 // set of all sequences (nodes)
 const sequences = new Set(); 
 // for logging time elapsed
 let previousTime = performance.now();
 
 // ----------- INITIALIZATION ------------
-const PAIRWISE_GRAPH_CANVAS = document.getElementById('pairwise-graph');
-const PAIRWISE_GRAPH_CONFIG = {
-    backgroundColor: "#ffffff",
-    nodeColor: "#000000",
-    linkColor: "#7a7a7a",
-    linkArrows: false,
-    randomSeed: 0,
-    simulation: {
-        repulsion: 2,
-        repulsionFromMouse: 0,
-        linkDistRandomVariationRange: [0.5, 2],
-        friction: 1,
-        linkDistance: 50,
-        gravity: 0.1,
-    }
-}
+const pairwiseGraph = ForceGraph();
 
 const data = {
     nodes: [],
     links: [],
 }
-
-const PAIRWISE_GRAPH = new Graph(PAIRWISE_GRAPH_CANVAS, PAIRWISE_GRAPH_CONFIG);
-PAIRWISE_GRAPH_CANVAS.style.display = "none";
 
 document.getElementById("read-file").addEventListener("click", async () => {
     if (!document.getElementById("upload-file").files[0]) {
@@ -44,7 +27,11 @@ document.getElementById("read-file").addEventListener("click", async () => {
     }
 
     await getPairwiseDistances();
-    PAIRWISE_GRAPH_CANVAS.style.display = "block";
+
+    pairwiseGraph(pairwiseGraphDOM)
+    .graphData(data)
+    .width(pairwiseGraphDOM.offsetWidth)
+    .height(pairwiseGraphDOM.offsetHeight)
 })
 
 
@@ -112,7 +99,6 @@ const getPairwiseDistances = async () => {
         }
     }
     log("Done parsing file...")
-    PAIRWISE_GRAPH.setData(data.nodes, data.links)
 }
 
 // helper function to promise-fy file read  
