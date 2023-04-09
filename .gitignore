@@ -7,3 +7,6 @@ dist/
 
 # ignore any pairwise files
 *.tsv
+
+# ignore any bash scripts
+*.sh

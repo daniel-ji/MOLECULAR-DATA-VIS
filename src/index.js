@@ -22,7 +22,10 @@ const PAIRWISE_GRAPH_CONFIG = {
     simulation: {
         repulsion: 2,
         repulsionFromMouse: 0,
-        linkDistRandomVariationRange: [1, 1]
+        linkDistRandomVariationRange: [0.5, 2],
+        friction: 1,
+        linkDistance: 50,
+        gravity: 0.1,
     }
 }
 
@@ -32,6 +35,7 @@ const data = {
 }
 
 const PAIRWISE_GRAPH = new Graph(PAIRWISE_GRAPH_CANVAS, PAIRWISE_GRAPH_CONFIG);
+PAIRWISE_GRAPH_CANVAS.style.display = "none";
 
 document.getElementById("read-file").addEventListener("click", async () => {
     if (!document.getElementById("upload-file").files[0]) {
@@ -40,6 +44,7 @@ document.getElementById("read-file").addEventListener("click", async () => {
     }
 
     await getPairwiseDistances();
+    PAIRWISE_GRAPH_CANVAS.style.display = "block";
 })
 
 
@@ -101,14 +106,12 @@ const getPairwiseDistances = async () => {
                 data.links.push({
                     source: columns[0],
                     target: columns[1],
-                    value: parseFloat(columns[2])
+                    value: parseFloat(columns[2]),
                 })
             }
         }
     }
     log("Done parsing file...")
-    log("Number of sequences: " + sequences.size)
-    log("Number of pairwise distances: " + data.links.length)
     PAIRWISE_GRAPH.setData(data.nodes, data.links)
 }
 
