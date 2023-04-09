@@ -1,8 +1,0 @@
-look into how to read file faster:
-- could multiple web workers be used to read a file with multiple threads?
-
-look how to loop over text faster:
-
-putting file reading / parsing in a web worker
-
-Do we really need to graphically see all X amount of nodes? can it just be summarized in a simpler graph?
