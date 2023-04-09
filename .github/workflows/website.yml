@@ -1,6 +1,10 @@
 # Simple workflow for deploying static content to GitHub Pages
 name: Deploy static content to Pages
 
+defaults:
+  run:
+    working-directory: ./
+
 on:
   # Runs on pushes targeting the default branch
   push:
@@ -39,7 +43,7 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: dist
-        path: './dist' 
+        path: ./dist
   # deploy job
   deploy:
     needs: build
@@ -49,7 +53,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: dist
-          path: './dist'
+          path: ./dist
       - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v3
         if: ${{ github.ref == 'refs/heads/master' }}
