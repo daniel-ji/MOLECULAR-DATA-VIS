@@ -6,3 +6,9 @@ look how to loop over text faster:
 putting file reading / parsing in a web worker
 
 Do we really need to graphically see all X amount of nodes? can it just be summarized in a simpler graph?
+
+edge reduction? including, but not limited to:
+    %-NN
+    Edge reduction
+    K-NN
+clustering? 

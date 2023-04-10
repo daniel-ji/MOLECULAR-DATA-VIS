@@ -7,8 +7,13 @@
     <body>
         <h1 class="my-5">Pairwise Distance Graph Visualization</h1>
 
-        <div class="graph-container mb-5">
+        <div id="graph-container" class="mb-5">
             <canvas id="pairwise-graph"></canvas>
+        </div>
+
+        <div id="pairwise-threshold">
+            <label for="threshold-select" id="threshold-label" class="form-label">Threshold Level: 0.0150</label>
+            <input type="range" class="form-range" id="threshold-select" min="0" max="0.05" step="0.0025" value="0.015">
         </div>
 
         <div class="my-3">

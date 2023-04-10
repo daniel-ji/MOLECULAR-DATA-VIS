@@ -4,10 +4,14 @@ import './styles/index.scss'
 // ----------- GLOBAL VARIABLES ------------
 // size of chunks to read from uploaded file
 const CHUNK_SIZE = 1024 * 1024 * 10;
+// Maximum threshold for pairwise distances to be added to map
+const MAX_THRESHOLD = 0.05;
 // threshold for pairwise distances to be added to map
-const threshold = 0.015;
+let threshold = 0.015;
 // set of all sequences (nodes)
-const sequences = new Set(); 
+let sequences = new Set(); 
+// array of all pairwise distances (links)
+const pairwiseDistances = [];
 // for logging time elapsed
 let previousTime = performance.now();
 
@@ -37,6 +41,8 @@ const data = {
 const PAIRWISE_GRAPH = new Graph(PAIRWISE_GRAPH_CANVAS, PAIRWISE_GRAPH_CONFIG);
 PAIRWISE_GRAPH_CANVAS.style.display = "none";
 
+
+// ----------- PAIRWISE DISTANCE MAP GENERATION ------------
 document.getElementById("read-file").addEventListener("click", async () => {
     if (!document.getElementById("upload-file").files[0]) {
         alert("Please select a file");
@@ -44,11 +50,11 @@ document.getElementById("read-file").addEventListener("click", async () => {
     }
 
     await getPairwiseDistances();
+    
+    updateGraphThreshold();
+    PAIRWISE_GRAPH.setData(data.nodes, data.links)
     PAIRWISE_GRAPH_CANVAS.style.display = "block";
 })
-
-
-// ----------- PAIRWISE DISTANCE MAP GENERATION ------------
 
 const getPairwiseDistances = async () => {
     const file = document.getElementById("upload-file").files[0];
@@ -90,20 +96,9 @@ const getPairwiseDistances = async () => {
                 continue;
             }
 
-            // add to set of all sequences
-            if (!sequences.has(columns[0])) {
-                sequences.add(columns[0]);
-                data.nodes.push({id: columns[0]});
-            }
-
-            if (!sequences.has(columns[1])) {
-                sequences.add(columns[1]);
-                data.nodes.push({id: columns[1]});
-            }
-
             // add to map of all pairwise distances if below threshold
-            if (parseFloat(columns[2]) < threshold) {
-                data.links.push({
+            if (parseFloat(columns[2]) < MAX_THRESHOLD) {
+                pairwiseDistances.push({
                     source: columns[0],
                     target: columns[1],
                     value: parseFloat(columns[2]),
@@ -112,7 +107,6 @@ const getPairwiseDistances = async () => {
         }
     }
     log("Done parsing file...")
-    PAIRWISE_GRAPH.setData(data.nodes, data.links)
 }
 
 // helper function to promise-fy file read  
@@ -125,6 +119,46 @@ const readFileAsync = async (file) => {
         reader.onerror = reject;
         reader.readAsArrayBuffer(file);
     })
+}
+
+// ----------- THRESHOLD SLIDER HANDLING ------------
+let adjustingTimeout = null;
+
+document.getElementById("threshold-select").addEventListener("input", (e) => {
+    threshold = parseFloat(e.target.value);
+    document.getElementById("threshold-label").innerHTML = "Threshold Level: " + threshold.toFixed(4);
+        
+    clearTimeout(adjustingTimeout);
+    adjustingTimeout = setTimeout(() => {
+        updateGraphThreshold();
+    }, 500)
+})
+
+const updateGraphThreshold = () => {
+    log("Updating graph...")
+    data.nodes = []
+    sequences = new Set();
+    data.links = pairwiseDistances.filter((link) => {
+        if (link.value < threshold) {
+            // add to set of all sequences
+            if (!sequences.has(link.source)) {
+                sequences.add(link.source);
+                data.nodes.push({id: link.source});
+            }
+
+            if (!sequences.has(link.target)) {
+                sequences.add(link.target);
+                data.nodes.push({id: link.target});
+            }
+
+            return true;
+        }
+
+        return false;
+    });
+    // data.nodes = data.nodes.filter((node) => data.links.some((link) => link.source === node.id || link.target === node.id));
+    PAIRWISE_GRAPH.setData(data.nodes, data.links)
+    log("Done updating graph...")
 }
 
 // ----------- GENERAL HELPER FUNCTIONS ------------ 
