@@ -22,7 +22,16 @@ body {
 }
 
 #graph-container {
+    position: relative;
     border-right: 4px solid black;
     width: 70%;
     height: 100%;
+
+    #zoom-to-fit {
+        position: absolute;
+        top: 2vh;
+        right: 2vh;
+        height: 45px;
+        cursor: pointer;
+    }
 }

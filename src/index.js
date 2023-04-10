@@ -18,6 +18,7 @@ const PAIRWISE_GRAPH_CANVAS = document.getElementById('pairwise-graph');
 const PAIRWISE_GRAPH_CONFIG = {
     backgroundColor: "#ffffff",
     nodeColor: "#000000",
+    nodeSize: 6,
     linkColor: "#a3a3a3",
     linkArrows: false,
     linkWidth: 0.2,
@@ -26,6 +27,11 @@ const PAIRWISE_GRAPH_CONFIG = {
     events: {
         onClick: () => {
             autoZoom = false;
+        },
+        onZoomStart: (event, userDriven) => {
+            if (userDriven) {
+                autoZoom = false;
+            }
         }
     },
     simulation: {
@@ -50,6 +56,7 @@ const PAIRWISE_GRAPH = new Graph(PAIRWISE_GRAPH_CANVAS, PAIRWISE_GRAPH_CONFIG);
 PAIRWISE_GRAPH_CANVAS.style.display = "none";
 
 document.getElementById("upload-success").style.display = "none";
+document.getElementById("threshold-label").innerHTML = "Threshold Level: " + threshold.toFixed(4) + " (Use slider to adjust)";
 
 
 // ----------- PAIRWISE DISTANCE MAP GENERATION ------------
@@ -74,11 +81,9 @@ document.getElementById("read-file").addEventListener("click", async () => {
     
 
     await getPairwiseDistances();
-    
+
     updateGraphThreshold();
-    PAIRWISE_GRAPH.setData(data.nodes, data.links)
     PAIRWISE_GRAPH_CANVAS.style.display = "block";
-    // PAIRWISE_GRAPH.setData(data.nodes, getClusters());
 
     document.getElementById("upload-success").style.display = "block";
     document.getElementById("upload-success").innerHTML = "Done!"
@@ -150,11 +155,11 @@ const readFileAsync = async (file) => {
 }
 
 // ----------- CLUSTER GENERATION ------------
-const getClusters = () => {
+const getClusterData = () => {
     log("Generating clusters...")
     const nodes = new Set(data.nodes);
     const clusters = [];
-    const clusterLinks = [];
+    const clusterDistribution = new Map();
 
     while (nodes.size > 0) {
         const cluster = new Set();
@@ -167,20 +172,17 @@ const getClusters = () => {
             const node = queue.pop();
             if (!cluster.has(node)) {
                 cluster.add(node);
-                clusterLinks.push({
-                    source: previousNode.id,
-                    target: starterNode.id,
-                })
                 previousNode = node;
                 nodes.delete(node);
                 queue.push(...PAIRWISE_GRAPH.getAdjacentNodes(node.id));
             }
         }
         clusters.push(cluster);
+        clusterDistribution.set(cluster.size, (clusterDistribution.get(cluster.size) || 0) + 1);
     }
 
     log("Done generating clusters...")
-    return clusterLinks;
+    return {clusters, clusterDistribution};
 }
 
 // ----------- THRESHOLD SLIDER HANDLING ------------
@@ -192,7 +194,7 @@ let autoZoom = true;
 
 document.getElementById("threshold-select").addEventListener("input", (e) => {
     threshold = parseFloat(e.target.value);
-    document.getElementById("threshold-label").innerHTML = "Threshold Level: " + threshold.toFixed(4);
+    document.getElementById("threshold-label").innerHTML = "Threshold Level: " + threshold.toFixed(4) + " (Use slider to adjust)";
         
     clearTimeout(adjustingTimeout);
     adjustingTimeout = setTimeout(() => {
@@ -222,13 +224,20 @@ const updateGraphThreshold = () => {
 
         return false;
     });
-    // data.nodes = data.nodes.filter((node) => data.links.some((link) => link.source === node.id || link.target === node.id));
+    
     PAIRWISE_GRAPH.setData(data.nodes, data.links)
+    const clusterData = getClusterData();
+    console.log(clusterData)
     setTimeout(() => {
         autoZoom && PAIRWISE_GRAPH.fitView()
     }, 1500)
     log("Done updating graph...")
 }
+
+// ----------- GRAPH INTERACTION  ------------
+document.getElementById("zoom-to-fit").addEventListener("click", () => {
+    PAIRWISE_GRAPH.fitView();
+})
 
 // ----------- GENERAL HELPER FUNCTIONS ------------ 
 // for logging time elapsed
