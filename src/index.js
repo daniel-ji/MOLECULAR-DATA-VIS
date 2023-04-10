@@ -12,8 +12,6 @@ let threshold = 0.015;
 let sequences = new Set(); 
 // array of all pairwise distances (links)
 const pairwiseDistances = [];
-// for logging time elapsed
-let previousTime = performance.now();
 
 // ----------- INITIALIZATION ------------
 const PAIRWISE_GRAPH_CANVAS = document.getElementById('pairwise-graph');
@@ -23,6 +21,11 @@ const PAIRWISE_GRAPH_CONFIG = {
     linkColor: "#7a7a7a",
     linkArrows: false,
     randomSeed: 0,
+    events: {
+        onClick: () => {
+            autoZoom = false;
+        }
+    },
     simulation: {
         repulsion: 2,
         repulsionFromMouse: 0,
@@ -122,7 +125,10 @@ const readFileAsync = async (file) => {
 }
 
 // ----------- THRESHOLD SLIDER HANDLING ------------
+// timeout for updating graph after threshold slider is adjusted (effectively a throttle)
 let adjustingTimeout = null;
+// auto zoom to fit view
+let autoZoom = true;
 
 document.getElementById("threshold-select").addEventListener("input", (e) => {
     threshold = parseFloat(e.target.value);
@@ -158,10 +164,15 @@ const updateGraphThreshold = () => {
     });
     // data.nodes = data.nodes.filter((node) => data.links.some((link) => link.source === node.id || link.target === node.id));
     PAIRWISE_GRAPH.setData(data.nodes, data.links)
+    setTimeout(() => {
+        autoZoom && PAIRWISE_GRAPH.fitView()
+    }, 1000)
     log("Done updating graph...")
 }
 
 // ----------- GENERAL HELPER FUNCTIONS ------------ 
+// for logging time elapsed
+let previousTime = performance.now();
 
 const log = (message, showElapsed=true) => {
     console.log(message);

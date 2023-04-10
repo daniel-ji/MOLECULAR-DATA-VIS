@@ -1,12 +1,23 @@
 body {
     display: flex;
     justify-content: center;
+    height: 100vh;
+}
+
+#input {
+    display: flex;
     align-items: center;
     flex-direction: column;
+    width: 30%;
+    padding: 3vh 4vw;
+
+    h1 {
+        text-align: center;
+    }
 }
 
 #graph-container {
-    border: 4px solid black;
-    width: 90vw;
-    height: 80vh;
+    border-right: 4px solid black;
+    width: 70%;
+    height: 100%;
 }

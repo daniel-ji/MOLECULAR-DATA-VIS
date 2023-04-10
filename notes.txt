@@ -12,3 +12,9 @@ edge reduction? including, but not limited to:
     Edge reduction
     K-NN
 clustering? 
+
+add a full screen button, scroll indicator
+
+summary stats
+
+node weight (make nodes with more edges "heavier")
