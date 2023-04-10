@@ -18,8 +18,10 @@ const PAIRWISE_GRAPH_CANVAS = document.getElementById('pairwise-graph');
 const PAIRWISE_GRAPH_CONFIG = {
     backgroundColor: "#ffffff",
     nodeColor: "#000000",
-    linkColor: "#7a7a7a",
+    linkColor: "#a3a3a3",
     linkArrows: false,
+    linkWidth: 0.2,
+    linkVisibilityMinTransparency: 1,
     randomSeed: 0,
     events: {
         onClick: () => {
@@ -29,10 +31,13 @@ const PAIRWISE_GRAPH_CONFIG = {
     simulation: {
         repulsion: 2,
         repulsionFromMouse: 0,
-        linkDistRandomVariationRange: [0.5, 2],
+        linkDistRandomVariationRange: [1, 1],
+        scaleNodesOnZoom: true,
         friction: 1,
         linkDistance: 50,
-        gravity: 0.1,
+        gravity: 0.2,
+        decay: 10000,
+        linkSpring: 0.1,
     }
 }
 
@@ -44,19 +49,39 @@ const data = {
 const PAIRWISE_GRAPH = new Graph(PAIRWISE_GRAPH_CANVAS, PAIRWISE_GRAPH_CONFIG);
 PAIRWISE_GRAPH_CANVAS.style.display = "none";
 
+document.getElementById("upload-success").style.display = "none";
+
 
 // ----------- PAIRWISE DISTANCE MAP GENERATION ------------
+document.getElementById("upload-file").addEventListener("click", () => {
+    document.getElementById("upload-file").value = "";
+})
+
+document.getElementById("upload-file").addEventListener("change", () => {
+    document.getElementById("read-file").style.display = "block";
+    document.getElementById("upload-success").innerHTML = "";
+})
+
 document.getElementById("read-file").addEventListener("click", async () => {
     if (!document.getElementById("upload-file").files[0]) {
         alert("Please select a file");
         return;
     }
 
+    document.getElementById("read-file").style.display = "none";
+    document.getElementById("upload-success").style.display = "block";
+    document.getElementById("upload-success").innerHTML = "Loading...";
+    
+
     await getPairwiseDistances();
     
     updateGraphThreshold();
     PAIRWISE_GRAPH.setData(data.nodes, data.links)
     PAIRWISE_GRAPH_CANVAS.style.display = "block";
+    // PAIRWISE_GRAPH.setData(data.nodes, getClusters());
+
+    document.getElementById("upload-success").style.display = "block";
+    document.getElementById("upload-success").innerHTML = "Done!"
 })
 
 const getPairwiseDistances = async () => {
@@ -124,7 +149,42 @@ const readFileAsync = async (file) => {
     })
 }
 
+// ----------- CLUSTER GENERATION ------------
+const getClusters = () => {
+    log("Generating clusters...")
+    const nodes = new Set(data.nodes);
+    const clusters = [];
+    const clusterLinks = [];
+
+    while (nodes.size > 0) {
+        const cluster = new Set();
+        const starterNode = nodes.values().next().value;
+        let previousNode = starterNode;
+        cluster.add(starterNode);
+        nodes.delete(starterNode)
+        const queue = PAIRWISE_GRAPH.getAdjacentNodes(starterNode.id);
+        while (queue.length > 0) {
+            const node = queue.pop();
+            if (!cluster.has(node)) {
+                cluster.add(node);
+                clusterLinks.push({
+                    source: previousNode.id,
+                    target: starterNode.id,
+                })
+                previousNode = node;
+                nodes.delete(node);
+                queue.push(...PAIRWISE_GRAPH.getAdjacentNodes(node.id));
+            }
+        }
+        clusters.push(cluster);
+    }
+
+    log("Done generating clusters...")
+    return clusterLinks;
+}
+
 // ----------- THRESHOLD SLIDER HANDLING ------------
+
 // timeout for updating graph after threshold slider is adjusted (effectively a throttle)
 let adjustingTimeout = null;
 // auto zoom to fit view
@@ -166,7 +226,7 @@ const updateGraphThreshold = () => {
     PAIRWISE_GRAPH.setData(data.nodes, data.links)
     setTimeout(() => {
         autoZoom && PAIRWISE_GRAPH.fitView()
-    }, 1000)
+    }, 1500)
     log("Done updating graph...")
 }
 
