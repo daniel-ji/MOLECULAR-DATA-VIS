@@ -248,6 +248,14 @@ const generateHistogram = (data) => {
         .attr("transform", `translate(0, ${height})`)
         .call(d3.axisBottom(x));
 
+    // X axis label:
+    svg.append("text")
+        .attr("class", "x label")
+        .attr("text-anchor", "middle")
+        .attr("x", width / 2)
+        .attr("y", height + 40)
+        .text("Cluster size");
+
     // set the parameters for the histogram
     const histogram = d3.bin()
         .domain(x.domain())  // then the domain of the graphic
@@ -262,6 +270,16 @@ const generateHistogram = (data) => {
     y.domain([0, d3.max(bins, function (d) { return d.length; })]);   // d3.hist has to be called before the Y axis obviously
     svg.append("g")
         .call(d3.axisLeft(y));
+
+    // Y axis label
+    svg.append("text")
+        .attr("class", "y label")
+        .attr("text-anchor", "middle")
+        .attr("y", -50)
+        .attr("x", -height / 2)
+        .attr("dy", ".75em")
+        .attr("transform", "rotate(-90)")
+        .text("Frequency");
 
     // append the bar rectangles to the svg element
     svg.selectAll("rect")

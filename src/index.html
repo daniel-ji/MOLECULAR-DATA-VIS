@@ -19,11 +19,47 @@
             <canvas id="pairwise-graph"></canvas>
         </div>
         <div class="graph-element d-none" id="graph-element-1">
-            <h1 class="graph-title">Cluster Size Histogram</h1>
+            <h1 class="graph-title">Cluster Size Distribution</h1>
             <div id="cluster-histogram"></div>
         </div>
         <div class="graph-element d-none" id="graph-element-2">
             <h1 class="graph-title">Cluster Summary Statistics</h1>
+            <table class="table table-bordered" id="summary-table">
+                <tbody>
+                    <tr>
+                        <td>Node Count:</td>
+                        <td id="node-count"></td>
+                    </tr>
+                    <tr>
+                        <td>Edge Count:</td>
+                        <td id="edge-count"></td>
+                    </tr>
+                    <tr>
+                        <td>Assortativity:</td>  
+                        <td id="assortativity"></td>
+                    </tr>
+                    <tr>
+                        <td>Transitivity:</td>  
+                        <td id="transitivity"></td>
+                    </tr>
+                    <tr>
+                        <td>Triangle Count:</td>  
+                        <td id="triangle-count"></td>
+                    </tr>
+                    <tr>
+                        <td>Cluster Count:</td>
+                        <td id="cluster-count"></td>
+                    </tr>
+                    <tr>
+                        <td>Mean Cluster Size</td>  
+                        <td id="mean-cluster-size"></td>
+                    </tr>
+                    <tr>
+                        <td>Median Cluster Size:</td>
+                        <td id="median-cluster-size"></td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
         <img src="images/arrow-left.svg" id="arrow-left" title="Previous Visualization"/>
         <img src="images/arrow-right.svg" id="arrow-right" title="Next Visualization"/>

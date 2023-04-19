@@ -42,6 +42,14 @@ body {
         }
     }
 
+    #summary-table {
+        position: absolute;
+        top: 20%;
+        left: 10%;
+        width: 80%;
+        padding: 2vh 2vw;
+    }
+
     #zoom-to-fit {
         position: absolute;
         top: 2vh;
