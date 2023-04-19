@@ -60,38 +60,40 @@ document.getElementById("upload-success").style.display = "none";
 document.getElementById("threshold-label").innerHTML = "Threshold Level: " + threshold.toFixed(4) + " (Use slider to adjust)";
 
 // ----------- TOGGLE GRAPH ------------
-let counter = 0;
+let graphCounter = 0;
 const graphElements = document.getElementsByClassName("graph-element");
 
 document.getElementById('graph-element-0').classList.remove('d-none')
-document.getElementById('footer-label').innerHTML = 'Visualization ' + (counter + 1) + ' of ' + graphElements.length;
 
 document.getElementById("arrow-left").addEventListener("click", () => {
     // change graph
-    counter = (counter - 1) % graphElements.length;
-    if (counter < 0) {
-        counter = graphElements.length - 1;
+    graphCounter = (graphCounter - 1) % graphElements.length;
+    if (graphCounter < 0) {
+        graphCounter = graphElements.length - 1;
     }
     for (let i = 0; i < graphElements.length; i++) {
         graphElements[i].classList.add('d-none')
     }
-    graphElements[counter].classList.remove('d-none')
+    graphElements[graphCounter].classList.remove('d-none')
 
-    // modify footer label
-    document.getElementById('footer-label').innerHTML = 'Visualization ' + (counter + 1) + ' of ' + graphElements.length;
+    updateFooterLabel();
 })
 
 document.getElementById("arrow-right").addEventListener("click", () => {
     // change graph
-    counter = (counter + 1) % graphElements.length;
+    graphCounter = (graphCounter + 1) % graphElements.length;
     for (let i = 0; i < graphElements.length; i++) {
         graphElements[i].classList.add('d-none')
     }
-    graphElements[counter].classList.remove('d-none')
+    graphElements[graphCounter].classList.remove('d-none')
 
-    // modify footer label
-    document.getElementById('footer-label').innerHTML = 'Visualization ' + (counter + 1) + ' of ' + graphElements.length;
+    updateFooterLabel();
 })
+
+const updateFooterLabel = () => {
+    document.getElementById('footer-label').innerHTML = 'Figure ' + (graphCounter + 1) + ' of ' + graphElements.length;
+}
+updateFooterLabel();
 
 // ----------- PAIRWISE DISTANCE MAP GENERATION ------------
 document.getElementById("upload-file").addEventListener("click", () => {
@@ -225,7 +227,7 @@ const generateHistogram = (data) => {
     // set the dimensions and margins of the graph
     const graphWidth = document.body.clientWidth * 0.7;
     const graphHeight = document.body.clientHeight;
-    const margin = { top: graphHeight * 0.15, right: graphWidth * 0.15, bottom: graphHeight * 0.15, left: graphWidth * 0.2}
+    const margin = { top: graphHeight * 0.15, right: graphWidth * 0.15, bottom: graphHeight * 0.15, left: graphWidth * 0.2 }
     const width = document.body.clientWidth * 0.7 - margin.left - margin.right;
     const height = graphHeight - margin.top - margin.bottom;
 
@@ -240,7 +242,7 @@ const generateHistogram = (data) => {
 
     // X axis: scale and draw:
     const x = d3.scaleLinear()
-        .domain([0, Math.max(...data)])
+        .domain([0, Math.max(...data) * 1.05])
         .range([0, width]);
     svg.append("g")
         .attr("transform", `translate(0, ${height})`)
@@ -270,6 +272,17 @@ const generateHistogram = (data) => {
         .attr("width", function (d) { return x(d.x1) - x(d.x0) < 1 ? 0 : x(d.x1) - x(d.x0) - 2 })
         .attr("height", function (d) { return height - y(d.length); })
         .style("fill", "#0D6EFD")
+
+    svg.selectAll(".text")
+        .data(bins)
+        .enter()
+        .append("text")
+        .attr("class", "label")
+        .attr("text-anchor", "middle")
+        .attr("font-size", "12px")
+        .attr("x", (function (d) { return (x(d.x1) + x(d.x0)) / 2 }))
+        .attr("y", function (d) { return y(d.length) - 12; })
+        .text(d => d.length > 0 ? d.length : null);
 }
 
 // ----------- THRESHOLD SLIDER HANDLING ------------
