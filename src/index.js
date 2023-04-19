@@ -57,7 +57,7 @@ const PAIRWISE_GRAPH = new Graph(PAIRWISE_GRAPH_CANVAS, PAIRWISE_GRAPH_CONFIG);
 PAIRWISE_GRAPH_CANVAS.style.display = "none";
 
 document.getElementById("upload-success").style.display = "none";
-document.getElementById("threshold-label").innerHTML = "Threshold Level: " + threshold.toFixed(4) + " (Use slider to adjust)";
+document.getElementById("threshold-label").innerHTML = "Threshold Level: " + threshold.toFixed(4);
 
 // ----------- TOGGLE GRAPH ------------
 let graphCounter = 0;
@@ -218,18 +218,22 @@ const getClusterData = () => {
         clusterDistribution.set(cluster.size, (clusterDistribution.get(cluster.size) || 0) + 1);
     }
 
+    clusterSizes.sort();
+
     log("Done generating clusters...")
     return { clusters, clusterSizes, clusterDistribution };
 }
 
 // ----------- HISTOGRAM GENERATION ------------
-const generateHistogram = (data) => {
+const generateHistogram = (clusterData) => {
     // set the dimensions and margins of the graph
     const graphWidth = document.body.clientWidth * 0.7;
     const graphHeight = document.body.clientHeight;
     const margin = { top: graphHeight * 0.15, right: graphWidth * 0.15, bottom: graphHeight * 0.15, left: graphWidth * 0.2 }
     const width = document.body.clientWidth * 0.7 - margin.left - margin.right;
     const height = graphHeight - margin.top - margin.bottom;
+
+    document.getElementById("cluster-histogram").innerHTML = "";
 
     // append the svg object to the body of the page
     const svg = d3.select("#cluster-histogram")
@@ -242,7 +246,7 @@ const generateHistogram = (data) => {
 
     // X axis: scale and draw:
     const x = d3.scaleLinear()
-        .domain([0, Math.max(...data) * 1.05])
+        .domain([0, Math.max(...clusterData) * 1.05])
         .range([0, width]);
     svg.append("g")
         .attr("transform", `translate(0, ${height})`)
@@ -262,7 +266,7 @@ const generateHistogram = (data) => {
         .thresholds(x.ticks(70)); // then the numbers of bins
 
     // And apply this function to data to get the bins
-    const bins = histogram(data);
+    const bins = histogram(clusterData);
 
     // Y axis: scale and draw:
     const y = d3.scaleLinear()
@@ -303,6 +307,15 @@ const generateHistogram = (data) => {
         .text(d => d.length > 0 ? d.length : null);
 }
 
+// ---------- SUMMARY STATISTICS GENERATION ------------
+const generateSummaryStatistics = (clusterData) => {
+    document.getElementById("summary-node-count").innerHTML = data.nodes.length;
+    document.getElementById("summary-edge-count").innerHTML = data.links.length;
+    document.getElementById("summary-cluster-count").innerHTML = clusterData.clusters.length;
+    document.getElementById("summary-cluster-mean").innerHTML = (clusterData.clusterSizes.reduce((a, b) => a + b, 0) / clusterData.clusterSizes.length).toFixed(2);
+    document.getElementById("summary-cluster-median").innerHTML = clusterData.clusterSizes[Math.floor(clusterData.clusterSizes.length / 2)];
+}
+
 // ----------- THRESHOLD SLIDER HANDLING ------------
 
 // timeout for updating graph after threshold slider is adjusted (effectively a throttle)
@@ -312,11 +325,17 @@ let autoZoom = true;
 
 document.getElementById("threshold-select").addEventListener("input", (e) => {
     threshold = parseFloat(e.target.value);
-    document.getElementById("threshold-label").innerHTML = "Threshold Level: " + threshold.toFixed(4) + " (Use slider to adjust)";
+    let invalid = isNaN(threshold) || threshold < 0 || threshold > MAX_THRESHOLD;
+    if (invalid) {
+        document.getElementById("threshold-select").classList.add('is-invalid')
+    } else {
+        document.getElementById("threshold-select").classList.remove('is-invalid')
+    }
+    document.getElementById("threshold-label").innerHTML = "Threshold Level: " + threshold.toFixed(4);
 
     clearTimeout(adjustingTimeout);
     adjustingTimeout = setTimeout(() => {
-        updateGraphThreshold();
+        !invalid && updateGraphThreshold();
     }, 500)
 })
 
@@ -348,6 +367,7 @@ const updateGraphThreshold = () => {
     console.log('Nodes: ' + data.nodes.length)
     console.log('Links: ' + data.links.length)
     console.log(clusterData)
+    generateSummaryStatistics(clusterData)
     generateHistogram(clusterData.clusterSizes)
     setTimeout(() => {
         autoZoom && PAIRWISE_GRAPH.fitView()
