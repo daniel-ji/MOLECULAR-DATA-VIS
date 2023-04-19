@@ -1,4 +1,5 @@
 import { Graph } from '@cosmograph/cosmos'
+import * as d3 from "d3";
 import './styles/index.scss'
 
 // ----------- GLOBAL VARIABLES ------------
@@ -9,7 +10,7 @@ const MAX_THRESHOLD = 0.05;
 // threshold for pairwise distances to be added to map
 let threshold = 0.015;
 // set of all sequences (nodes)
-let sequences = new Set(); 
+let sequences = new Set();
 // array of all pairwise distances (links)
 const pairwiseDistances = [];
 
@@ -58,6 +59,39 @@ PAIRWISE_GRAPH_CANVAS.style.display = "none";
 document.getElementById("upload-success").style.display = "none";
 document.getElementById("threshold-label").innerHTML = "Threshold Level: " + threshold.toFixed(4) + " (Use slider to adjust)";
 
+// ----------- TOGGLE GRAPH ------------
+let counter = 0;
+const graphElements = document.getElementsByClassName("graph-element");
+
+document.getElementById('graph-element-0').classList.remove('d-none')
+document.getElementById('footer-label').innerHTML = 'Visualization ' + (counter + 1) + ' of ' + graphElements.length;
+
+document.getElementById("arrow-left").addEventListener("click", () => {
+    // change graph
+    counter = (counter - 1) % graphElements.length;
+    if (counter < 0) {
+        counter = graphElements.length - 1;
+    }
+    for (let i = 0; i < graphElements.length; i++) {
+        graphElements[i].classList.add('d-none')
+    }
+    graphElements[counter].classList.remove('d-none')
+
+    // modify footer label
+    document.getElementById('footer-label').innerHTML = 'Visualization ' + (counter + 1) + ' of ' + graphElements.length;
+})
+
+document.getElementById("arrow-right").addEventListener("click", () => {
+    // change graph
+    counter = (counter + 1) % graphElements.length;
+    for (let i = 0; i < graphElements.length; i++) {
+        graphElements[i].classList.add('d-none')
+    }
+    graphElements[counter].classList.remove('d-none')
+
+    // modify footer label
+    document.getElementById('footer-label').innerHTML = 'Visualization ' + (counter + 1) + ' of ' + graphElements.length;
+})
 
 // ----------- PAIRWISE DISTANCE MAP GENERATION ------------
 document.getElementById("upload-file").addEventListener("click", () => {
@@ -78,7 +112,7 @@ document.getElementById("read-file").addEventListener("click", async () => {
     document.getElementById("read-file").style.display = "none";
     document.getElementById("upload-success").style.display = "block";
     document.getElementById("upload-success").innerHTML = "Loading...";
-    
+
 
     await getPairwiseDistances();
 
@@ -92,13 +126,13 @@ document.getElementById("read-file").addEventListener("click", async () => {
 const getPairwiseDistances = async () => {
     const file = document.getElementById("upload-file").files[0];
     log("Reading file...", false)
-    
+
     const array = await readFileAsync(file);
     log("Done reading file...")
 
     const decoder = new TextDecoder("utf-8");
     // for when the chunk_size split doesn't match a full line
-    let splitString = ""; 
+    let splitString = "";
 
     // iterate over the file in chunks, readAsText can't read the entire file 
     for (let i = 0; i < array.byteLength; i += CHUNK_SIZE) {
@@ -109,7 +143,7 @@ const getPairwiseDistances = async () => {
             // line represents a single pairwise distance entry
             let line = lines[j];
             let columns = line.split("\t");
-            
+
             // edge case: very first line of file
             if (i === 0 && j === 0) {
                 continue;
@@ -117,7 +151,7 @@ const getPairwiseDistances = async () => {
 
             // edge case: first line is split
             if (j === 0 && columns.length < 3) {
-                
+
                 line = splitString + line;
                 splitString = "";
                 columns = line.split("\t")
@@ -159,12 +193,12 @@ const getClusterData = () => {
     log("Generating clusters...")
     const nodes = new Set(data.nodes);
     const clusters = [];
+    const clusterSizes = [];
     const clusterDistribution = new Map();
 
     while (nodes.size > 0) {
         const cluster = new Set();
         const starterNode = nodes.values().next().value;
-        let previousNode = starterNode;
         cluster.add(starterNode);
         nodes.delete(starterNode)
         const queue = PAIRWISE_GRAPH.getAdjacentNodes(starterNode.id);
@@ -178,11 +212,64 @@ const getClusterData = () => {
             }
         }
         clusters.push(cluster);
+        clusterSizes.push(cluster.size);
         clusterDistribution.set(cluster.size, (clusterDistribution.get(cluster.size) || 0) + 1);
     }
 
     log("Done generating clusters...")
-    return {clusters, clusterDistribution};
+    return { clusters, clusterSizes, clusterDistribution };
+}
+
+// ----------- HISTOGRAM GENERATION ------------
+const generateHistogram = (data) => {
+    // set the dimensions and margins of the graph
+    const graphWidth = document.body.clientWidth * 0.7;
+    const graphHeight = document.body.clientHeight;
+    const margin = { top: graphHeight * 0.15, right: graphWidth * 0.15, bottom: graphHeight * 0.15, left: graphWidth * 0.2}
+    const width = document.body.clientWidth * 0.7 - margin.left - margin.right;
+    const height = graphHeight - margin.top - margin.bottom;
+
+    // append the svg object to the body of the page
+    const svg = d3.select("#cluster-histogram")
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform",
+            `translate(${margin.left},${margin.top})`);
+
+    // X axis: scale and draw:
+    const x = d3.scaleLinear()
+        .domain([0, Math.max(...data)])
+        .range([0, width]);
+    svg.append("g")
+        .attr("transform", `translate(0, ${height})`)
+        .call(d3.axisBottom(x));
+
+    // set the parameters for the histogram
+    const histogram = d3.bin()
+        .domain(x.domain())  // then the domain of the graphic
+        .thresholds(x.ticks(70)); // then the numbers of bins
+
+    // And apply this function to data to get the bins
+    const bins = histogram(data);
+
+    // Y axis: scale and draw:
+    const y = d3.scaleLinear()
+        .range([height, 0]);
+    y.domain([0, d3.max(bins, function (d) { return d.length; })]);   // d3.hist has to be called before the Y axis obviously
+    svg.append("g")
+        .call(d3.axisLeft(y));
+
+    // append the bar rectangles to the svg element
+    svg.selectAll("rect")
+        .data(bins)
+        .join("rect")
+        .attr("x", 1)
+        .attr("transform", function (d) { return `translate(${x(d.x0)} , ${y(d.length)})` })
+        .attr("width", function (d) { return x(d.x1) - x(d.x0) < 1 ? 0 : x(d.x1) - x(d.x0) - 2 })
+        .attr("height", function (d) { return height - y(d.length); })
+        .style("fill", "#0D6EFD")
 }
 
 // ----------- THRESHOLD SLIDER HANDLING ------------
@@ -195,7 +282,7 @@ let autoZoom = true;
 document.getElementById("threshold-select").addEventListener("input", (e) => {
     threshold = parseFloat(e.target.value);
     document.getElementById("threshold-label").innerHTML = "Threshold Level: " + threshold.toFixed(4) + " (Use slider to adjust)";
-        
+
     clearTimeout(adjustingTimeout);
     adjustingTimeout = setTimeout(() => {
         updateGraphThreshold();
@@ -211,12 +298,12 @@ const updateGraphThreshold = () => {
             // add to set of all sequences
             if (!sequences.has(link.source)) {
                 sequences.add(link.source);
-                data.nodes.push({id: link.source});
+                data.nodes.push({ id: link.source });
             }
 
             if (!sequences.has(link.target)) {
                 sequences.add(link.target);
-                data.nodes.push({id: link.target});
+                data.nodes.push({ id: link.target });
             }
 
             return true;
@@ -224,10 +311,13 @@ const updateGraphThreshold = () => {
 
         return false;
     });
-    
+
     PAIRWISE_GRAPH.setData(data.nodes, data.links)
     const clusterData = getClusterData();
+    console.log('Nodes: ' + data.nodes.length)
+    console.log('Links: ' + data.links.length)
     console.log(clusterData)
+    generateHistogram(clusterData.clusterSizes)
     setTimeout(() => {
         autoZoom && PAIRWISE_GRAPH.fitView()
     }, 1500)
@@ -243,7 +333,7 @@ document.getElementById("zoom-to-fit").addEventListener("click", () => {
 // for logging time elapsed
 let previousTime = performance.now();
 
-const log = (message, showElapsed=true) => {
+const log = (message, showElapsed = true) => {
     console.log(message);
     showElapsed && console.log("Time elapsed: " + (performance.now() - previousTime) + "ms")
     previousTime = performance.now();

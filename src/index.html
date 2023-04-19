@@ -13,8 +13,18 @@
 
 <body>
     <div id="graph-container">
-        <img src="images/zoom-to-fit.png" id="zoom-to-fit" title="Zoom to Fit"/>
-        <canvas id="pairwise-graph"></canvas>
+        <div class="graph-element d-none" id="graph-element-0">
+            <h1 class="graph-title">Cluster Graph</h1>
+            <img src="images/zoom-to-fit.png" id="zoom-to-fit" title="Zoom to Fit"/>
+            <canvas id="pairwise-graph"></canvas>
+        </div>
+        <div class="graph-element d-none" id="graph-element-1">
+            <h1 class="graph-title">Cluster Size Histogram</h1>
+            <div id="cluster-histogram"></div>
+        </div>
+        <img src="images/arrow-left.svg" id="arrow-left" title="Previous Visualization"/>
+        <img src="images/arrow-right.svg" id="arrow-right" title="Next Visualization"/>
+        <h5 id="footer-label"></h5>
     </div>
 
     <div id="input">
@@ -38,7 +48,7 @@
         </div>
 
         <div id="pairwise-filter" class="mb-5 w-100">
-            <label for="filter-select" id="threshold-label" class="form-label w-100 text-center">Filter by transmission:</label>
+            <label for="filter-select" id="threshold-label" class="form-label w-100 text-center">Filter by risk factor:</label>
             <select id="filter-select" class="form-select">
                 <option selected>Select all</option>
                 <option value="IDU">IDU</option>
