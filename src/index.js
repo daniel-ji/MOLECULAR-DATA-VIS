@@ -13,6 +13,14 @@ let threshold = 0.015;
 let sequences = new Set();
 // array of all pairwise distances (links)
 const pairwiseDistances = [];
+// graph data 
+const data = {
+    nodes: [],
+    links: [],
+}
+// extra demographic data, mapped by ID
+const nodeData = new Map();
+let nodeDataCategories = [];
 
 // ----------- INITIALIZATION ------------
 const PAIRWISE_GRAPH_CANVAS = document.getElementById('pairwise-graph');
@@ -46,11 +54,6 @@ const PAIRWISE_GRAPH_CONFIG = {
         decay: 10000,
         linkSpring: 0.1,
     }
-}
-
-const data = {
-    nodes: [],
-    links: [],
 }
 
 const PAIRWISE_GRAPH = new Graph(PAIRWISE_GRAPH_CANVAS, PAIRWISE_GRAPH_CONFIG);
@@ -96,18 +99,22 @@ const updateFooterLabel = () => {
 updateFooterLabel();
 
 // ----------- PAIRWISE DISTANCE MAP GENERATION ------------
-document.getElementById("upload-file").addEventListener("click", () => {
-    document.getElementById("upload-file").value = "";
+document.getElementById("upload-pairwise-file").addEventListener("click", () => {
+    document.getElementById("upload-pairwise-file").value = "";
 })
 
-document.getElementById("upload-file").addEventListener("change", () => {
+document.getElementById("upload-data-file").addEventListener("click", () => {
+    document.getElementById("upload-data-file").value = "";
+})
+
+document.getElementById("upload-pairwise-file").addEventListener("change", () => {
     document.getElementById("read-file").style.display = "block";
     document.getElementById("upload-success").innerHTML = "";
 })
 
 document.getElementById("read-file").addEventListener("click", async () => {
-    if (!document.getElementById("upload-file").files[0]) {
-        alert("Please select a file");
+    if (!document.getElementById("upload-pairwise-file").files[0]) {
+        alert("Please select a file.");
         return;
     }
 
@@ -116,17 +123,18 @@ document.getElementById("read-file").addEventListener("click", async () => {
     document.getElementById("upload-success").innerHTML = "Loading...";
 
 
+    getNodeData();
     await getPairwiseDistances();
 
     updateGraphThreshold();
     PAIRWISE_GRAPH_CANVAS.style.display = "block";
-
+    
     document.getElementById("upload-success").style.display = "block";
     document.getElementById("upload-success").innerHTML = "Done!"
 })
 
 const getPairwiseDistances = async () => {
-    const file = document.getElementById("upload-file").files[0];
+    const file = document.getElementById("upload-pairwise-file").files[0];
     log("Reading file...", false)
 
     const array = await readFileAsync(file);
@@ -179,14 +187,14 @@ const getPairwiseDistances = async () => {
 }
 
 // helper function to promise-fy file read  
-const readFileAsync = async (file) => {
+const readFileAsync = async (file, asText=false) => {
     const reader = new FileReader();
     return new Promise((resolve, reject) => {
         reader.onload = (e) => {
             resolve(e.target.result);
         };
         reader.onerror = reject;
-        reader.readAsArrayBuffer(file);
+        asText ? reader.readAsText(file) : reader.readAsArrayBuffer(file);
     })
 }
 
@@ -314,6 +322,37 @@ const generateSummaryStatistics = (clusterData) => {
     document.getElementById("summary-cluster-count").innerHTML = clusterData.clusters.length;
     document.getElementById("summary-cluster-mean").innerHTML = (clusterData.clusterSizes.reduce((a, b) => a + b, 0) / clusterData.clusterSizes.length).toFixed(2);
     document.getElementById("summary-cluster-median").innerHTML = clusterData.clusterSizes[Math.floor(clusterData.clusterSizes.length / 2)];
+}
+
+// ----------- FILTERS GENERATION ------------
+const getNodeData = async () => {
+    const file = document.getElementById("upload-data-file").files[0];
+    if (!file || !(file.name.endsWith(".tsv") || file.name.endsWith(".csv"))) {
+        alert("Invalid supplementary data file.")
+        return;
+    }
+
+    const text = await readFileAsync(file, true)
+    const delimiter = file.name.endsWith(".csv") ? "," : "\t";
+
+    const lines = text.split("\n")
+    lines[0] = lines[0].toUpperCase();
+    nodeDataCategories = lines[0].split(delimiter);
+
+    if (nodeDataCategories.length < 2 || nodeDataCategories.length > 25) {
+        alert("Invalid supplementary data file.")
+        return;
+    }
+
+    for (let i = 1; i < lines.length; i++) {
+        const dataEntry = lines[i].split(delimiter);
+        if (dataEntry.length !== nodeDataCategories.length) {
+            alert("Invalid supplementary data file.")
+            return;
+        }
+
+        
+    }
 }
 
 // ----------- THRESHOLD SLIDER HANDLING ------------

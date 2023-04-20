@@ -67,14 +67,14 @@
     </div>
 
     <div id="input">
-        <h1 class="my-5">Pairwise Distance Graph Visualization</h1>
+        <h1 class="mt-4 mb-5">Pairwise Distance Graph Visualization</h1>
 
         <!-- <div id="pairwise-threshold" class="mb-5">
             <label for="threshold-select" id="threshold-label" class="form-label w-100 text-center"></label>
             <input type="range" class="form-range" id="threshold-select" min="0" max="0.05" step="0.0025" value="0.015">
         </div> -->
 
-        <div id="pairwise-threshold" class="mb-5">
+        <div id="pairwise-threshold" class="mb-3">
             <label for="threshold-select" id="threshold-label" class="form-label w-100 text-center">Threshold Level:</label>
             <div class="input-group">
                 <input type="number" class="form-control" id="threshold-select" aria-describedby="basic-addon3 basic-addon4" min="0" max="0.05" step="0.0025" value="0.015">
@@ -82,7 +82,7 @@
             <div class="form-text" id="basic-addon4">Accepted Threshold Range: 0 to 0.05 </div>
         </div>
 
-        <div id="pairwise-filter" class="mb-5 w-100">
+        <div class="pairwise-filter mb-3 w-100">
             <label for="filter-select" id="threshold-label" class="form-label w-100 text-center">Filter by race:</label>
             <select id="filter-select" class="form-select">
                 <option selected>Select all</option>
@@ -93,7 +93,7 @@
             </select>
         </div>
 
-        <div id="pairwise-filter" class="mb-5 w-100">
+        <div class="pairwise-filter mb-3 w-100">
             <label for="filter-select" id="threshold-label" class="form-label w-100 text-center">Filter by risk
                 factor:</label>
             <select id="filter-select" class="form-select">
@@ -108,8 +108,12 @@
             </select>
         </div>
 
-        <label for="upload-file" class="form-label w-100 text-center">Upload pairwise distances file:</label>
-        <input type="file" class="form-control" id="upload-file" />
+        <label for="upload-pairwise-file" class="form-label w-100 text-center mt-5">Upload pairwise distances file:</label>
+        <input type="file" class="form-control" id="upload-pairwise-file" />
+
+        <label for="upload-data-file" class="form-label w-100 text-center mt-3">Upload supplementary data file:</label>
+        <input type="file" class="form-control" id="upload-data-file" />
+
         <button id="read-file" class="btn btn-primary mt-3">Submit</button>
         <p class="mt-2 text-success" id="upload-success">Done!</p>
 
