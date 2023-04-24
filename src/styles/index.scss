@@ -4,7 +4,7 @@ body {
     height: 100vh;
 }
 
-#input {
+#input-form {
     display: flex;
     align-items: center;
     flex-direction: column;
@@ -15,9 +15,30 @@ body {
         text-align: center;
     }
 
+    .bi-asterisk {
+        vertical-align: top;
+        font-size: 0.5rem;
+    }
+
+    .input-step {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+    }
+
     footer {
         position: absolute;
-        bottom: 4vh;
+        bottom: 2vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 30%;
+
+        #step-action {
+            width: 100%;
+            display: inline-flex;
+            justify-content: space-between;
+        }
     }
 }
 
@@ -58,7 +79,7 @@ body {
         cursor: pointer;
     }
 
-    #arrow-right {
+    #graph-arrow-right {
         position: absolute;
         top: 50%;
         right: 3vw;
@@ -66,7 +87,7 @@ body {
         cursor: pointer;
     }
 
-    #arrow-left {
+    #graph-arrow-left {
         position: absolute;
         top: 50%;
         left: 3vw;
