@@ -619,7 +619,7 @@ const getNodeDemoData = async () => {
     const categories = lines[0].split(delimiter);
     // create new category for each column
     for (let i = 0; i < categories.length; i++) {
-        nodeDemoDataCategories.set(categories[i], { type: '', elements: new Set() })
+        nodeDemoDataCategories.set(categories[i], { type: 'number', elements: new Set() })
     }
 
     // edge case to remove empty line at end of file
@@ -633,7 +633,7 @@ const getNodeDemoData = async () => {
         return;
     }
 
-    log("Reading node supplementary data...")
+    log("Parsing node supplementary data...")
 
     // create node demographic data
     for (let i = 1; i < lines.length; i++) {
@@ -644,11 +644,21 @@ const getNodeDemoData = async () => {
             return;
         }
 
-        // create object for each data entry
+        // create object for each data entry, corresponds to a node
         const dataEntryObject = {};
+
         for (let j = 1; j < categories.length; j++) {
-            dataEntryObject[categories[j]] = dataEntry[j];
-            nodeDemoDataCategories.get(categories[j]).elements.add(dataEntry[j])
+            if (isNaN(dataEntry[j])) {
+                nodeDemoDataCategories.get(categories[j]).type = 'string';
+            }
+
+            if (nodeDemoDataCategories.get(categories[j]).type === 'string') {
+                dataEntryObject[categories[j]] = dataEntry[j];
+                nodeDemoDataCategories.get(categories[j]).elements.add(dataEntry[j])
+            } else {
+                dataEntryObject[categories[j]] = parseFloat(dataEntry[j]);
+                nodeDemoDataCategories.get(categories[j]).elements.add(parseFloat(dataEntry[j]))
+            }
         }
 
         // add data entry to node demographic data
@@ -658,7 +668,7 @@ const getNodeDemoData = async () => {
     // generate HTML elements for filters
     generateNodeFilters();
 
-    log("Done reading node supplementary data...")
+    log("Done parsing node supplementary data...")
 }
 
 /**
@@ -668,24 +678,60 @@ const generateNodeFilters = () => {
     const categories = [...nodeDemoDataCategories.keys()];
     const container = document.getElementById("filters-container");
     container.innerHTML = "";
+    // loop through each category
     for (let i = 1; i < categories.length; i++) {
         const filter = document.createElement("div");
         filter.classList.add("pairwise-filter", "mb-3", "w-100");
 
+        // create label
         const label = document.createElement("label");
-        label.htmlFor = "filter-select" + categories[i];
+        label.htmlFor = "filter-select-" + categories[i];
         label.classList.add("form-label", "w-100", "text-center");
-        label.innerHTML = "Filter by " + categories[i].toLowerCase() + ": ";
+        label.innerHTML = "View by " + categories[i].toLowerCase() + ": ";
 
+        // create select input
         const select = document.createElement("select");
-        select.id = "filter-select" + categories[i];
+        select.id = "filter-select-" + categories[i];
         select.classList.add("form-select");
 
+        // add default option 
         const defaultOption = document.createElement("option");
         defaultOption.selected = true;
         defaultOption.innerHTML = "All";
         select.appendChild(defaultOption);
 
+        // add options for each possible value
+        const values = [...nodeDemoDataCategories.get(categories[i]).elements];
+        if (nodeDemoDataCategories.get(categories[i]).type === 'number') {
+            values.sort((a, b) => a - b);
+            // create default 10 options for each range of values
+            const min = values[0];
+            const max = values[values.length - 1];
+            const step = (max - min) / 10;
+            for (let j = min; j <= max; j += step) {
+                const option = document.createElement("option");
+                option.innerHTML = j.toFixed(2) + " - " + (j + step).toFixed(2);
+                option.value = j.toFixed(2) + " - " + (j + step).toFixed(2);
+                select.appendChild(option);
+            }
+        } else {
+            values.sort();
+            // make "other" last value
+            const otherIndex = values.map(string => string.toLowerCase()).indexOf("other");
+            if (otherIndex !== -1) {
+                const otherText = values.splice(otherIndex, 1);
+                values.push(otherText);
+            }
+
+            for (let j = 0; j < values.length; j++) {
+                const option = document.createElement("option");
+                option.innerHTML = values[j];
+                option.value = values[j];
+                select.appendChild(option);
+            }
+        }
+
+        // append everything
         filter.appendChild(label);
         filter.appendChild(select);
         container.appendChild(filter);
