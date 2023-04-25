@@ -64,6 +64,10 @@ let thresholdValid = true;
 // whether or not the cluster filter input value is valid
 let clusterValid = false;
 
+// --- STEP 3 ---
+// key is a view ID, in format "0-0-..." where each number is the index of the value of the selected view for that specific category
+const nodeViews = new Map();
+
 // ----------- COSMOGRAPH PARAMETERS ------------
 const PAIRWISE_GRAPH_CANVAS = document.getElementById('pairwise-graph');
 const PAIRWISE_GRAPH_CONFIG = {
@@ -501,10 +505,10 @@ const generateHistogram = () => {
     }
 
     // set the dimensions and margins of the graph
-    const graphWidth = document.body.clientWidth * 0.7;
+    const graphWidth = document.body.clientWidth * 0.65;
     const graphHeight = document.body.clientHeight;
-    const margin = { top: graphHeight * 0.15, right: graphWidth * 0.15, bottom: graphHeight * 0.15, left: graphWidth * 0.2 }
-    const width = document.body.clientWidth * 0.7 - margin.left - margin.right;
+    const margin = { top: graphHeight * 0.15, right: graphWidth * 0.1, bottom: graphHeight * 0.15, left: graphWidth * 0.15 }
+    const width = document.body.clientWidth * 0.65 - margin.left - margin.right;
     const height = graphHeight - margin.top - margin.bottom;
 
     // remove old svg
@@ -614,7 +618,6 @@ const getNodeDemoData = async () => {
     const delimiter = file.name.endsWith(".csv") ? "," : "\t";
 
     const lines = text.split("\n")
-    lines[0] = lines[0].toUpperCase();
     // first line is categories
     const categories = lines[0].split(delimiter);
     // create new category for each column
@@ -665,34 +668,35 @@ const getNodeDemoData = async () => {
         nodeDemoData.set(dataEntry[0], dataEntryObject)
     }
 
-    // generate HTML elements for filters
-    generateNodeFilters();
+    // generate HTML elements for views
+    generateNodeViews();
 
     log("Done parsing node supplementary data...")
 }
 
 /**
- * Generates HTML elements for node filters, one per category.
+ * Generates HTML elements for node views, one per category.
  */
-const generateNodeFilters = () => {
+const generateNodeViews = () => {
     const categories = [...nodeDemoDataCategories.keys()];
-    const container = document.getElementById("filters-container");
+    const container = document.getElementById("views-container");
     container.innerHTML = "";
     // loop through each category
     for (let i = 1; i < categories.length; i++) {
-        const filter = document.createElement("div");
-        filter.classList.add("pairwise-filter", "mb-3", "w-100");
+        const view = document.createElement("div");
+        view.classList.add("pairwise-view", "mb-3", "w-100");
 
         // create label
         const label = document.createElement("label");
-        label.htmlFor = "filter-select-" + categories[i];
+        label.htmlFor = "view-select-" + i;
         label.classList.add("form-label", "w-100", "text-center");
         label.innerHTML = "View by " + categories[i].toLowerCase() + ": ";
 
         // create select input
         const select = document.createElement("select");
-        select.id = "filter-select-" + categories[i];
-        select.classList.add("form-select");
+        select.id = "view-select-" + i;
+        select.classList.add("form-select", "view-select");
+        select.setAttribute("category", categories[i]);
 
         // add default option 
         const defaultOption = document.createElement("option");
@@ -732,12 +736,84 @@ const generateNodeFilters = () => {
         }
 
         // append everything
-        filter.appendChild(label);
-        filter.appendChild(select);
-        container.appendChild(filter);
+        view.appendChild(label);
+        view.appendChild(select);
+        container.appendChild(view);
 
     }
 }
+
+// ----------- NODE VIEW CREATION ------------
+document.getElementById("create-view-button").addEventListener("click", (e) => {
+    // TODO: add validation
+    // create view ID and add to map
+    let viewID = "";
+    let viewName = "";
+    const viewElements = document.getElementsByClassName("view-select");
+    for (let i = 0; i < viewElements.length; i++) {
+        viewID += viewElements[i].selectedIndex + (i === viewElements.length - 1 ? "" : "-");
+
+        if (viewElements[i].selectedIndex !== 0) {
+            viewName += viewElements[i].getAttribute("category") + "-" + viewElements[i].value + ", ";
+        }
+    }
+
+    if (viewName === "") {
+        viewName = "All";
+    } else {
+        // slice off last comma and space
+        viewName = viewName.slice(0, -2);
+    }
+
+    nodeViews.set(viewID, {
+        color: document.getElementById("view-color").value,
+        name: viewName
+    })
+
+    // check if view element exists
+    if (document.getElementById("view-entry-" + viewID) !== null) {
+        alert("View already exists.");
+        return;
+    }
+
+    // create view element
+    const viewEntryElement = document.createElement("div");
+    viewEntryElement.classList.add("view-entry", "my-3", "w-100");
+    viewEntryElement.id = "view-entry-" + viewID;
+
+    const viewPreview = document.createElement("div");
+    viewPreview.classList.add("view-entry-preview", "w-100");
+    viewPreview.id = "view-entry-preview-" + viewID;
+    viewEntryElement.appendChild(viewPreview);
+
+    const viewButton = document.createElement("button");
+    viewButton.classList.add("btn", "btn-secondary", "view-entry-button");
+    viewButton.id = "view-entry-button-" + viewID;
+    viewButton.innerHTML = "View: " + viewName;
+    viewPreview.appendChild(viewButton);
+
+    const viewColor = document.createElement("input");
+    viewColor.type = "color";
+    viewColor.value = document.getElementById("view-color").value;
+    viewColor.classList.add("view-entry-color", "form-control", "form-control-color", "border-secondary");
+    viewColor.id = "view-entry-color-" + viewID;
+    viewPreview.appendChild(viewColor);
+
+    const viewDelete = document.createElement("button");
+    viewDelete.classList.add("btn", "btn-danger", "view-entry-delete");
+    viewDelete.id = "view-entry-delete-" + viewID;
+    viewDelete.addEventListener("click", () => {
+        document.getElementById("view-entry-" + viewID).remove();
+        nodeViews.delete(viewID);
+    })
+    viewPreview.appendChild(viewDelete);
+
+    const viewDeleteIcon = document.createElement("i");
+    viewDeleteIcon.classList.add("bi", "bi-trash");
+    viewDelete.appendChild(viewDeleteIcon);
+
+    document.getElementById("view-entry-container").appendChild(viewEntryElement);
+})
 
 // ----------- THRESHOLD SLIDER HANDLING ------------
 
