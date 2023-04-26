@@ -198,6 +198,10 @@ const updateData = () => {
         getClusterData();
     }
 
+    let views = [...nodeViews.keys()];
+    for (let i = 0; i < views.length; i++) {
+        updateViews(views[i])
+    }
     log("Setting graph data...")
     PAIRWISE_GRAPH.setData(data.nodes, data.links)
     log("Done setting graph data...")
@@ -219,7 +223,7 @@ const updateData = () => {
  */
 const updateViews = (viewID) => {
     const nodesKeys = [...nodesMap.keys()]
-    const viewValues = nodeViews.get(viewID)
+    const viewValues = nodeViews.get(viewID).values;
     for (let i = 0; i < nodesKeys.length; i++) {
         const correspondingIndividual = individualData.get(nodesKeys[i].split("|")[1]);
         if (correspondingIndividual === undefined) {
@@ -249,10 +253,16 @@ const updateViews = (viewID) => {
             }
         }
 
+        console.log(add);
+        console.log(individualDemoValues);
+        console.log(viewValues);
+
         if (add) {
             nodesMap.get(nodesKeys[i]).views.add(viewID)
         }
     }
+
+    console.log(nodesMap)
 
     setNodeDataFromMap();
 }
@@ -851,7 +861,7 @@ document.getElementById("create-view-button").addEventListener("click", (e) => {
         values: viewValues
     })
 
-    updateViews();
+    updateViews(viewID);
 
     PAIRWISE_GRAPH.setData(data.nodes, data.links)
 
