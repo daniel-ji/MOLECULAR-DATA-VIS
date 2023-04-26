@@ -30,15 +30,15 @@ const pairwiseDistances = [];
 /** SEQUENCES (NODES) */
 // a set of all nodes uploaded from the file, only changes when a new file is uploaded
 const ALL_NODES = new Set();
-// a map of all current nodes in the graph, mapped by ID to an object containing adjacentNodes
+// a map of all current nodes in the graph, with their supplementary data (adjacent nodes, color, etc.)
 // TODO: this doesn't update with the cluster filters, should it? 
-const dataNodesMap = new Map();
-// extra demographic data, mapped by ID
-const nodeDemoData = new Map();
-// a map of demographic data categories to their type of value and a set of all possible values
-const nodeDemoDataCategories = new Map();
+const nodesMap = new Map();
+// individual demographic data, mapped by ID
+const individualData = new Map();
+// a map of individual demographic data categories to their type of value and a set of all possible values
+const individualDataCategories = new Map();
 // maximum number of node categories to show in the form (a sanity check to make sure the uploaded demographic data is valid)
-const MAX_NODE_CATEGORIES = 25;
+const MAX_INDIVIDUAL_CATEGORIES = 25;
 
 /** CLUSTERS */
 // the type of cluster filtering that's currently being used: show all clusters, show clusters with a minimum number of nodes, or show x largest clusters
@@ -72,7 +72,9 @@ const nodeViews = new Map();
 const PAIRWISE_GRAPH_CANVAS = document.getElementById('pairwise-graph');
 const PAIRWISE_GRAPH_CONFIG = {
     backgroundColor: "#ffffff",
-    nodeColor: "#000000",
+    nodeColor: (node) => {
+        return node.color ?? "#000000";
+    },
     nodeSize: 6,
     linkColor: "#a3a3a3",
     linkArrows: false,
@@ -117,9 +119,9 @@ const resetData = () => {
 
     // reset node data
     ALL_NODES.clear();
-    dataNodesMap.clear();
-    nodeDemoData.clear();
-    nodeDemoDataCategories.clear();
+    nodesMap.clear();
+    individualData.clear();
+    individualDataCategories.clear();
 }
 
 /**
@@ -132,28 +134,12 @@ const updateData = () => {
     // clears currently shown nodes and links
     data.nodes = [];
     data.links = [];
-    dataNodesMap.clear();
+    nodesMap.clear();
     // loops through all uploaded pairwise distances and adds links to data if below threshold
     for (let i = 0; i < pairwiseDistances.length; i++) {
         const link = pairwiseDistances[i];
         if (link.value < threshold) {
-            // source node
-            if (!dataNodesMap.has(link.source)) {
-                dataNodesMap.set(link.source, {
-                    adjacentNodes: new Set([link.target])
-                });
-            }
-
-            // target node
-            if (!dataNodesMap.has(link.target)) {
-                dataNodesMap.set(link.target, {
-                    adjacentNodes: new Set([link.source])
-                });
-            }
-
-            // update source and target nodes' adjacentNodes set
-            dataNodesMap.get(link.source).adjacentNodes.add(link.target);
-            dataNodesMap.get(link.target).adjacentNodes.add(link.source);
+            addLinkToData(link);
 
             // add link to data
             data.links.push(link)
@@ -161,7 +147,7 @@ const updateData = () => {
     };
 
     // set nodes
-    data.nodes = [...dataNodesMap.keys()].map(node => { return { id: node } })
+    setNodeDataFromMap();
 
     getClusterData();
 
@@ -199,29 +185,13 @@ const updateData = () => {
         }
 
         // set data to filtered nodes and links
-        data.nodes = filteredNodes.map(node => ({ id: node }));
+        setNodeDataFromMap();
         data.links = filteredLinks;
 
-        // update dataNodesMap
-        dataNodesMap.clear();
+        // update nodesMap
+        nodesMap.clear();
         for (let i = 0; i < data.links.length; i++) {
-            const source = data.links[i].source;
-            const target = data.links[i].target;
-
-            if (!dataNodesMap.has(source)) {
-                dataNodesMap.set(source, {
-                    adjacentNodes: new Set([target])
-                });
-            }
-
-            if (!dataNodesMap.has(target)) {
-                dataNodesMap.set(target, {
-                    adjacentNodes: new Set([source])
-                });
-            }
-
-            dataNodesMap.get(source).adjacentNodes.add(target);
-            dataNodesMap.get(target).adjacentNodes.add(source);
+            addLinkToData(data.links[i])
         }
 
         log("Done filtering clusters...")
@@ -241,6 +211,93 @@ const updateData = () => {
     generateHistogram()
     generateClusterGraph()
     log("Done generating other diagrams (done updating data)...")
+}
+
+/**
+ * Updates graph nodes' colors / views with given viewID. 
+ * 
+ */
+const updateViews = (viewID) => {
+    const nodesKeys = [...nodesMap.keys()]
+    const viewValues = nodeViews.get(viewID)
+    for (let i = 0; i < nodesKeys.length; i++) {
+        const correspondingIndividual = individualData.get(nodesKeys[i].split("|")[1]);
+        if (correspondingIndividual === undefined) {
+            continue;
+        }
+
+        const individualDemoKeys = Object.keys(correspondingIndividual);
+        const individualDemoValues = Object.values(correspondingIndividual);
+        let add = true;
+
+        for (let j = 0; j < individualDemoKeys.length; j++) {
+            if (viewValues[j] === "All") {
+                continue;
+            }
+
+            if (individualDataCategories.get(individualDemoKeys[j]).type === 'number') {
+                const range = viewValues[j].split(" - ");
+                if (!(individualDemoValues[j] >= parseFloat(range[0]) && individualDemoValues[j] <= parseFloat(range[1]))) {
+                    add = false;
+                    break;
+                }
+            } else {
+                if (individualDemoValues[j] !== viewValues[j]) {
+                    add = false;
+                    break;
+                }
+            }
+        }
+
+        if (add) {
+            nodesMap.get(nodesKeys[i]).views.add(viewID)
+        }
+    }
+
+    setNodeDataFromMap();
+}
+
+const setNodeDataFromMap = (filteredNodes = undefined) => {
+    const getColor = (node) => {
+        let color;
+        const view = [...nodesMap.get(node).views.keys()]
+        if (view.length > 0) {
+            color = nodeViews.get([...nodesMap.get(node).views.keys()][0]).color
+        }
+        return color;
+    }
+
+    if (filteredNodes) {
+        data.nodes = filteredNodes.map(node => { return { id: node, color: getColor(node) } })
+    } else {
+        data.nodes = [...nodesMap.keys()].map(node => { return { id: node, color: getColor(node) } })
+    }
+}
+
+const addLinkToData = (link) => {
+    // source node
+    const sourceIndividualID = link.source.split("|")[1];
+    if (!nodesMap.has(link.source)) {
+        nodesMap.set(link.source, {
+            adjacentNodes: new Set([link.target]),
+            individualID: sourceIndividualID,
+            views: new Set()
+        });
+    }
+
+    // target node
+    const targetIndividualID = link.target.split("|")[1];
+    if (!nodesMap.has(link.target)) {
+        nodesMap.set(link.target, {
+            adjacentNodes: new Set([link.source]),
+            individualID: targetIndividualID,
+            views: new Set()
+        });
+    }
+
+    // update source and target nodes' adjacentNodes set
+    nodesMap.get(link.source).adjacentNodes.add(link.target);
+    nodesMap.get(link.target).adjacentNodes.add(link.source);
 }
 
 // ----------- TOGGLE GRAPH ELEMENTS (switch between different diagrams) ------------
@@ -351,9 +408,9 @@ document.getElementById("read-file").addEventListener("click", async () => {
     document.getElementById("upload-success").classList.remove("d-none");
     document.getElementById("upload-success").innerHTML = "Loading...";
 
-    // reset data, get node demographic data, and get pairwise distances (actual node / link data)
+    // reset data, get individual demographic data, and get pairwise distances (actual node / link data)
     resetData();
-    getNodeDemoData();
+    await getIndividualDemoData();
     await getPairwiseDistances();
 
     // update graph after getting data
@@ -455,7 +512,7 @@ const readFileAsync = async (file, asText = false) => {
 const getClusterData = () => {
     log("Generating clusters...")
     // list of current nodes on graph, a list of ids (strings) 
-    const nodes = new Set(dataNodesMap.keys());
+    const nodes = new Set(nodesMap.keys());
     // array of clusters, each cluster is a set of ids (strings)
     const clusters = [];
     // array of cluster sizes
@@ -472,14 +529,14 @@ const getClusterData = () => {
         cluster.add(starterNode);
         nodes.delete(starterNode)
         // queue of nodes to visit, which are id strings
-        // each key in dataNodesMap points to a node object, which has an adjacentNodes property that is a list of id strings
-        const queue = [...(dataNodesMap.get(starterNode).adjacentNodes)];
+        // each key in nodesMap points to a node object, which has an adjacentNodes property that is a list of id strings
+        const queue = [...(nodesMap.get(starterNode).adjacentNodes)];
         while (queue.length > 0) {
             const node = queue.pop();
             if (!cluster.has(node)) {
                 cluster.add(node);
                 nodes.delete(node);
-                queue.push(...(dataNodesMap.get(node).adjacentNodes));
+                queue.push(...(nodesMap.get(node).adjacentNodes));
             }
         }
 
@@ -600,8 +657,8 @@ const generateSummaryStatistics = () => {
     document.getElementById("summary-cluster-median").innerHTML = clusterData.clusterSizes[Math.floor(clusterData.clusterSizes.length / 2)];
 }
 
-// ----------- GET NODE DEMOGRAPHIC (SUPPLEMENTARY) DATA ------------
-const getNodeDemoData = async () => {
+// ----------- GET INDIVIDUAL DEMOGRAPHIC (SUPPLEMENTARY) DATA ------------
+const getIndividualDemoData = async () => {
     const file = document.getElementById("upload-data-file").files[0];
 
     // validation
@@ -622,7 +679,7 @@ const getNodeDemoData = async () => {
     const categories = lines[0].split(delimiter);
     // create new category for each column
     for (let i = 0; i < categories.length; i++) {
-        nodeDemoDataCategories.set(categories[i], { type: 'number', elements: new Set() })
+        individualDataCategories.set(categories[i], { type: 'number', elements: new Set() })
     }
 
     // edge case to remove empty line at end of file
@@ -631,18 +688,18 @@ const getNodeDemoData = async () => {
     }
 
     // validation by checking number of data entry columns
-    if (nodeDemoDataCategories.size < 2 || nodeDemoDataCategories.size > MAX_NODE_CATEGORIES) {
+    if (individualDataCategories.size < 2 || individualDataCategories.size > MAX_INDIVIDUAL_CATEGORIES) {
         alert("Invalid supplementary data file.")
         return;
     }
 
-    log("Parsing node supplementary data...")
+    log("Parsing node supplementary data...", true)
 
-    // create node demographic data
+    // create individual demographic data
     for (let i = 1; i < lines.length; i++) {
         const dataEntry = lines[i].split(delimiter);
         // validation by checking if number of data entry columns matches number of categories
-        if (dataEntry.length !== nodeDemoDataCategories.size) {
+        if (dataEntry.length !== individualDataCategories.size) {
             alert("Invalid supplementary data file.")
             return;
         }
@@ -652,20 +709,34 @@ const getNodeDemoData = async () => {
 
         for (let j = 1; j < categories.length; j++) {
             if (isNaN(dataEntry[j])) {
-                nodeDemoDataCategories.get(categories[j]).type = 'string';
+                individualDataCategories.get(categories[j]).type = 'string';
             }
 
-            if (nodeDemoDataCategories.get(categories[j]).type === 'string') {
+            if (individualDataCategories.get(categories[j]).type === 'string') {
                 dataEntryObject[categories[j]] = dataEntry[j];
-                nodeDemoDataCategories.get(categories[j]).elements.add(dataEntry[j])
+                individualDataCategories.get(categories[j]).elements.add(dataEntry[j])
             } else {
                 dataEntryObject[categories[j]] = parseFloat(dataEntry[j]);
-                nodeDemoDataCategories.get(categories[j]).elements.add(parseFloat(dataEntry[j]))
+                individualDataCategories.get(categories[j]).elements.add(parseFloat(dataEntry[j]))
             }
         }
 
-        // add data entry to node demographic data
-        nodeDemoData.set(dataEntry[0], dataEntryObject)
+        // add data entry to individual demographic data
+        individualData.set(dataEntry[0], dataEntryObject)
+    }
+
+    // sort categories
+    for (let i = 0; i < categories.length; i++) {
+        const sortedElements = [...individualDataCategories.get(categories[i]).elements.values()]
+
+        if (individualDataCategories.get(categories[i]).type === 'string') {
+            sortedElements.sort()
+        } else {
+            sortedElements.sort((a, b) => a - b)
+        }
+
+        // add in "All" option
+        individualDataCategories.get(categories[i]).elements = new Set(["All", ...sortedElements])
     }
 
     // generate HTML elements for views
@@ -678,7 +749,7 @@ const getNodeDemoData = async () => {
  * Generates HTML elements for node views, one per category.
  */
 const generateNodeViews = () => {
-    const categories = [...nodeDemoDataCategories.keys()];
+    const categories = [...individualDataCategories.keys()];
     const container = document.getElementById("views-container");
     container.innerHTML = "";
     // loop through each category
@@ -698,18 +769,18 @@ const generateNodeViews = () => {
         select.classList.add("form-select", "view-select");
         select.setAttribute("category", categories[i]);
 
-        // add default option 
-        const defaultOption = document.createElement("option");
-        defaultOption.selected = true;
-        defaultOption.innerHTML = "All";
-        select.appendChild(defaultOption);
-
         // add options for each possible value
-        const values = [...nodeDemoDataCategories.get(categories[i]).elements];
-        if (nodeDemoDataCategories.get(categories[i]).type === 'number') {
-            values.sort((a, b) => a - b);
+        const values = [...individualDataCategories.get(categories[i]).elements]
+        if (individualDataCategories.get(categories[i]).type === 'number') {
+            // create "All" option
+            const allOption = document.createElement("option");
+            allOption.innerHTML = "All";
+            allOption.value = "All";
+            select.appendChild(allOption);
+
             // create default 10 options for each range of values
-            const min = values[0];
+            // use index 1 instead of index 0 since index 0 is "All" option
+            const min = values[1];
             const max = values[values.length - 1];
             const step = (max - min) / 10;
             for (let j = min; j <= max; j += step) {
@@ -719,10 +790,11 @@ const generateNodeViews = () => {
                 select.appendChild(option);
             }
         } else {
-            values.sort();
             // make "other" last value
             const otherIndex = values.map(string => string.toLowerCase()).indexOf("other");
             if (otherIndex !== -1) {
+                individualDataCategories.get(categories[i]).elements.delete(values[otherIndex])
+                individualDataCategories.get(categories[i]).elements.add(values[otherIndex])
                 const otherText = values.splice(otherIndex, 1);
                 values.push(otherText);
             }
@@ -749,13 +821,21 @@ document.getElementById("create-view-button").addEventListener("click", (e) => {
     // create view ID and add to map
     let viewID = "";
     let viewName = "";
+    let viewValues = [];
     const viewElements = document.getElementsByClassName("view-select");
     for (let i = 0; i < viewElements.length; i++) {
         viewID += viewElements[i].selectedIndex + (i === viewElements.length - 1 ? "" : "-");
+        viewValues.push(viewElements[i].value)
 
         if (viewElements[i].selectedIndex !== 0) {
             viewName += viewElements[i].getAttribute("category") + "-" + viewElements[i].value + ", ";
         }
+    }
+
+    // check if view element exists
+    if (document.getElementById("view-entry-" + viewID) !== null) {
+        alert("View already exists.");
+        return;
     }
 
     if (viewName === "") {
@@ -767,14 +847,13 @@ document.getElementById("create-view-button").addEventListener("click", (e) => {
 
     nodeViews.set(viewID, {
         color: document.getElementById("view-color").value,
-        name: viewName
+        name: viewName,
+        values: viewValues
     })
 
-    // check if view element exists
-    if (document.getElementById("view-entry-" + viewID) !== null) {
-        alert("View already exists.");
-        return;
-    }
+    updateViews();
+
+    PAIRWISE_GRAPH.setData(data.nodes, data.links)
 
     // create view element
     const viewEntryElement = document.createElement("div");
