@@ -200,7 +200,7 @@ const updateData = () => {
 
     let views = [...nodeViews.keys()];
     for (let i = 0; i < views.length; i++) {
-        updateViews(views[i])
+        addView(views[i])
     }
     log("Setting graph data...")
     PAIRWISE_GRAPH.setData(data.nodes, data.links)
@@ -221,19 +221,23 @@ const updateData = () => {
  * Updates graph nodes' colors / views with given viewID. 
  * 
  */
-const updateViews = (viewID) => {
+const addView = (viewID) => {
     const nodesKeys = [...nodesMap.keys()]
     const viewValues = nodeViews.get(viewID).values;
+    // loop through current nodes
     for (let i = 0; i < nodesKeys.length; i++) {
+        // get sequence's corresponding individual, return if not found
         const correspondingIndividual = individualData.get(nodesKeys[i].split("|")[1]);
         if (correspondingIndividual === undefined) {
             continue;
         }
 
+        // get individual's (demographic) data
         const individualDemoKeys = Object.keys(correspondingIndividual);
         const individualDemoValues = Object.values(correspondingIndividual);
         let add = true;
 
+        // check if sequence's corresponding individual matches view
         for (let j = 0; j < individualDemoKeys.length; j++) {
             if (viewValues[j] === "All") {
                 continue;
@@ -253,16 +257,19 @@ const updateViews = (viewID) => {
             }
         }
 
-        console.log(add);
-        console.log(individualDemoValues);
-        console.log(viewValues);
-
         if (add) {
             nodesMap.get(nodesKeys[i]).views.add(viewID)
         }
     }
 
-    console.log(nodesMap)
+    setNodeDataFromMap();
+}
+
+const deleteView = (viewID) => {
+    const nodesKeys = [...nodesMap.keys()]
+    for (let i = 0; i < nodesKeys.length; i++) {
+        nodesMap.get(nodesKeys[i]).views.delete(viewID)
+    }
 
     setNodeDataFromMap();
 }
@@ -861,7 +868,7 @@ document.getElementById("create-view-button").addEventListener("click", (e) => {
         values: viewValues
     })
 
-    updateViews(viewID);
+    addView(viewID);
 
     PAIRWISE_GRAPH.setData(data.nodes, data.links)
 
@@ -887,6 +894,11 @@ document.getElementById("create-view-button").addEventListener("click", (e) => {
     viewColor.classList.add("view-entry-color", "form-control", "form-control-color", "border-secondary");
     viewColor.id = "view-entry-color-" + viewID;
     viewPreview.appendChild(viewColor);
+    viewColor.addEventListener("input", (e) => {
+        nodeViews.get(viewID).color = e.target.value;
+        setNodeDataFromMap();
+        PAIRWISE_GRAPH.setData(data.nodes, data.links)
+    })
 
     const viewDelete = document.createElement("button");
     viewDelete.classList.add("btn", "btn-danger", "view-entry-delete");
@@ -894,6 +906,8 @@ document.getElementById("create-view-button").addEventListener("click", (e) => {
     viewDelete.addEventListener("click", () => {
         document.getElementById("view-entry-" + viewID).remove();
         nodeViews.delete(viewID);
+        deleteView(viewID);
+        PAIRWISE_GRAPH.setData(data.nodes, data.links)
     })
     viewPreview.appendChild(viewDelete);
 
