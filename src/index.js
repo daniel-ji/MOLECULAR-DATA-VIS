@@ -26,12 +26,15 @@ const MAX_THRESHOLD = 0.05;
 let threshold = 0.015;
 // array of all pairwise distances (links), parsed from uploaded file
 const pairwiseDistances = [];
+// array of current pairwise distances (links), not filtered
+let nonFilteredLinks = [];
 
 /** SEQUENCES (NODES) */
 // a set of all nodes uploaded from the file, only changes when a new file is uploaded
 const ALL_NODES = new Set();
+// a set of all current nodes before any filters are applied
+let nonFilteredNodes = new Set();
 // a map of all current nodes in the graph, with their supplementary data (adjacent nodes, color, etc.)
-// TODO: this doesn't update with the cluster filters, should it? 
 const nodesMap = new Map();
 // individual demographic data, mapped by ID
 const individualData = new Map();
@@ -47,8 +50,16 @@ let clusterFilterType = "all";
 let clusterNodeMin = 0;
 // the number of largest clusters to show
 let maxClusterCount = 0;
+// current cluster data, without filters
+let nonFilteredClusterData; 
 // current cluster data
 let clusterData;
+
+/** CLUSTERS PI GRAPH DATA */
+const piData = {
+    nodes: [],
+    links: [],
+};
 
 /** FORM INTERFACE */
 // number of steps in the form
@@ -75,7 +86,7 @@ const PAIRWISE_GRAPH_CONFIG = {
     nodeColor: (node) => {
         return node.color ?? "#000000";
     },
-    nodeSize: 6,
+    nodeSize: 7,
     linkColor: "#a3a3a3",
     linkArrows: false,
     linkWidth: 0.2,
@@ -99,7 +110,7 @@ const PAIRWISE_GRAPH_CONFIG = {
         friction: 1,
         linkDistance: 50,
         gravity: 0.2,
-        decay: 100000,
+        decay: 99999999,
         linkSpring: 0.1,
     }
 }
@@ -147,11 +158,14 @@ const updateData = () => {
     };
 
     // set nodes
-    setNodeDataFromMap();
-
     getClusterData();
 
+    nonFilteredLinks = data.links;
+    nonFilteredClusterData = clusterData;
+    nonFilteredNodes = new Set(data.nodes);
+
     if (clusterFilterType === "all") {
+        setNodeDataFromMap();
         // do no filtering
     } else if (clusterFilterType === "clusterNodeMin" || clusterFilterType === "maxClusterCount") {
         log("Filtering clusters...")
@@ -185,14 +199,14 @@ const updateData = () => {
         }
 
         // set data to filtered nodes and links
-        setNodeDataFromMap();
         data.links = filteredLinks;
-
+        
         // update nodesMap
         nodesMap.clear();
         for (let i = 0; i < data.links.length; i++) {
             addLinkToData(data.links[i])
         }
+        setNodeDataFromMap();
 
         log("Done filtering clusters...")
         getClusterData();
@@ -323,7 +337,7 @@ const addLinkToData = (link) => {
 // go back and forth between different graph elements
 document.getElementById("graph-arrow-left").addEventListener("click", () => {
     // change graph
-    graphCounter = (graphCounter - 1) % graphElements.length;
+    graphCounter = (graphCounter - 1 + graphElements.length) % graphElements.length;
     updateGraphElement();
 })
 document.getElementById("graph-arrow-right").addEventListener("click", () => {
@@ -348,6 +362,10 @@ const updateGraphElement = () => {
             PAIRWISE_GRAPH.fitView()
             updatedGraph = false;
         }, 250)
+    }
+
+    if (graphCounter === 2) {
+        clusterPiGraph.centerAt(0.65 * window.innerWidth / 2, window.innerHeight / 2)
     }
 
     // update label
@@ -569,7 +587,13 @@ const getClusterData = () => {
 
 // ----------- CLUSTER GRAPH GENERATION ------------
 const generateClusterGraph = () => {
+    piData.nodes.length = 0;
+    for (let i = clusterData.clusterSizes.length - 1; i >= 0; i--) {
+        piData.nodes.push({ id: i, val: Math.sqrt(clusterData.clusterSizes[i]) * 2, count: clusterData.clusterSizes[i]});
+    }
 
+    clusterPiGraph.graphData(piData);
+    clusterPiGraph.centerAt(0.65 * window.innerWidth / 2, window.innerHeight / 2)
 }
 
 // ----------- HISTOGRAM GENERATION ------------
@@ -664,14 +688,14 @@ const generateHistogram = () => {
 // ---------- SUMMARY STATISTICS GENERATION ------------
 const generateSummaryStatistics = () => {
     // sort cluster sizes to get median
-    clusterData.clusterSizes.sort((a, b) => a - b);
+    nonFilteredClusterData.clusterSizes.sort((a, b) => a - b);
 
-    document.getElementById("summary-node-count").innerHTML = data.nodes.length;
-    document.getElementById("summary-singleton-count").innerHTML = ALL_NODES.size - data.nodes.length;
-    document.getElementById("summary-edge-count").innerHTML = data.links.length;
-    document.getElementById("summary-cluster-count").innerHTML = clusterData.clusters.length;
-    document.getElementById("summary-cluster-mean").innerHTML = (clusterData.clusterSizes.reduce((a, b) => a + b, 0) / clusterData.clusterSizes.length).toFixed(2);
-    document.getElementById("summary-cluster-median").innerHTML = clusterData.clusterSizes[Math.floor(clusterData.clusterSizes.length / 2)];
+    document.getElementById("summary-node-count").innerHTML = nonFilteredNodes.size;
+    document.getElementById("summary-singleton-count").innerHTML = ALL_NODES.size - nonFilteredNodes.size;
+    document.getElementById("summary-edge-count").innerHTML = nonFilteredLinks.length;
+    document.getElementById("summary-cluster-count").innerHTML = nonFilteredClusterData.clusters.length;
+    document.getElementById("summary-cluster-mean").innerHTML = (nonFilteredClusterData.clusterSizes.reduce((a, b) => a + b, 0) / nonFilteredClusterData.clusterSizes.length).toFixed(2);
+    document.getElementById("summary-cluster-median").innerHTML = nonFilteredClusterData.clusterSizes[Math.floor(nonFilteredClusterData.clusterSizes.length / 2)];
 }
 
 // ----------- GET INDIVIDUAL DEMOGRAPHIC (SUPPLEMENTARY) DATA ------------
@@ -918,22 +942,29 @@ document.getElementById("create-view-button").addEventListener("click", (e) => {
     document.getElementById("view-entry-container").appendChild(viewEntryElement);
 })
 
-// ----------- THRESHOLD SLIDER HANDLING ------------
+// ----------- THRESHOLD INPUT HANDLING ------------
+let thresholdTimeout = undefined;
 
-// threshold slider input handling, checks if input is valid and updates threshold if so
+// threshold input handling, checks if input is valid and updates threshold if so
 document.getElementById("threshold-select").addEventListener("input", (e) => {
     threshold = parseFloat(e.target.value);
     thresholdValid = !isNaN(threshold) && threshold >= 0 && threshold <= MAX_THRESHOLD;
     if (thresholdValid) {
         document.getElementById("threshold-select").classList.remove('is-invalid')
         updateThresholdLabel();
+
+        clearTimeout(thresholdTimeout);
+
+        thresholdTimeout = setTimeout(() => {
+            updateData();
+        }, 500)
     } else {
         document.getElementById("threshold-select").classList.add('is-invalid')
     }
 })
 
 const updateThresholdLabel = () => {
-    document.getElementById("threshold-label").innerHTML = "Pairwise Distance Threshold Level: " + threshold.toFixed(4);
+    document.getElementById("threshold-label").innerHTML = "Maximum Pairwise Distance Threshold Level: " + threshold.toFixed(4);
 }
 
 // ----------- CLUSTER FILTERS ------------
@@ -998,12 +1029,6 @@ let filterStatusTimeout;
 
 // update button click handling, checks if inputs are valid and updates graph if so
 document.getElementById("filter-update").addEventListener("click", () => {
-    if (!thresholdValid) {
-        document.getElementById("threshold-select").classList.add("is-invalid");
-    } else {
-        document.getElementById("threshold-select").classList.remove("is-invalid");
-    }
-
     checkClusterValueValid();
     if (!clusterValid) {
         document.getElementById("cluster-filter-value").classList.add("is-invalid");
@@ -1011,7 +1036,7 @@ document.getElementById("filter-update").addEventListener("click", () => {
         document.getElementById("cluster-filter-value").classList.remove("is-invalid");
     }
 
-    if (thresholdValid && clusterValid) {
+    if (clusterValid) {
         document.getElementById("filter-update-status").classList.remove("d-none");
         document.getElementById("filter-update-status").innerHTML = "Graph updated!";
         updateData();
@@ -1050,3 +1075,27 @@ updateGraphElement();
 // update form step
 updateForm();
 updateThresholdLabel();
+
+const clusterPiGraph = ForceGraph();
+clusterPiGraph(document.getElementById("cluster-pi-graph"))
+    .width(0.65 * window.innerWidth)
+    .d3Force('charge', d3.forceManyBody().strength(0.5))
+    .d3Force('collide', d3.forceCollide(node => node.val * 1.3))
+    .d3Force('center', d3.forceCenter(0.65 * window.innerWidth / 2, window.innerHeight / 2))
+    .enableNodeDrag(false)
+    .nodeCanvasObject((node, ctx, globalScale) => {
+        ctx.fillStyle = "#a3a3a3"
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, node.val, 0, 2 * Math.PI);
+        ctx.fill();
+        // set font color to white
+        ctx.fillStyle = "#ffffff"
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        // adjust font size to node size
+        ctx.font = `${Math.round(node.val / 2)}px monospace`;
+        // create label of node.count
+        ctx.fillText(node.count, node.x, node.y);
+    })
+
+clusterPiGraph.centerAt(0.65 * window.innerWidth / 2, window.innerHeight / 2)

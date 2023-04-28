@@ -88,13 +88,18 @@ body {
         }
     }
 
-    #summary-table {
-        position: absolute;
-        top: 20%;
-        left: 20%;
-        width: 60%;
-        padding: 2vh 2vw;
+    #graph-element-3 {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+
+        #summary-table {
+            width: 60%;
+            padding: 2vh 2vw;
+        }
     }
+
 
     #zoom-to-fit {
         position: absolute;
