@@ -62,12 +62,20 @@
                         <td id="summary-cluster-count"></td>
                     </tr>
                     <tr>
-                        <td>Mean Cluster Size</td>
+                        <td>Mean Cluster Size:</td>
                         <td id="summary-cluster-mean"></td>
                     </tr>
                     <tr>
                         <td>Median Cluster Size:</td>
                         <td id="summary-cluster-median"></td>
+                    </tr>
+                    <tr>
+                        <td>Mean Pairwise Distance:</td>
+                        <td id="summary-pairwise-mean"></td>
+                    </tr>
+                    <tr>
+                        <td>Median Pairwise Distance:</td>
+                        <td id="summary-pairwise-median"></td>
                     </tr>
                 </tbody>
             </table>
@@ -109,7 +117,7 @@
                 <p class="mt-3"><i class="bi bi-asterisk text-danger"></i> Required</p>
             </div>
 
-            <div id="input-step-2" class="input-step d-none">
+            <!-- <div id="input-step-2" class="input-step d-none">
                 <h3 class="w-100 text-center mb-5">Step 2: Filter Clusters</h3>
 
                 <div id="cluster-filter" class="mb-3">
@@ -126,10 +134,10 @@
 
                 <button id="filter-update" class="btn btn-primary mt-3">Update</button>
                 <p class="mt-3 text-success text-center d-none" id="filter-update-status">Updating...</p>
-            </div>
+            </div> -->
 
-            <div id="input-step-3" class="input-step d-none">
-                <h3 class="w-100 text-center mb-5">Step 3: Create Node Views</h3>
+            <div id="input-step-2" class="input-step d-none">
+                <h3 class="w-100 text-center mb-5">Step 2: Create Node Views</h3>
 
                 <div id="views-container">
                     <!-- Dynamically generated on node data load in index.js-->
