@@ -77,6 +77,9 @@ const piData = {
     links: [],
 };
 
+/** HISTOGRAM VARIABLES */
+let histogramBarCount = 0;
+
 /** FORM INTERFACE */
 // number of steps in the form
 const TOTAL_STEPS = 2;
@@ -638,6 +641,11 @@ const getClusterData = () => {
         clusterDistribution.set(cluster.size, (clusterDistribution.get(cluster.size) || 0) + 1);
     }
 
+    // also set histogram bar count variable to largest cluster size 
+    histogramBarCount = Math.max(...clusterSizes);
+    document.getElementById("cluster-histogram-bar-count").value = histogramBarCount;
+    document.getElementById("cluster-histogram-bar-hint").innerHTML = "Default (Intervals of 1): " + histogramBarCount;
+
     clusterStats.sort((a, b) => a.cluster.size - b.cluster.size)
     data.clusters = { clusterStats, clusterSizes, clusterDistribution };
     log("Done generating clusters...")
@@ -655,6 +663,18 @@ const generateClusterGraph = () => {
 }
 
 // ----------- HISTOGRAM GENERATION ------------
+document.getElementById("cluster-histogram-bar-count").addEventListener("input", (e) => {
+    // validation
+    if (isNaN(e.target.value) || parseInt(e.target.value) < 0) {
+        return;
+    }
+
+    histogramBarCount = parseInt(e.target.value);
+    log("Updating histogram...", true)
+    generateHistogram();
+    log("Done updating histogram...")
+})
+
 const generateHistogram = () => {
     if (data.clusters.clusterSizes.length === 0) {
         return;
@@ -698,7 +718,7 @@ const generateHistogram = () => {
     // set the parameters for the histogram
     const histogram = d3.bin()
         .domain(x.domain())  // then the domain of the graphic
-        .thresholds(x.ticks(50)); // then the numbers of bins
+        .thresholds(x.ticks(histogramBarCount)); // then the numbers of bins
     // TODO: make bins editable
 
     // And apply this function to data to get the bins

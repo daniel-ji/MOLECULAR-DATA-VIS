@@ -88,6 +88,23 @@ body {
         }
     }
 
+    #graph-element-1 {
+
+        #cluster-histogram-controls {
+            position: absolute;
+            top: 0;
+            right: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 15vw;
+            border-left: 4px solid black;
+            border-bottom: 4px solid black;
+            padding: 0 1.5vw;
+        }
+    }
+
     #graph-element-3 {
         display: flex;
         flex-direction: column;
@@ -97,6 +114,12 @@ body {
         #summary-table {
             width: 60%;
             padding: 2vh 2vw;
+            
+            td {
+                padding: 0.6rem;
+                border-color: black;
+                border-width: 2px;
+            }
         }
     }
 
