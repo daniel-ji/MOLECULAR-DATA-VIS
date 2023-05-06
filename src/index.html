@@ -25,7 +25,7 @@
             <div id="cluster-histogram"></div>
             <div id="cluster-histogram-controls">
                 <h5 class="mb-3">Bar Tick Intervals Count:</h5> 
-                <input class="form-control w-50" type="number" id="cluster-histogram-bar-count" min="1" max="100" value="10" />
+                <input class="form-control w-50" type="number" id="cluster-histogram-bar-count" min="1" value="10" />
                 <div class="form-text" id="cluster-histogram-bar-hint">Default (Intervals of 1): </div>
             </div>
         </div>
@@ -142,7 +142,21 @@
             </div> -->
 
             <div id="input-step-2" class="input-step d-none">
-                <h3 class="w-100 text-center mb-5">Step 2: Create Node Views</h3>
+                <h3 class="w-100 text-center mb-5">Step 2: Adjust Quantitative Demographic Data Intervals</h3>
+
+                <h4 class="text-center">Quantitative Categories</h4>
+                <select id="number-category-intervals-select" class="form-select mt-3 mb-5">
+                    <!-- Dynamically generated on node data load in index.js-->
+                </select>
+
+                <div id="number-category-list-container">
+                    <h4 class="text-center">Intervals</h4>
+                    <!-- Dynamically generated on node data load in index.js-->
+                </div>
+            </div>
+
+            <div id="input-step-3" class="input-step d-none">
+                <h3 class="w-100 text-center mb-5">Step 3: Create Node Views</h3>
 
                 <div id="views-container">
                     <!-- Dynamically generated on node data load in index.js-->

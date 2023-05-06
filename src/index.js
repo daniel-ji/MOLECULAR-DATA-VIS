@@ -1,3 +1,4 @@
+// OVERALL TODO: refactor document.getElementById b/c of runtime?
 import { Graph } from '@cosmograph/cosmos'
 import * as d3 from "d3";
 import './styles/index.scss'
@@ -6,6 +7,8 @@ import './styles/index.scss'
 /** READING FILES */
 // size of chunks to read from uploaded file
 const CHUNK_SIZE = 1024 * 1024 * 10;
+// whether or not the pairwise distance file has been reuploaded
+let reuploadedPairwise = true;
 
 /** GRAPH DATA */
 const data = {
@@ -82,7 +85,7 @@ let histogramBarCount = 0;
 
 /** FORM INTERFACE */
 // number of steps in the form
-const TOTAL_STEPS = 2;
+const TOTAL_STEPS = 3;
 // current step in the form
 let stepCounter = 1;
 
@@ -262,6 +265,144 @@ const updateData = () => {
     log("Done generating other diagrams (done updating data)...")
 }
 
+
+// ----------- FILE UPLOAD EVENT HANDLERS ------------
+document.getElementById("upload-pairwise-file").addEventListener("click", () => {
+    reuploadedPairwise = true;
+    document.getElementById("upload-pairwise-file").value = "";
+    document.getElementById("upload-success").classList.add("d-none");
+})
+
+document.getElementById("upload-data-file").addEventListener("click", () => {
+    reuploadedDemo = true;
+    document.getElementById("upload-data-file").value = "";
+    document.getElementById("upload-success").classList.add("d-none");
+})
+
+document.getElementById("upload-pairwise-file").addEventListener("change", () => {
+    document.getElementById("upload-success").innerHTML = "";
+})
+
+document.getElementById("upload-data-file").addEventListener("change", () => {
+    document.getElementById("upload-success").innerHTML = "";
+})
+
+// Submit button for uploading data file
+document.getElementById("read-file").addEventListener("click", async () => {
+    if (!document.getElementById("upload-pairwise-file").files[0]) {
+        alert("Please select a file.");
+        return;
+    }
+
+    // update status
+    document.getElementById("upload-success").classList.remove("d-none");
+    document.getElementById("upload-success").innerHTML = "Loading...";
+
+    // reset data, get individual demographic data, and get pairwise distances (actual node / link data)
+    resetData();
+    await getIndividualDemoData();
+    if (reuploadedPairwise) {
+        await getPairwiseDistances();
+        reuploadedPairwise = false;
+    }
+
+    // update graph after getting data
+    updateData();
+    PAIRWISE_GRAPH_CANVAS.style.display = "block";
+
+    // update status
+    document.getElementById("upload-success").style.display = "block";
+    document.getElementById("upload-success").innerHTML = "Done!"
+})
+
+// ----------- SEQUENCE (nodes) AND PAIRWISE DISTANCE (links) PARSING ------------
+/**
+ * Reads the uploaded data file and updates global variables with the node and link node data (not demographic data, but actual data)
+ */
+const getPairwiseDistances = async () => {
+    const file = document.getElementById("upload-pairwise-file").files[0];
+    console.log("\n\n\n-------- READING FILE -------- \n\n\n")
+    log("Reading file...", true)
+
+    const array = await readFileAsync(file);
+    log("Done reading file...")
+
+    const decoder = new TextDecoder("utf-8");
+    // for when the chunk_size split doesn't match a full line
+    let splitString = "";
+
+    log("Parsing file...", true)
+    // iterate over the file in chunks, readAsText can't read the entire file 
+    for (let i = 0; i < array.byteLength; i += CHUNK_SIZE) {
+        // get chunk and decode it
+        const text = decoder.decode(array.slice(i, i + CHUNK_SIZE));
+        const lines = text.split("\n")
+        for (let j = 0; j < lines.length; ++j) {
+            // line represents a single pairwise distance entry
+            let line = lines[j];
+            // split line into data entry columns
+            let columns = line.split("\t");
+
+            // edge case: very first line of file (header line)
+            if (i === 0 && j === 0) {
+                continue;
+            }
+
+            // edge case: first line is split (part of the line is in the previous chunk)
+            if (j === 0 && columns.length < 3) {
+                // add it to the splitString and reset split string
+                line = splitString + line;
+                splitString = "";
+                columns = line.split("\t")
+            }
+
+            // edge case: last line is split (part of the line is in the next chunk)
+            if (j === lines.length - 1 && lines[j].length > 0) {
+                // set the splitString to the last line
+                splitString = line;
+                continue;
+            }
+
+            // add to map of all pairwise distances if below threshold
+            if (parseFloat(columns[2]) < MAX_THRESHOLD) {
+                const min = columns[0].localeCompare(columns[1]) < 0 ? columns[0] : columns[1];
+                const max = columns[0].localeCompare(columns[1]) < 0 ? columns[1] : columns[0];
+                ALL_LINKS.set(min + "-" + max, {
+                    id: min + "-" + max,
+                    source: columns[0],
+                    target: columns[1],
+                    value: parseFloat(columns[2]),
+                })
+            }
+
+            // skip empty lines / lines with missing data
+            if (columns[0] === undefined || columns[0] === "" || columns[1] === undefined || columns[1] === "") {
+                continue;
+            }
+
+            // add nodes to set of all nodes
+            ALL_NODES.add(columns[0]);
+            ALL_NODES.add(columns[1]);
+        }
+    }
+
+    log("Done parsing file...")
+}
+
+// helper function to promise-fy file read and make it awaitable 
+const readFileAsync = async (file, asText = false) => {
+    console.log(file.slice(0, 100))
+
+    const reader = new FileReader();
+    return new Promise((resolve, reject) => {
+        reader.onload = (e) => {
+            resolve(e.target.result);
+        };
+        reader.onerror = reject;
+        asText ? reader.readAsText(file) : reader.readAsArrayBuffer(file);
+    })
+}
+
 /**
  * Updates graph nodes' colors / views with given viewID. 
  * 
@@ -369,12 +510,10 @@ const addLinkToData = (link) => {
 
 // go back and forth between different graph elements
 document.getElementById("graph-arrow-left").addEventListener("click", () => {
-    // change graph
     graphCounter = (graphCounter - 1 + graphElements.length) % graphElements.length;
     updateGraphElement();
 })
 document.getElementById("graph-arrow-right").addEventListener("click", () => {
-    // change graph
     graphCounter = (graphCounter + 1) % graphElements.length;
     updateGraphElement();
 })
@@ -446,134 +585,6 @@ const updateForm = () => {
     }
 }
 
-// ----------- FILE UPLOAD EVENT HANDLERS ------------
-document.getElementById("upload-pairwise-file").addEventListener("click", () => {
-    document.getElementById("upload-pairwise-file").value = "";
-    document.getElementById("upload-success").classList.add("d-none");
-})
-
-document.getElementById("upload-data-file").addEventListener("click", () => {
-    document.getElementById("upload-data-file").value = "";
-    document.getElementById("upload-success").classList.add("d-none");
-})
-
-document.getElementById("upload-pairwise-file").addEventListener("change", () => {
-    document.getElementById("upload-success").innerHTML = "";
-})
-
-document.getElementById("upload-data-file").addEventListener("change", () => {
-    document.getElementById("upload-success").innerHTML = "";
-})
-
-// Submit button for uploading data file
-document.getElementById("read-file").addEventListener("click", async () => {
-    if (!document.getElementById("upload-pairwise-file").files[0]) {
-        alert("Please select a file.");
-        return;
-    }
-
-    // update status
-    document.getElementById("upload-success").classList.remove("d-none");
-    document.getElementById("upload-success").innerHTML = "Loading...";
-
-    // reset data, get individual demographic data, and get pairwise distances (actual node / link data)
-    resetData();
-    await getIndividualDemoData();
-    await getPairwiseDistances();
-
-    // update graph after getting data
-    updateData();
-    PAIRWISE_GRAPH_CANVAS.style.display = "block";
-
-    // update status
-    document.getElementById("upload-success").style.display = "block";
-    document.getElementById("upload-success").innerHTML = "Done!"
-})
-
-// ----------- SEQUENCE (nodes) AND PAIRWISE DISTANCE (links) PARSING ------------
-/**
- * Reads the uploaded data file and updates global variables with the node and link node data (not demographic data, but actual data)
- */
-const getPairwiseDistances = async () => {
-    const file = document.getElementById("upload-pairwise-file").files[0];
-    console.log("\n\n\n-------- READING FILE -------- \n\n\n")
-    log("Reading file...", true)
-
-    const array = await readFileAsync(file);
-    log("Done reading file...")
-
-    const decoder = new TextDecoder("utf-8");
-    // for when the chunk_size split doesn't match a full line
-    let splitString = "";
-
-    log("Parsing file...", true)
-    // iterate over the file in chunks, readAsText can't read the entire file 
-    for (let i = 0; i < array.byteLength; i += CHUNK_SIZE) {
-        // get chunk and decode it
-        const text = decoder.decode(array.slice(i, i + CHUNK_SIZE));
-        const lines = text.split("\n")
-        for (let j = 0; j < lines.length; ++j) {
-            // line represents a single pairwise distance entry
-            let line = lines[j];
-            // split line into data entry columns
-            let columns = line.split("\t");
-
-            // edge case: very first line of file (header line)
-            if (i === 0 && j === 0) {
-                continue;
-            }
-
-            // edge case: first line is split (part of the line is in the previous chunk)
-            if (j === 0 && columns.length < 3) {
-                // add it to the splitString and reset split string
-                line = splitString + line;
-                splitString = "";
-                columns = line.split("\t")
-            }
-
-            // edge case: last line is split (part of the line is in the next chunk)
-            if (j === lines.length - 1 && lines[j].length > 0) {
-                // set the splitString to the last line
-                splitString = line;
-                continue;
-            }
-
-            // add to map of all pairwise distances if below threshold
-            if (parseFloat(columns[2]) < MAX_THRESHOLD) {
-                ALL_LINKS.set(columns[0] + "-" + columns[1], {
-                    id: columns[0] + "-" + columns[1],
-                    source: columns[0],
-                    target: columns[1],
-                    value: parseFloat(columns[2]),
-                })
-            }
-
-            // skip empty lines / lines with missing data
-            if (columns[0] === undefined || columns[0] === "" || columns[1] === undefined || columns[1] === "") {
-                continue;
-            }
-
-            // add nodes to set of all nodes
-            ALL_NODES.add(columns[0]);
-            ALL_NODES.add(columns[1]);
-        }
-    }
-
-    log("Done parsing file...")
-}
-
-// helper function to promise-fy file read and make it awaitable 
-const readFileAsync = async (file, asText = false) => {
-    const reader = new FileReader();
-    return new Promise((resolve, reject) => {
-        reader.onload = (e) => {
-            resolve(e.target.result);
-        };
-        reader.onerror = reject;
-        asText ? reader.readAsText(file) : reader.readAsArrayBuffer(file);
-    })
-}
-
 // ----------- CLUSTER GENERATION ------------
 /**
  * Creates cluster data from the pairwise distance data by using a BFS to find all nodes within a cluster
@@ -614,16 +625,14 @@ const getClusterData = () => {
         const clusterNodes = [...cluster.values()];
         for (let i = 0; i < clusterNodes.length; i++) {
             const node1 = clusterNodes[i];
-            for (let j = i + 1; j < clusterNodes.length; j++) {
-                const node2 = clusterNodes[j];
-                if (!(unfilteredLinks.has(node1 + "-" + node2) || unfilteredLinks.has(node2 + "-" + node1))) {
-                    continue;
-                }
-                
-                for (let k = j + 1; k < clusterNodes.length; k++) {
-                    const node3 = clusterNodes[k];
-                    if ((unfilteredLinks.has(node1 + "-" + node3) || unfilteredLinks.has(node3 + "-" + node1)) && 
-                    (unfilteredLinks.has(node2 + "-" + node3) || unfilteredLinks.has(node3 + "-" + node2))) {
+            const adjacentNodes = nodesMap.get(node1).adjacentNodes;
+            const adjacentNodesArray = [...adjacentNodes];
+            for (let j = 0; j < adjacentNodesArray.length; j++) {
+                const node2 = adjacentNodesArray[j];
+                const adjacentNodes2 = [...nodesMap.get(node2).adjacentNodes];
+
+                for (let k = 0; k < adjacentNodes2.length; k++) {
+                    if (adjacentNodes.has(adjacentNodes2[k])) {
                         triangleCount++;
                     }
                 }
@@ -719,7 +728,6 @@ const generateHistogram = () => {
     const histogram = d3.bin()
         .domain(x.domain())  // then the domain of the graphic
         .thresholds(x.ticks(histogramBarCount)); // then the numbers of bins
-    // TODO: make bins editable
 
     // And apply this function to data to get the bins
     const bins = histogram(data.clusters.clusterSizes);
@@ -727,7 +735,7 @@ const generateHistogram = () => {
     // Y axis: scale and draw:
     const y = d3.scaleLinear()
         .range([height, 0]);
-    y.domain([0, d3.max(bins, function (d) { return d.length; })]);
+    y.domain([0, d3.max(bins, function (d) { return d.length; }) * 1.1]);
     svg.append("g")
         .call(d3.axisLeft(y));
 
@@ -757,7 +765,7 @@ const generateHistogram = () => {
         .append("text")
         .attr("class", "label")
         .attr("text-anchor", "middle")
-        .attr("font-size", "12px")
+        .attr("font-size", "11px")
         .attr("x", (function (d) { return (x(d.x1) + x(d.x0)) / 2 }))
         .attr("y", function (d) { return y(d.length) - 12; })
         .text(d => d.length > 0 ? d.length : null);
@@ -790,7 +798,7 @@ const generateSummaryStatistics = () => {
     triples /= 3;
 
     // calculate transitivity
-    data.stats.transitivity = (triangleCount / triples).toFixed(2); 
+    data.stats.transitivity = (triangleCount / triples).toFixed(2);
 
     data.stats.triangleCount = triangleCount;
 
@@ -841,7 +849,7 @@ const getIndividualDemoData = async () => {
     const categories = lines[0].split(delimiter);
     // create new category for each column
     for (let i = 0; i < categories.length; i++) {
-        individualDataCategories.set(categories[i], { type: 'number', elements: new Set() })
+        individualDataCategories.set(categories[i], { type: 'string', elements: new Set() })
     }
 
     // edge case to remove empty line at end of file
@@ -870,8 +878,9 @@ const getIndividualDemoData = async () => {
         const dataEntryObject = {};
 
         for (let j = 1; j < categories.length; j++) {
-            if (isNaN(dataEntry[j])) {
-                individualDataCategories.get(categories[j]).type = 'string';
+            if (!isNaN(dataEntry[j])) {
+                individualDataCategories.get(categories[j]).type = 'number';
+                individualDataCategories.get(categories[j]).intervals = [];
             }
 
             if (individualDataCategories.get(categories[j]).type === 'string') {
@@ -901,12 +910,161 @@ const getIndividualDemoData = async () => {
         individualDataCategories.get(categories[i]).elements = new Set(["All", ...sortedElements])
     }
 
+    // create initial 5 categories for quantitative data
+    const individualDataCategoriesKeys = [...individualDataCategories.keys()];
+    for (let i = 0; i < individualDataCategoriesKeys.length; i++) {
+        if (individualDataCategories.get(individualDataCategoriesKeys[i]).type !== 'number') {
+            continue;
+        }
+
+        const values = [...individualDataCategories.get(individualDataCategoriesKeys[i]).elements]
+
+        // create intervals for numerical data (default of 5 even splits)
+        const min = values[1];
+        const max = values[values.length - 1];
+        const step = (max - min) / 5;
+        for (let j = min; j <= max; j += step) {
+            individualDataCategories.get(individualDataCategoriesKeys[i]).intervals.push(j);
+        }
+    }
+
+    // generate quantitative data intervals
+    generateQuantIntervals();
+
     // generate HTML elements for views
     generateNodeViews();
 
     log("Done parsing node supplementary data...")
 }
 
+// ----------- NODE VIEW QUANTITATIVE DATA INTERVALS ADJUSTMENT ------------
+document.getElementById("number-category-intervals-select").addEventListener("change", (e) => {
+    showQuantIntervals(e.target.value)
+})
+
+const showQuantIntervals = (category) => {
+    // hide all containers
+    const containers = document.getElementsByClassName("number-category-intervals-list");
+    for (let i = 0; i < containers.length; i++) {
+        containers[i].classList.add("d-none");
+    }
+
+    // show selected container
+    const selectedContainer = document.getElementById("number-category-intervals-list-" + category);
+    selectedContainer.classList.remove("d-none");
+}
+
+const generateQuantIntervals = () => {
+    const individualDataCategoriesKeys = [...individualDataCategories.keys()];
+    const select = document.getElementById("number-category-intervals-select");
+    const intervalsContainer = document.getElementById("number-category-list-container");
+    let firstContainer = -1;
+
+    for (let i = 1; i < individualDataCategoriesKeys.length; i++) {
+        if (individualDataCategories.get(individualDataCategoriesKeys[i]).type === 'number') {
+            if (firstContainer === -1) {
+                firstContainer = i;
+            }
+
+            // create option
+            const option = document.createElement("option");
+            option.value = individualDataCategoriesKeys[i];
+            option.innerHTML = individualDataCategoriesKeys[i];
+
+            select.appendChild(option)
+
+            // create div to hold all inputs for each category
+            const list = document.createElement("div");
+            list.classList.add("number-category-intervals-list", "d-none");
+            list.id = "number-category-intervals-list-" + individualDataCategoriesKeys[i];
+
+            generateQuantIntervalsList(list, individualDataCategoriesKeys[i], i);
+            intervalsContainer.appendChild(list);
+
+            if (firstContainer !== -1) {
+                showQuantIntervals(individualDataCategoriesKeys[firstContainer]);
+            }
+        }
+    }
+}
+
+const generateQuantIntervalsList = (listContainer, category, categoryIndex) => {
+    // clear container 
+    listContainer.innerHTML = "";
+
+    const intervals = individualDataCategories.get(category).intervals;
+    for (let j = 0; j < intervals.length; j++) {
+        const inputContainer = document.createElement("div");
+        inputContainer.classList.add("d-flex", "align-items-center");
+
+        // create input for each interval
+        const input = document.createElement("input");
+        input.type = "number";
+        input.step = 0.01;
+        input.classList.add("form-control", "my-3");
+        input.value = intervals[j].toFixed(2);
+        inputContainer.appendChild(input);
+
+        // first and last intervals are fixed
+        if (j === 0 || j === intervals.length - 1) {
+            // do nothing
+        } else {
+            // add delete button
+            const deleteButton = document.createElement("button");
+            deleteButton.classList.add("btn", "btn-danger", "ms-4");
+
+            const deleteIcon = document.createElement("i");
+            deleteIcon.classList.add("bi", "bi-trash");
+            deleteButton.appendChild(deleteIcon);
+
+            deleteButton.addEventListener("click", (e) => {
+                inputContainer.remove();
+                intervals.splice(j, 1);
+                updateNodeView(categoryIndex);
+            })
+
+            inputContainer.appendChild(deleteButton)
+
+        }
+
+        // add event listener to update intervals
+        input.addEventListener("input", (e) => {
+            const value = parseFloat(e.target.value);
+            if (value <= intervals[j - 1] || value >= intervals[j + 1]) {
+                // error, add red border
+                input.classList.add("border-danger");
+                return;
+            }
+
+            // remove red border if any
+            input.classList.remove("border-danger");
+            intervals[j] = parseFloat(e.target.value);
+            updateNodeView(categoryIndex);
+        })
+
+        listContainer.appendChild(inputContainer);
+
+        // create add interval button
+        if (j !== intervals.length - 1) {
+            const addButton = document.createElement("button");
+            addButton.classList.add("btn", "btn-primary", "ms-4");
+
+            const addIcon = document.createElement("i");
+            addIcon.classList.add("bi", "bi-plus");
+            addButton.appendChild(addIcon);
+
+            addButton.addEventListener("click", (e) => {
+                intervals.splice(j + 1, 0, (intervals[j] + intervals[j + 1]) / 2);
+                updateNodeView(categoryIndex);
+                generateQuantIntervalsList(listContainer, category, categoryIndex)
+            })
+
+            inputContainer.appendChild(addButton)
+        }
+    }
+}
+
+// ----------- NODE VIEW CREATION ------------
 /**
  * Generates HTML elements for node views, one per category.
  */
@@ -940,15 +1098,13 @@ const generateNodeViews = () => {
             allOption.value = "All";
             select.appendChild(allOption);
 
-            // create default 10 options for each range of values
-            // use index 1 instead of index 0 since index 0 is "All" option
-            const min = values[1];
-            const max = values[values.length - 1];
-            const step = (max - min) / 10;
-            for (let j = min; j <= max; j += step) {
+            const intervals = individualDataCategories.get(categories[i]).intervals;
+            for (let j = 0; j < intervals.length - 1; j++) {
+                const startInterval = intervals[j];
+                const endInterval = intervals[j + 1];
                 const option = document.createElement("option");
-                option.innerHTML = j.toFixed(2) + " - " + (j + step).toFixed(2);
-                option.value = j.toFixed(2) + " - " + (j + step).toFixed(2);
+                option.innerHTML = startInterval.toFixed(2) + " - " + endInterval.toFixed(2);
+                option.value = startInterval.toFixed(2) + " - " + endInterval.toFixed(2);
                 select.appendChild(option);
             }
         } else {
@@ -977,7 +1133,37 @@ const generateNodeViews = () => {
     }
 }
 
-// ----------- NODE VIEW CREATION ------------
+/**
+ * Updates a node view, specified by its index in the individualDataCategories array.
+ * 
+ * @param {number} index index of the node view to update
+ */
+const updateNodeView = (index) => {
+    const select = document.getElementById("view-select-" + index);
+    select.innerHTML = "";
+
+    const individualDataCategoriesKeys = [...individualDataCategories.keys()];
+
+    // add options for each possible value
+    if (individualDataCategories.get(individualDataCategoriesKeys[index]).type === 'number') {
+        // create "All" option
+        const allOption = document.createElement("option");
+        allOption.innerHTML = "All";
+        allOption.value = "All";
+        select.appendChild(allOption);
+
+        const intervals = individualDataCategories.get(individualDataCategoriesKeys[index]).intervals;
+        for (let j = 0; j < intervals.length - 1; j++) {
+            const startInterval = intervals[j];
+            const endInterval = intervals[j + 1];
+            const option = document.createElement("option");
+            option.innerHTML = startInterval.toFixed(2) + " - " + endInterval.toFixed(2);
+            option.value = startInterval.toFixed(2) + " - " + endInterval.toFixed(2);
+            select.appendChild(option);
+        }
+    }
+}
+
 document.getElementById("create-view-button").addEventListener("click", (e) => {
     // TODO: add validation
     // create view ID and add to map
@@ -1191,8 +1377,6 @@ const log = (message, reset = false) => {
 // create new graph and hide it until user uploads a file
 const PAIRWISE_GRAPH = new Graph(PAIRWISE_GRAPH_CANVAS, PAIRWISE_GRAPH_CONFIG);
 PAIRWISE_GRAPH_CANVAS.style.display = "none";
-// update threshold label
-document.getElementById("threshold-label").innerHTML = "Pairwise Distance Threshold Level: " + threshold.toFixed(4);
 // show first graph element
 document.getElementById('graph-element-0').classList.remove('d-none')
 updateGraphElement();
