@@ -10,7 +10,7 @@ const CHUNK_SIZE = 1024 * 1024 * 10;
 // whether or not the pairwise distance file has been reuploaded
 let reuploadedPairwise = true;
 
-/** GRAPH DATA */
+/** GRAPH DATA [DONE] */
 const data = {
     nodes: [],
     links: [],
@@ -274,7 +274,6 @@ document.getElementById("upload-pairwise-file").addEventListener("click", () => 
 })
 
 document.getElementById("upload-data-file").addEventListener("click", () => {
-    reuploadedDemo = true;
     document.getElementById("upload-data-file").value = "";
     document.getElementById("upload-success").classList.add("d-none");
 })

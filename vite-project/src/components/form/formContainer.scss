@@ -1,0 +1,62 @@
+#form-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 35vw;
+    height: 100%;
+    padding: 0vh 2vw;
+
+    h1 {
+        text-align: center;
+    }
+
+    #input-form-content {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        height: 100%;
+        padding: 0 2vw;
+        overflow-y: scroll;
+    
+        .bi-asterisk {
+            vertical-align: top;
+            font-size: 0.5rem;
+        }
+    
+        .input-step {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+
+        #create-views {
+            #select-view-color {
+                display: inline-flex;
+                justify-content: center;
+                align-items: center;
+            }
+    
+            .view-entry-preview {
+                display: inline-flex;
+                justify-content: space-between;
+                align-items: center;
+
+                .view-entry-button {
+                    width: 75%;
+                }
+
+                .view-entry-delete {
+                    width: 10%;
+                }
+            }
+        }
+    }
+    
+    #step-action {
+        display: inline-flex;
+        justify-content: space-between;
+        width: 100%;
+    }
+}

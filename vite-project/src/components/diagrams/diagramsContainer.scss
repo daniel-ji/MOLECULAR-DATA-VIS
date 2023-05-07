@@ -1,0 +1,88 @@
+#diagrams-container {
+    position: relative;
+    border-right: 4px solid black;
+    width: 65vw;
+    height: 100%;
+
+    .graph-element {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+
+        .graph-title {
+            position: absolute;
+            top: 4vh;
+            left: 50%;
+            transform: translate(-50%, 0);
+        }
+    }
+
+    #node-graph {
+        #zoom-to-fit {
+            position: absolute;
+            top: 2vh;
+            right: 2vh;
+            height: 45px;
+            cursor: pointer;
+        }
+    }
+
+    #cluster-graph {
+        #cluster-histogram-controls {
+            position: absolute;
+            top: 0;
+            right: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 15vw;
+            border-left: 4px solid black;
+            border-bottom: 4px solid black;
+            padding: 0 1.5vw;
+        }
+    }
+
+    #summary-stats {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+
+        #summary-table {
+            width: 60%;
+            padding: 2vh 2vw;
+
+            td {
+                padding: 0.6rem;
+                border-color: black;
+                border-width: 2px;
+            }
+        }
+    }
+
+    #graph-arrow-right {
+        position: absolute;
+        top: 50%;
+        right: 3vw;
+        height: 5vh;
+        cursor: pointer;
+    }
+
+    #graph-arrow-left {
+        position: absolute;
+        top: 50%;
+        left: 3vw;
+        height: 5vh;
+        cursor: pointer;
+    }
+
+    #footer-label {
+        position: absolute;
+        bottom: 4vh;
+        left: 50%;
+        transform: translate(-50%, 0);
+    }
+}
