@@ -1,0 +1,8 @@
+need to reimplement: 
+
+- node views (creation, deletion, data structs for colors and additional node data)
+- cluster data generation 
+- cluster histogram generation
+- cluster summary statistics generation
+- intervals editing
+- cluster pi graph generation

@@ -1,0 +1,78 @@
+export const CHUNK_SIZE = 1024 * 1024 * 10;
+export const MAX_THRESHOLD = 0.05;
+export const MAX_INDIVIDUAL_CATEGORIES = 255;
+
+export const DEFAULT_DATA = {
+    nodes: [],
+    nodesMap: new Map(),
+    allNodes: new Set(),
+    links: [],
+    linksMap: new Map(),
+    allLinks: new Map(),
+    clusters: {
+        clusterStats: [],
+        clusterDistribution: new Map(),
+    },
+    unfilteredClusters: {
+        clusterStats: [],
+        clusterDistribution: new Map(),
+    },
+    stats: {
+        recalculate: true,
+        clusterMedian: 0,
+        clusterMean: 0,
+        assortativity: 0,
+        transitivity: 0,
+        triangleCount: 0,
+        meanPairwiseDistance: 0,
+        medianPairwiseDistance: 0,
+    },
+    demographicData: {
+        categories: new Map(), 
+        data: new Map(),
+    }
+};
+
+export const NODE_GRAPH_CANVAS_ID = "node-graph";
+export const NODE_GRAPH_CONFIG = {
+    backgroundColor: "#ffffff",
+    nodeColor: (node) => {
+        return node.color ?? "#000000";
+    },
+    nodeSize: 7,
+    linkColor: "#a3a3a3",
+    linkArrows: false,
+    linkWidth: 0.2,
+    linkVisibilityMinTransparency: 1,
+    randomSeed: 0,
+    simulation: {
+        repulsion: 2,
+        repulsionFromMouse: 0,
+        linkDistRandomVariationRange: [1, 1],
+        scaleNodesOnZoom: true,
+        friction: 1,
+        linkDistance: 50,
+        gravity: 0.2,
+        decay: 99999999,
+        linkSpring: 0.1,
+    }
+}
+
+export const READ_FILE_ASYNC = async (file, asText = false) => {
+    const reader = new FileReader();
+    return new Promise((resolve, reject) => {
+        reader.onload = (e) => {
+            resolve(e.target.result);
+        };
+        reader.onerror = reject;
+        asText ? reader.readAsText(file) : reader.readAsArrayBuffer(file);
+    })
+}
+
+let basetime = performance.now();
+export const LOG = (message, reset = false) => {
+    if (reset) {
+        basetime = performance.now();
+    }
+    console.log(message + "\n" + "Time: " + (performance.now() - basetime) + "ms");
+}

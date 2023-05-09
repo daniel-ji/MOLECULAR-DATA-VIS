@@ -24,7 +24,12 @@ export class DiagramsContainer extends Component {
     render() {
         return (
             <div id="diagrams-container">
-                {this.props.children[this.state.diagramCounter]}
+                {this.props.children.map((child, index) => {
+                    return (
+                    <div key={index} className={`${this.state.diagramCounter !== index && 'd-none'}`}>
+                        {child}
+                    </div>);
+                })}
                 <img src={arrowLeft} id="graph-arrow-left" title="Previous Diagram" onClick={this.decrementCounter} />
                 <img src={arrowRight} id="graph-arrow-right" title="Next Diagram" onClick={this.incrementCounter} />
                 <h5 id="footer-label">Diagram {this.state.diagramCounter + 1} of {this.props.children.length}</h5>

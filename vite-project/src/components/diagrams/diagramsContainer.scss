@@ -8,6 +8,7 @@
         position: absolute;
         width: 100%;
         height: 100%;
+        overflow: hidden;
         top: 0;
         left: 0;
 
@@ -19,7 +20,7 @@
         }
     }
 
-    #node-graph {
+    #node-graph-container {
         #zoom-to-fit {
             position: absolute;
             top: 2vh;
@@ -29,7 +30,7 @@
         }
     }
 
-    #cluster-graph {
+    #cluster-graph-container {
         #cluster-histogram-controls {
             position: absolute;
             top: 0;
@@ -37,11 +38,10 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            height: 15vw;
-            border-left: 4px solid black;
-            border-bottom: 4px solid black;
-            padding: 0 1.5vw;
+            justify-content: flex-start;
+            border-left: 3px solid black;
+            border-bottom: 3px solid black;
+            padding: 1.5vw 2vw 2vw 2vw;
         }
     }
 
