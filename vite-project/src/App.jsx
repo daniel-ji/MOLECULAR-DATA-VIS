@@ -185,6 +185,7 @@ export class App extends Component {
 		LOG("Done generating clusters...")
 	}
 
+	// TODO: move to summary stats component
 	updateSummaryStats = () => {
 		// alias
 		const data = this.state.data;
@@ -224,7 +225,7 @@ export class App extends Component {
 			sourceAverage += data.nodesMap.get(link.source).adjacentNodes.size;
 			targetAverage += data.nodesMap.get(link.target).adjacentNodes.size;
 		}
-		
+
 		sourceAverage /= data.links.length;
 		targetAverage /= data.links.length;
 
@@ -259,8 +260,8 @@ export class App extends Component {
 		this.setState({ thresholdValid })
 	}
 
-	setClusterHistogramData = (newData) => {
-		this.setState((prevState) => { return { clusterHistogram: { ...prevState.clusterHistogram, ...newData } } });
+	setClusterHistogramData = (newData, callback) => {
+		this.setState((prevState) => { return { clusterHistogram: { ...prevState.clusterHistogram, ...newData } } }, callback);
 	}
 
 	// TODO: update
@@ -268,10 +269,18 @@ export class App extends Component {
 		this.setState({ data: DEFAULT_DATA })
 	}
 
+	nodeGraphFitView = () => {
+		setTimeout(() => {
+			this.state.nodesGraph.fitView();
+		}, 250)
+	}
+
 	render() {
 		return (
 			<>
-				<DiagramsContainer>
+				<DiagramsContainer
+					nodeGraphFitView={this.nodeGraphFitView}
+				>
 					{/** each of the following components is a diagram **/}
 					<NodesGraph
 						nodesGraph={this.state.nodesGraph}
@@ -281,6 +290,7 @@ export class App extends Component {
 						histogramTicks={this.state.clusterHistogram.histogramTicks}
 						maxHistogramTicks={this.state.clusterHistogram.maxHistogramTicks}
 						setClusterHistogramData={this.setClusterHistogramData}
+						data={this.state.data}
 					/>
 					<SummaryStats
 						data={this.state.data}

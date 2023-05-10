@@ -18,6 +18,10 @@ export class DiagramsContainer extends Component {
     }
 
     decrementCounter = () => {
+        if (this.state.diagramCounter - 1 === 0) {
+            this.props.nodeGraphFitView();
+        }
+
         this.setState({ diagramCounter: Math.max(this.state.diagramCounter - 1, 0) })
     }
 
