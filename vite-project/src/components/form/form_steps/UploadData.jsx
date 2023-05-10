@@ -64,10 +64,7 @@ export class UploadData extends Component {
                 this.setState({ uploadLoading: false, uploadSuccess: true });
             });
         }
-
-        // update graph after getting data
-        this.props.updateDiagrams();
-
+        
         // update status
         this.setState({ uploadLoading: false, uploadSuccess: true });
     }
@@ -227,7 +224,7 @@ export class UploadData extends Component {
                 }
 
                 // edge case: last line is split (part of the line is in the next chunk)
-                if (j === lines.length - 1 && lines[j].length > 0) {
+                if (j === lines.length - 1 && lines[j].length > 0 && columns.length < 3) {
                     // set the splitString to the last line
                     splitString = line;
                     continue;
@@ -249,6 +246,8 @@ export class UploadData extends Component {
                 if (columns[0] === undefined || columns[0] === "" || columns[1] === undefined || columns[1] === "") {
                     continue;
                 }
+
+
 
                 // add nodes to set of all nodes
                 allNodes.add(columns[0]);

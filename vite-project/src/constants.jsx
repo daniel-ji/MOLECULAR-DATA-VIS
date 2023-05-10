@@ -9,16 +9,12 @@ export const DEFAULT_DATA = {
     links: [],
     linksMap: new Map(),
     allLinks: new Map(),
-    clusters: {
-        clusterStats: [],
+    cluster: {
         clusterDistribution: new Map(),
-    },
-    unfilteredClusters: {
-        clusterStats: [],
-        clusterDistribution: new Map(),
+        clusterNodes: [],
+        clusterSizes: [],
     },
     stats: {
-        recalculate: true,
         clusterMedian: 0,
         clusterMean: 0,
         assortativity: 0,

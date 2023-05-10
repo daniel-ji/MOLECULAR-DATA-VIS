@@ -10,47 +10,47 @@ export class SummaryStats extends Component {
                     <tbody>
                         <tr>
                             <td>Node Count:</td>
-                            <td id="summary-node-count"></td>
+                            <td id="summary-node-count">{this.props.data.nodes.length}</td>
                         </tr>
                         <tr>
                             <td>Singletons:</td>
-                            <td id="summary-singleton-count"></td>
+                            <td id="summary-singleton-count">{this.props.data.allNodes.size - this.props.data.nodes.length}</td>
                         </tr>
                         <tr>
                             <td>Edge Count:</td>
-                            <td id="summary-edge-count"></td>
+                            <td id="summary-edge-count">{this.props.data.links.length}</td>
                         </tr>
                         <tr>
                             <td>Assortativity:</td>
-                            <td id="summary-assortativity"></td>
+                            <td id="summary-assortativity">{this.props.data.stats.assortativity}</td>
                         </tr>
                         <tr>
                             <td>Transitivity:</td>
-                            <td id="summary-transitivity"></td>
+                            <td id="summary-transitivity">{this.props.data.stats.transitivity}</td>
                         </tr>
                         <tr>
                             <td>Triangle Count:</td>
-                            <td id="summary-triangle-count"></td>
+                            <td id="summary-triangle-count">{this.props.data.stats.triangleCount}</td>
                         </tr>
                         <tr>
                             <td>Cluster Count:</td>
-                            <td id="summary-cluster-count"></td>
+                            <td id="summary-cluster-count">{this.props.data.cluster.clusterSizes.length}</td>
                         </tr>
                         <tr>
                             <td>Mean Cluster Size:</td>
-                            <td id="summary-cluster-mean"></td>
+                            <td id="summary-cluster-mean">{this.props.data.stats.clusterMean}</td>
                         </tr>
                         <tr>
                             <td>Median Cluster Size:</td>
-                            <td id="summary-cluster-median"></td>
+                            <td id="summary-cluster-median">{this.props.data.stats.clusterMedian}</td>
                         </tr>
                         <tr>
                             <td>Mean Pairwise Distance:</td>
-                            <td id="summary-pairwise-mean"></td>
+                            <td id="summary-pairwise-mean">{this.props.data.stats.meanPairwiseDistance}</td>
                         </tr>
                         <tr>
                             <td>Median Pairwise Distance:</td>
-                            <td id="summary-pairwise-median"></td>
+                            <td id="summary-pairwise-median">{this.props.data.stats.medianPairwiseDistance}</td>
                         </tr>
                     </tbody>
                 </table>
