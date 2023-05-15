@@ -23,7 +23,7 @@ export class UploadData extends Component {
                 thresholdTimeout: setTimeout(() => {
                     if (this.props.thresholdValid) {
                         this.props.updateDiagrams();
-                        this.props.nodesGraph.fitView();
+                        this.props.nodeGraph.fitView();
                     }
                 }, 500)
             })

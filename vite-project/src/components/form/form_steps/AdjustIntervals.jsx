@@ -22,21 +22,18 @@ export class AdjustIntervals extends Component {
         const intervals = this.getIntervals();
         intervals.splice(index + 1, 0, (intervals[index] + intervals[index + 1]) / 2);
         this.renderIntervals();
-        this.props.setDemoData({ categories: new Map(this.props.data.demographicData.categories) })
     }
 
     setInterval = (index, value) => {
         const intervals = this.getIntervals();
         intervals[index] = parseFloat(value);
         this.renderIntervals();
-        this.props.setDemoData({ categories: new Map(this.props.data.demographicData.categories) })
     }
 
     deleteInterval = (index) => {
         const intervals = this.getIntervals();
         intervals.splice(index, 1);
         this.renderIntervals();
-        this.props.setDemoData({ categories: new Map(this.props.data.demographicData.categories) })
     }
 
     getIntervals = () => {

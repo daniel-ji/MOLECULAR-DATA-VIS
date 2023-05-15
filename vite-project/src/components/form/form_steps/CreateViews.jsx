@@ -17,17 +17,17 @@ export class CreateViews extends Component {
     setViewSelectColor = (e) => {
         this.setState({ viewSelectColor: e.target.value });
     }
-    
+
     setViewColor = (viewID, color) => {
         const nodeViews = new Map(this.props.data.nodeViews);
         nodeViews.get(viewID).color = color;
-        this.props.setData({ nodeViews })
+        this.props.setData({ nodeViews }, this.props.updateNodeViews)
     }
 
     deleteView = (viewID) => {
         const nodeViews = new Map(this.props.data.nodeViews);
         nodeViews.delete(viewID);
-        this.props.setData({ nodeViews })
+        this.props.setData({ nodeViews }, this.props.updateNodeViews)
     }
 
     renderViews = () => {
@@ -48,7 +48,8 @@ export class CreateViews extends Component {
                         return;
                     }
 
-                    return <option key={index} value={value}>{value.toFixed(4) + " - " + category.intervals[index + 1].toFixed(4)}</option>
+                    return <option key={index} value={value.toFixed(4) + " - " + category.intervals[index + 1].toFixed(4)}>
+                        {value.toFixed(4) + " - " + category.intervals[index + 1].toFixed(4)}</option>
                 });
             } else {
                 options = [...category.elements.values()].map((value, index) => {
@@ -145,7 +146,7 @@ export class CreateViews extends Component {
                             <div className="view-entry my-3 w-100" id={`view-entry-${viewID}`} key={viewID}>
                                 <div className="view-entry-preview w-100" id={`view-entry-preview-${viewID}`}>
                                     <button className="btn btn-secondary view-entry-button" id={`view-entry-button-${viewID}`}>{viewData.name}</button>
-                                    <input type="color" className="view-entry-color form-control form-control-color border-secondary" id={`view-entry-color-${viewID}`} value={viewData.color} 
+                                    <input type="color" className="view-entry-color form-control form-control-color border-secondary" id={`view-entry-color-${viewID}`} value={viewData.color}
                                         onChange={(e) => this.setViewColor(viewID, e.target.value)} />
                                     <button className="btn btn-danger view-entry-delete" id={`view-entry-delete-${viewID}`} onClick={() => this.deleteView(viewID)}><i className="bi bi-trash" /></button>
                                 </div>

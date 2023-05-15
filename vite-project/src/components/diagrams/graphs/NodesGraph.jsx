@@ -8,7 +8,7 @@ export class NodesGraph extends Component {
 			<div className="graph-element" id="node-graph-container">
 				<h1 className="graph-title">Pairwise Distance Graph</h1>
 				<img src={zoomToFit} id="zoom-to-fit" title="Zoom to Fit" onClick={() => {
-					this.props.nodesGraph.fitView();
+					this.props.nodeGraph.fitView();
 				}} />
 				<canvas id="node-graph"></canvas>
 			</div>

@@ -23,7 +23,7 @@ export class App extends Component {
 		this.state = {
 			/** GRAPH DATA */
 			data: DEFAULT_DATA,
-			nodesGraph: undefined,
+			nodeGraph: undefined,
 			/** UI DATA */
 			clusterHistogram: {
 				histogramTicks: 0,
@@ -35,23 +35,17 @@ export class App extends Component {
 	}
 
 	componentDidMount() {
-		this.setState({ nodesGraph: new Graph(document.getElementById(NODE_GRAPH_CANVAS_ID), NODE_GRAPH_CONFIG) }, () => {
-			this.setNodesGraph([], [])
-		})
+		this.setState({ nodeGraph: new Graph(document.getElementById(NODE_GRAPH_CANVAS_ID), NODE_GRAPH_CONFIG) }, this.setNodesGraph)
 	}
 
 	setData = (newData, callback) => {
 		this.setState((prevState) => { return { data: { ...prevState.data, ...newData } } }, callback);
 	}
 
-	setDemoData = (demoData, callback) => {
-		this.setState((prevState) => { return { data: { ...prevState.data, demographicData: { ...prevState.data.demographicData, ...demoData } } } }, callback);
-	}
-
 	setNodesGraph = () => {
-		this.state.nodesGraph.setData(this.state.data.nodes, this.state.data.links);
+		this.state.nodeGraph.setData(this.state.data.nodes, this.state.data.links);
 		setTimeout(() => {
-			this.state.nodesGraph.fitView();
+			this.state.nodeGraph.fitView();
 		}, 1500)
 	}
 
@@ -190,7 +184,7 @@ export class App extends Component {
 
 		clusterNodes.sort((a, b) => a.cluster.size - b.cluster.size)
 		clusterSizes.sort((a, b) => a - b);
-		this.setData({cluster: { clusterNodes, clusterSizes, clusterDistribution }}, callback)
+		this.setData({ cluster: { clusterNodes, clusterSizes, clusterDistribution } }, callback)
 		LOG("Done generating clusters...")
 	}
 
@@ -251,13 +245,81 @@ export class App extends Component {
 
 		const assortativity = (assortNumerator / Math.sqrt(sourceVariance * targetVariance)).toFixed(8);
 
-		this.setData({stats: { clusterMedian, clusterMean, transitivity, triangleCount, meanPairwiseDistance, medianPairwiseDistance, assortativity }})
+		this.setData({ stats: { clusterMedian, clusterMean, transitivity, triangleCount, meanPairwiseDistance, medianPairwiseDistance, assortativity } })
 	}
 
 	createView = (viewID, viewData) => {
 		const nodeViews = new Map(this.state.data.nodeViews);
 		nodeViews.set(viewID, viewData);
-		this.setData({ nodeViews });
+
+		const nodeKeys = [...this.state.data.nodesMap.keys()];
+
+		for (let i = 0; i < nodeKeys.length; i++) {
+			// get sequence's corresponding individual, return if not found
+			const correspondingIndividual = this.state.data.demographicData.data.get(nodeKeys[i].split("|")[1]);
+			if (correspondingIndividual === undefined) {
+				continue;
+			}
+
+			// get individual's (demographic) data
+			const individualDemoKeys = Object.keys(correspondingIndividual);
+			const individualDemoValues = Object.values(correspondingIndividual);
+			let add = true;
+
+			// check if sequence's corresponding individual matches view
+			for (let j = 0; j < individualDemoKeys.length; j++) {
+				if (viewData.values[j] === "All") {
+					continue;
+				}
+
+				if (this.state.data.demographicData.categories.get(individualDemoKeys[j]).type === 'number') {
+					const range = viewData.values[j].split(" - ");
+					if (!(individualDemoValues[j] >= parseFloat(range[0]) && individualDemoValues[j] <= parseFloat(range[1]))) {
+						add = false;
+						break;
+					}
+				} else {
+					if (individualDemoValues[j] !== viewData.values[j]) {
+						add = false;
+						break;
+					}
+				}
+			}
+
+			if (add) {
+				this.state.data.nodesMap.get(nodeKeys[i]).views.add(viewID)
+			}
+		}
+
+		this.setData({ nodeViews }, this.updateNodeViews);
+	}
+
+	getNodeColor = (node) => {
+		const view = [...this.state.data.nodesMap.get(node).views.keys()]
+		if (view.length > 0) {
+			return this.state.data.nodeViews.get(view[0]).color
+		}
+	}
+
+	updateNodeViews = () => {
+		const nodesMap = new Map(this.state.data.nodesMap);
+		const nodeViews = this.state.data.nodeViews;
+
+		for (const node of nodesMap.keys()) {
+			// delete any views that were deleted
+			const views = [...nodesMap.get(node).views.keys()];
+			for (const view of views) {
+				if (!nodeViews.has(view)) {
+					nodesMap.get(node).views.delete(view);
+				}
+			}
+
+			// set color
+			nodesMap.get(node).color = this.getNodeColor(node);
+		}
+
+
+		this.setData({ nodesMap, nodes: [...nodesMap.values()] }, this.setNodesGraph);
 	}
 
 	resetData = () => {
@@ -266,7 +328,7 @@ export class App extends Component {
 
 	nodeGraphFitView = () => {
 		setTimeout(() => {
-			this.state.nodesGraph.fitView();
+			this.state.nodeGraph.fitView();
 		}, 250)
 	}
 
@@ -278,7 +340,7 @@ export class App extends Component {
 				>
 					{/** each of the following components is a diagram **/}
 					<NodesGraph
-						nodesGraph={this.state.nodesGraph}
+						nodeGraph={this.state.nodeGraph}
 					/>
 					<ClusterGraph />
 					<ClusterHistogram
@@ -296,7 +358,7 @@ export class App extends Component {
 					<UploadData
 						threshold={this.state.threshold}
 						thresholdValid={this.state.thresholdValid}
-						nodesGraph={this.state.nodesGraph}
+						nodeGraph={this.state.nodeGraph}
 						setThreshold={this.setThreshold}
 						setThresholdValid={this.setThresholdValid}
 						resetData={this.resetData}
@@ -305,12 +367,12 @@ export class App extends Component {
 					/>
 					<AdjustIntervals
 						data={this.state.data}
-						setDemoData={this.setDemoData}
 					/>
 					<CreateViews
 						data={this.state.data}
 						setData={this.setData}
 						createView={this.createView}
+						updateNodeViews={this.updateNodeViews}
 					/>
 				</FormContainer>
 			</>
