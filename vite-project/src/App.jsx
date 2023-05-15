@@ -56,27 +56,44 @@ export class App extends Component {
 		this.setState((prevState) => { return { data: { ...prevState.data, stats: { ...prevState.data.stats, ...newData } } } }, callback);
 	}
 
+	setNodesGraph = () => {
+		this.state.nodesGraph.setData(this.state.data.nodes, this.state.data.links);
+		setTimeout(() => {
+			this.state.nodesGraph.fitView();
+		}, 1500)
+	}
+
+	setThreshold = (threshold) => {
+		this.setState({ threshold })
+	}
+
+	setThresholdValid = (thresholdValid) => {
+		this.setState({ thresholdValid })
+	}
+
+	setClusterHistogramData = (newData, callback) => {
+		this.setState((prevState) => { return { clusterHistogram: { ...prevState.clusterHistogram, ...newData } } }, callback);
+	}
+
 	addToNodeMapFromLink = (link, nodesMap) => {
 		// source node
-		const sourceIndividualID = link.source.split("|")[1];
 		if (!nodesMap.has(link.source)) {
 			nodesMap.set(link.source, {
 				id: link.source,
 				color: "#000000",
 				adjacentNodes: new Set([link.target]),
-				individualID: sourceIndividualID,
+				individualID: link.source.split("|")[1] ?? link.source,
 				views: new Set()
 			});
 		}
 
 		// target node
-		const targetIndividualID = link.target.split("|")[1];
 		if (!nodesMap.has(link.target)) {
 			nodesMap.set(link.target, {
 				id: link.target,
 				color: "#000000",
 				adjacentNodes: new Set([link.source]),
-				individualID: targetIndividualID,
+				individualID: link.target.split("|")[1] ?? link.target,
 				views: new Set()
 			});
 		}
@@ -185,7 +202,6 @@ export class App extends Component {
 		LOG("Done generating clusters...")
 	}
 
-	// TODO: move to summary stats component
 	updateSummaryStats = () => {
 		// alias
 		const data = this.state.data;
@@ -215,6 +231,7 @@ export class App extends Component {
 			triples += adjacentNodeCount * (adjacentNodeCount - 1) / 2;
 		}
 		triples /= 3;
+		// TODO: Don't reinvent the wheel, use a library for this
 		// calculate transitivity
 		const transitivity = (triangleCount / triples).toFixed(2);
 
@@ -245,26 +262,12 @@ export class App extends Component {
 		this.setStatsData({ clusterMedian, clusterMean, transitivity, triangleCount, meanPairwiseDistance, medianPairwiseDistance, assortativity })
 	}
 
-	setNodesGraph = () => {
-		this.state.nodesGraph.setData(this.state.data.nodes, this.state.data.links);
-		setTimeout(() => {
-			this.state.nodesGraph.fitView();
-		}, 1500)
+	createView = (viewID, viewData) => {
+		const nodeViews = new Map(this.state.data.nodeViews);
+		nodeViews.set(viewID, viewData);
+		this.setData({ nodeViews });
 	}
 
-	setThreshold = (threshold) => {
-		this.setState({ threshold })
-	}
-
-	setThresholdValid = (thresholdValid) => {
-		this.setState({ thresholdValid })
-	}
-
-	setClusterHistogramData = (newData, callback) => {
-		this.setState((prevState) => { return { clusterHistogram: { ...prevState.clusterHistogram, ...newData } } }, callback);
-	}
-
-	// TODO: update
 	resetData = () => {
 		this.setState({ data: DEFAULT_DATA })
 	}
@@ -309,8 +312,13 @@ export class App extends Component {
 						setDemoData={this.setDemoData}
 						updateDiagrams={this.updateDiagrams}
 					/>
-					<AdjustIntervals />
-					<CreateViews />
+					<AdjustIntervals
+						data={this.state.data}
+					/>
+					<CreateViews
+						data={this.state.data}
+						createView={this.createView}
+					/>
 				</FormContainer>
 			</>
 		)

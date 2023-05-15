@@ -6,6 +6,7 @@ export const DEFAULT_DATA = {
     nodes: [],
     nodesMap: new Map(),
     allNodes: new Set(),
+    nodeViews: new Map(),
     links: [],
     linksMap: new Map(),
     allLinks: new Map(),

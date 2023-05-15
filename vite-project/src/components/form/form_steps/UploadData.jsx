@@ -8,7 +8,6 @@ export class UploadData extends Component {
 
         this.state = {
             thresholdTimeout: undefined,
-            reuploadedPairwise: true,
             uploadSuccess: false,
             uploadLoading: false,
         }
@@ -32,7 +31,7 @@ export class UploadData extends Component {
     }
 
     updatePairwiseFile = (e) => {
-        this.setState({ reuploadedPairwise: true, uploadSuccess: false, uploadLoading: false })
+        this.setState({ uploadSuccess: false, uploadLoading: false })
         document.getElementById("upload-pairwise-file").value = "";
     }
 
@@ -52,19 +51,12 @@ export class UploadData extends Component {
 
         // reset data, get individual demographic data, and get pairwise distances (actual node / link data)
         this.props.resetData();
-        if (this.state.reuploadedPairwise) {
-            await this.getDemoData();
-            await this.getPairwiseDistances(() => {
-                this.props.updateDiagrams();
-                this.setState({ uploadLoading: false, uploadSuccess: true });
-            });
-        } else {
-            await this.getDemoData(() => {
-                this.props.updateDiagrams();
-                this.setState({ uploadLoading: false, uploadSuccess: true });
-            });
-        }
-        
+        await this.getDemoData();
+        await this.getPairwiseDistances(() => {
+            this.props.updateDiagrams();
+            this.setState({ uploadLoading: false, uploadSuccess: true });
+        });
+
         // update status
         this.setState({ uploadLoading: false, uploadSuccess: true });
     }
@@ -149,8 +141,7 @@ export class UploadData extends Component {
                 sortedElements.sort((a, b) => a - b)
             }
 
-            // add in "All" option
-            demoCategories.get(categories[i]).elements = new Set(["All", ...sortedElements])
+            demoCategories.get(categories[i]).elements = new Set(sortedElements)
         }
 
         // create initial 5 categories for quantitative data
@@ -162,22 +153,19 @@ export class UploadData extends Component {
 
             const values = [...demoCategories.get(demoCategoriesKeys[i]).elements]
             // create intervals for numerical data (default of 5 even splits)
-            const min = values[1];
+            const min = values[0];
             const max = values[values.length - 1];
             const step = (max - min) / 5;
-            for (let j = min; j <= max; j += step) {
+            for (let j = min; j < max + step; j += step) {
                 demoCategories.get(demoCategoriesKeys[i]).intervals.push(j);
             }
         }
 
         // update state
-        this.props.setDemoData({ demoData, demoCategories }, callback);
+        this.props.setDemoData({ data: demoData, categories: demoCategories }, callback);
 
         // // generate quantitative data intervals
         // generateQuantIntervals();
-
-        // // generate HTML elements for views
-        // generateNodeViews();
 
         LOG("Done parsing node supplementary data...")
     }
@@ -187,7 +175,6 @@ export class UploadData extends Component {
         const allNodes = new Set();
 
         const file = document.getElementById("upload-pairwise-file").files[0];
-        this.setState({ reuploadedPairwise: false });
         console.log("\n\n\n-------- READING FILE -------- \n\n\n")
         LOG("Reading file...", true)
 
