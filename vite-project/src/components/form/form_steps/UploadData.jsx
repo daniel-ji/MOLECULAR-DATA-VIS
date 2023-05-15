@@ -159,10 +159,13 @@ export class UploadData extends Component {
             for (let j = min; j < max + step; j += step) {
                 demoCategories.get(demoCategoriesKeys[i]).intervals.push(j);
             }
+
+            // delete elements
+            demoCategories.get(demoCategoriesKeys[i]).elements = undefined;
         }
 
         // update state
-        this.props.setDemoData({ data: demoData, categories: demoCategories }, callback);
+        this.props.setData({demographicData: { data: demoData, categories: demoCategories }}, callback);
 
         // // generate quantitative data intervals
         // generateQuantIntervals();

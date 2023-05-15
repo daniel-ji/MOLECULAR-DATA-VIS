@@ -48,14 +48,6 @@ export class App extends Component {
 		this.setState((prevState) => { return { data: { ...prevState.data, demographicData: { ...prevState.data.demographicData, ...demoData } } } }, callback);
 	}
 
-	setClusterData = (newData, callback) => {
-		this.setState((prevState) => { return { data: { ...prevState.data, cluster: { ...prevState.data.cluster, ...newData } } } }, callback);
-	}
-
-	setStatsData = (newData, callback) => {
-		this.setState((prevState) => { return { data: { ...prevState.data, stats: { ...prevState.data.stats, ...newData } } } }, callback);
-	}
-
 	setNodesGraph = () => {
 		this.state.nodesGraph.setData(this.state.data.nodes, this.state.data.links);
 		setTimeout(() => {
@@ -198,7 +190,7 @@ export class App extends Component {
 
 		clusterNodes.sort((a, b) => a.cluster.size - b.cluster.size)
 		clusterSizes.sort((a, b) => a - b);
-		this.setClusterData({ clusterNodes, clusterSizes, clusterDistribution }, callback)
+		this.setData({cluster: { clusterNodes, clusterSizes, clusterDistribution }}, callback)
 		LOG("Done generating clusters...")
 	}
 
@@ -259,7 +251,7 @@ export class App extends Component {
 
 		const assortativity = (assortNumerator / Math.sqrt(sourceVariance * targetVariance)).toFixed(8);
 
-		this.setStatsData({ clusterMedian, clusterMean, transitivity, triangleCount, meanPairwiseDistance, medianPairwiseDistance, assortativity })
+		this.setData({stats: { clusterMedian, clusterMean, transitivity, triangleCount, meanPairwiseDistance, medianPairwiseDistance, assortativity }})
 	}
 
 	createView = (viewID, viewData) => {
@@ -309,14 +301,15 @@ export class App extends Component {
 						setThresholdValid={this.setThresholdValid}
 						resetData={this.resetData}
 						setData={this.setData}
-						setDemoData={this.setDemoData}
 						updateDiagrams={this.updateDiagrams}
 					/>
 					<AdjustIntervals
 						data={this.state.data}
+						setDemoData={this.setDemoData}
 					/>
 					<CreateViews
 						data={this.state.data}
+						setData={this.setData}
 						createView={this.createView}
 					/>
 				</FormContainer>

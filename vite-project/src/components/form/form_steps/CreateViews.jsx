@@ -14,8 +14,20 @@ export class CreateViews extends Component {
         this.renderViews();
     }
 
-    setViewColor = (e) => {
+    setViewSelectColor = (e) => {
         this.setState({ viewSelectColor: e.target.value });
+    }
+    
+    setViewColor = (viewID, color) => {
+        const nodeViews = new Map(this.props.data.nodeViews);
+        nodeViews.get(viewID).color = color;
+        this.props.setData({ nodeViews })
+    }
+
+    deleteView = (viewID) => {
+        const nodeViews = new Map(this.props.data.nodeViews);
+        nodeViews.delete(viewID);
+        this.props.setData({ nodeViews })
     }
 
     renderViews = () => {
@@ -59,7 +71,6 @@ export class CreateViews extends Component {
     }
 
     createView = () => {
-        // TODO: add validation
         // ID is based on selected categories
         let viewID = "";
         // view name is based on selected categories, excluding "All", user-facing name
@@ -107,21 +118,6 @@ export class CreateViews extends Component {
             name: viewName,
             values: viewData
         })
-
-        // TODO: implement
-        // viewColor.addEventListener("input", (e) => {
-        //     nodeViews.get(viewID).color = e.target.value;
-        //     setNodeDataFromMap();
-        //     PAIRWISE_GRAPH.setData(data.nodes, data.links)
-        // })
-
-        // viewDelete.addEventListener("click", () => {
-        //     document.getElementById("view-entry-" + viewID).remove();
-        //     nodeViews.delete(viewID);
-        //     deleteView(viewID);
-        //     PAIRWISE_GRAPH.setData(data.nodes, data.links)
-        // })
-        // viewPreview.appendChild(viewDelete);
     }
 
     render() {
@@ -134,7 +130,7 @@ export class CreateViews extends Component {
                 <div id="select-view-color" className="w-100 mt-4">
                     <label htmlFor="view-color">Select View Color:</label>
                     <input type="color" className="form-control form-control-color ms-3 border-secondary" id="view-color" value={this.state.viewSelectColor}
-                        onChange={this.setViewColor} title="Choose your color" />
+                        onChange={this.setViewSelectColor} title="Choose your color" />
                 </div>
                 <div id="create-view">
                     <button className="btn btn-primary mt-3 w-100" id="create-view-button" onClick={this.createView}>Create View</button>
@@ -149,8 +145,9 @@ export class CreateViews extends Component {
                             <div className="view-entry my-3 w-100" id={`view-entry-${viewID}`} key={viewID}>
                                 <div className="view-entry-preview w-100" id={`view-entry-preview-${viewID}`}>
                                     <button className="btn btn-secondary view-entry-button" id={`view-entry-button-${viewID}`}>{viewData.name}</button>
-                                    <input type="color" className="view-entry-color form-control form-control-color border-secondary" id={`view-entry-color-${viewID}`} value={viewData.color} />
-                                    <button className="btn btn-danger view-entry-delete" id={`view-entry-delete-${viewID}`}><i className="bi bi-trash" /></button>
+                                    <input type="color" className="view-entry-color form-control form-control-color border-secondary" id={`view-entry-color-${viewID}`} value={viewData.color} 
+                                        onChange={(e) => this.setViewColor(viewID, e.target.value)} />
+                                    <button className="btn btn-danger view-entry-delete" id={`view-entry-delete-${viewID}`} onClick={() => this.deleteView(viewID)}><i className="bi bi-trash" /></button>
                                 </div>
                             </div>);
                     })

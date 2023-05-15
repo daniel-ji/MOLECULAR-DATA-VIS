@@ -17,6 +17,33 @@ export class AdjustIntervals extends Component {
         this.renderIntervals();
     }
 
+    // TODO: handle when interval is used in a view, or when interval is out of bounds / not between other intervals
+    addInterval = (index) => {
+        const intervals = this.getIntervals();
+        intervals.splice(index + 1, 0, (intervals[index] + intervals[index + 1]) / 2);
+        this.renderIntervals();
+        this.props.setDemoData({ categories: new Map(this.props.data.demographicData.categories) })
+    }
+
+    setInterval = (index, value) => {
+        const intervals = this.getIntervals();
+        intervals[index] = parseFloat(value);
+        this.renderIntervals();
+        this.props.setDemoData({ categories: new Map(this.props.data.demographicData.categories) })
+    }
+
+    deleteInterval = (index) => {
+        const intervals = this.getIntervals();
+        intervals.splice(index, 1);
+        this.renderIntervals();
+        this.props.setDemoData({ categories: new Map(this.props.data.demographicData.categories) })
+    }
+
+    getIntervals = () => {
+        const category = document.getElementById("number-category-intervals-select").value;
+        return this.props.data.demographicData.categories.get(category).intervals;
+    }
+
     renderIntervals = () => {
         const category = document.getElementById("number-category-intervals-select").value;
 
@@ -25,32 +52,18 @@ export class AdjustIntervals extends Component {
         }
 
         const intervals = this.props.data.demographicData.categories.get(category).intervals;
-        console.log(intervals);
 
         this.setState({
             intervals: intervals.map((interval, index) => {
                 return (
                     <div key={index} className="d-flex align-items-center">
-                        <input type="number" step="0.01" className="form-control my-3" value={interval.toFixed(2)} />
-                        {index !== 0 && index !== intervals.length - 1 ? <button className="btn btn-danger ms-4"><i className="bi bi-trash"></i></button> : null}
-                        {index !== intervals.length - 1 ? <button className="btn btn-primary ms-4"><i className="bi bi-plus"></i></button> : null}
+                        <input type="number" step="0.01" className="form-control my-3" value={parseFloat(interval.toFixed(2))} onChange={(e) => this.setInterval(index, e.target.value)} />
+                        {index !== 0 && index !== intervals.length - 1 ? <button className="btn btn-danger ms-4" onClick={() => this.deleteInterval(index)}><i className="bi bi-trash"></i></button> : null}
+                        {index !== intervals.length - 1 ? <button className="btn btn-primary ms-4" onClick={() => this.addInterval(index)}><i className="bi bi-plus"></i></button> : null}
                     </div>
                 )
             })
         })
-
-        // TODO: implement
-        // deleteButton.addEventListener("click", (e) => {
-        //     inputContainer.remove();
-        //     intervals.splice(j, 1);
-        //     updateNodeView(categoryIndex);
-        // })
-
-        // addButton.addEventListener("click", (e) => {
-        //     intervals.splice(j + 1, 0, (intervals[j] + intervals[j + 1]) / 2);
-        //     updateNodeView(categoryIndex);
-        //     generateQuantIntervalsList(listContainer, category, categoryIndex)
-        // })
 
         // add event listener to update intervals
         // input.addEventListener("input", (e) => {
