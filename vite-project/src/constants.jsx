@@ -67,9 +67,10 @@ export const READ_FILE_ASYNC = async (file, asText = false) => {
 }
 
 let basetime = performance.now();
-export const LOG = (message, reset = false) => {
-    if (reset) {
+export const LOG = (message) => {
+    if (performance.now() - basetime > 2000) {
         basetime = performance.now();
     }
+
     console.log(message + "\n" + "Time: " + (performance.now() - basetime) + "ms");
 }

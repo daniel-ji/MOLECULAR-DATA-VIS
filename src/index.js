@@ -390,8 +390,6 @@ const getPairwiseDistances = async () => {
 
 // helper function to promise-fy file read and make it awaitable 
 const readFileAsync = async (file, asText = false) => {
-    console.log(file.slice(0, 100))
-
     const reader = new FileReader();
     return new Promise((resolve, reject) => {
         reader.onload = (e) => {

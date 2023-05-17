@@ -96,7 +96,7 @@ export class UploadData extends Component {
             return;
         }
 
-        LOG("Parsing node supplementary data...", true)
+        LOG("Parsing node supplementary data...")
 
         const demoData = new Map();
         // create individual demographic data
@@ -179,7 +179,7 @@ export class UploadData extends Component {
 
         const file = document.getElementById("upload-pairwise-file").files[0];
         console.log("\n\n\n-------- READING FILE -------- \n\n\n")
-        LOG("Reading file...", true)
+        LOG("Reading file...")
 
         const array = await READ_FILE_ASYNC(file);
         LOG("Done reading file...")
@@ -188,7 +188,7 @@ export class UploadData extends Component {
         // for when the chunk_size split doesn't match a full line
         let splitString = "";
 
-        LOG("Parsing file...", true)
+        LOG("Parsing file...")
         // iterate over the file in chunks, readAsText can't read the entire file 
         for (let i = 0; i < array.byteLength; i += CHUNK_SIZE) {
             // get chunk and decode it

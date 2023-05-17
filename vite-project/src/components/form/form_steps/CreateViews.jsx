@@ -7,6 +7,7 @@ export class CreateViews extends Component {
         this.state = {
             views: [],
             viewSelectColor: "#198754",
+            viewTimeout: undefined,
         }
     }
 
@@ -21,13 +22,17 @@ export class CreateViews extends Component {
     setViewColor = (viewID, color) => {
         const nodeViews = new Map(this.props.data.nodeViews);
         nodeViews.get(viewID).color = color;
-        this.props.setData({ nodeViews }, this.props.updateNodeViews)
+        this.props.setData({ nodeViews })
+        clearTimeout(this.state.viewTimeout);
+        this.setState({
+            viewTimeout: setTimeout(this.props.updateNodesColor, 500)
+        })
     }
 
     deleteView = (viewID) => {
         const nodeViews = new Map(this.props.data.nodeViews);
         nodeViews.delete(viewID);
-        this.props.setData({ nodeViews }, this.props.updateNodeViews)
+        this.props.setData({ nodeViews }, () => this.props.deleteNodeViewFromNodes(viewID))
     }
 
     renderViews = () => {
@@ -118,7 +123,7 @@ export class CreateViews extends Component {
             color: document.getElementById("view-color").value,
             name: viewName,
             values: viewData
-        })
+        }, () => this.props.updateNodesFromNodeViews(viewID))
     }
 
     render() {

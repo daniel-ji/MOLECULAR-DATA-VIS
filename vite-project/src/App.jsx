@@ -43,10 +43,12 @@ export class App extends Component {
 	}
 
 	setNodesGraph = () => {
+		LOG("Setting nodes graph...")
 		this.state.nodeGraph.setData(this.state.data.nodes, this.state.data.links);
 		setTimeout(() => {
 			this.state.nodeGraph.fitView();
-		}, 1500)
+		}, 750)
+		LOG("Done setting nodes graph.")
 	}
 
 	setThreshold = (threshold) => {
@@ -91,7 +93,7 @@ export class App extends Component {
 
 	updateDiagrams = () => {
 		console.log("\n\n\n-------- UPDATING DATA -------- \n\n\n")
-		LOG("Updating data...", true)
+		LOG("Updating data...")
 
 		const linksMap = new Map();
 		const nodesMap = new Map();
@@ -111,7 +113,7 @@ export class App extends Component {
 		LOG("Setting data...");
 		this.setData({ nodes, links, nodesMap }, () => {
 			this.updateClusterData(this.updateSummaryStats);
-			this.setNodesGraph();
+			this.updateNodesFromNodeViews();
 			LOG("Done setting data.");
 		});
 	}
@@ -192,6 +194,11 @@ export class App extends Component {
 		// alias
 		const data = this.state.data;
 
+		if (data.links.length === 0) {
+			this.setData({ stats: { clusterMedian: 0, clusterMean: 0, transitivity: 0, triangleCount: 0, meanPairwiseDistance: 0, medianPairwiseDistance: 0, assortativity: 0 } })
+			return;
+		}
+
 		const clusterMedian = data.cluster.clusterSizes[Math.floor(data.cluster.clusterSizes.length / 2)];
 		const clusterMean = (data.cluster.clusterSizes.reduce((a, b) => a + b, 0) / data.cluster.clusterSizes.length).toFixed(2);
 
@@ -248,15 +255,38 @@ export class App extends Component {
 		this.setData({ stats: { clusterMedian, clusterMean, transitivity, triangleCount, meanPairwiseDistance, medianPairwiseDistance, assortativity } })
 	}
 
-	createView = (viewID, viewData) => {
+	createView = (viewID, viewData, callback) => {
 		const nodeViews = new Map(this.state.data.nodeViews);
 		nodeViews.set(viewID, viewData);
 
-		const nodeKeys = [...this.state.data.nodesMap.keys()];
+		this.setData({ nodeViews }, () => this.updateNodesFromNodeViews(viewID, callback));
+	}
 
-		for (let i = 0; i < nodeKeys.length; i++) {
-			// get sequence's corresponding individual, return if not found
-			const correspondingIndividual = this.state.data.demographicData.data.get(nodeKeys[i].split("|")[1]);
+	getNodeColor = (node) => {
+		const view = [...this.state.data.nodesMap.get(node).views.keys()]
+		if (view.length > 0) {
+			return this.state.data.nodeViews.get(view[0]).color
+		}
+	}
+
+	updateNodesFromNodeViews = (viewID, callback) => {
+		LOG("Updating node views...")
+		const nodeViews = this.state.data.nodeViews;
+		const nodesMap = new Map(this.state.data.nodesMap);
+
+		let viewDataArray;
+
+		if (viewID === undefined) {
+			viewDataArray = [...nodeViews.keys()];
+		} else {
+			viewDataArray = [viewID];
+		}
+
+		const nodeKeys = [...nodesMap.keys()];
+
+		for (const node of nodeKeys) {
+			// get sequence's corresponding individual, continue if not found
+			const correspondingIndividual = this.state.data.demographicData.data.get(node.split("|")[1]);
 			if (correspondingIndividual === undefined) {
 				continue;
 			}
@@ -267,59 +297,73 @@ export class App extends Component {
 			let add = true;
 
 			// check if sequence's corresponding individual matches view
-			for (let j = 0; j < individualDemoKeys.length; j++) {
-				if (viewData.values[j] === "All") {
-					continue;
-				}
+			for (const viewIDKey of viewDataArray) {
+				const viewData = nodeViews.get(viewIDKey);
 
-				if (this.state.data.demographicData.categories.get(individualDemoKeys[j]).type === 'number') {
-					const range = viewData.values[j].split(" - ");
-					if (!(individualDemoValues[j] >= parseFloat(range[0]) && individualDemoValues[j] <= parseFloat(range[1]))) {
-						add = false;
-						break;
+				for (let j = 0; j < individualDemoKeys.length; j++) {
+					if (viewData.values[j] === "All") {
+						continue;
 					}
-				} else {
-					if (individualDemoValues[j] !== viewData.values[j]) {
-						add = false;
-						break;
+
+					if (this.state.data.demographicData.categories.get(individualDemoKeys[j]).type === 'number') {
+						const range = viewData.values[j].split(" - ");
+						if (!(individualDemoValues[j] >= parseFloat(range[0]) && individualDemoValues[j] <= parseFloat(range[1]))) {
+							add = false;
+							break;
+						}
+					} else {
+						if (individualDemoValues[j] !== viewData.values[j]) {
+							add = false;
+							break;
+						}
 					}
 				}
-			}
 
-			if (add) {
-				this.state.data.nodesMap.get(nodeKeys[i]).views.add(viewID)
-			}
-		}
-
-		this.setData({ nodeViews }, this.updateNodeViews);
-	}
-
-	getNodeColor = (node) => {
-		const view = [...this.state.data.nodesMap.get(node).views.keys()]
-		if (view.length > 0) {
-			return this.state.data.nodeViews.get(view[0]).color
-		}
-	}
-
-	updateNodeViews = () => {
-		const nodesMap = new Map(this.state.data.nodesMap);
-		const nodeViews = this.state.data.nodeViews;
-
-		for (const node of nodesMap.keys()) {
-			// delete any views that were deleted
-			const views = [...nodesMap.get(node).views.keys()];
-			for (const view of views) {
-				if (!nodeViews.has(view)) {
-					nodesMap.get(node).views.delete(view);
+				if (add) {
+					nodesMap.get(node).views.add(viewIDKey)
 				}
 			}
 
-			// set color
+			// set node color
 			nodesMap.get(node).color = this.getNodeColor(node);
 		}
 
+		this.setData({ nodesMap, nodes: [...nodesMap.values()] }, () => {
+			this.setNodesGraph();
+			LOG("Done updating node views.")
+			if (callback) {
+				callback();
+			}
+		});
+	}
 
-		this.setData({ nodesMap, nodes: [...nodesMap.values()] }, this.setNodesGraph);
+	updateNodesColor = () => {
+		const nodesMap = new Map(this.state.data.nodesMap);
+		const nodeKeys = [...nodesMap.keys()];
+
+		for (const node of nodeKeys) {
+			nodesMap.get(node).color = this.getNodeColor(node);
+		}
+
+		this.setData({ nodesMap, nodes: [...nodesMap.values()] }, () => {
+			this.setNodesGraph();
+		});
+	}
+
+	deleteNodeViewFromNodes = (viewID) => {
+		LOG("Deleting node view from nodes...")
+		const nodesMap = new Map(this.state.data.nodesMap);
+		const nodeKeys = [...nodesMap.keys()];
+
+		for (const node of nodeKeys) {
+			nodesMap.get(node).views.delete(viewID);
+			nodesMap.get(node).color = this.getNodeColor(node);
+		}
+
+		this.setData({ nodesMap, nodes: [...nodesMap.values()] }, () => {
+			this.setNodesGraph();
+			LOG("Done deleting node view from nodes.")
+		});
 	}
 
 	resetData = () => {
@@ -372,7 +416,9 @@ export class App extends Component {
 						data={this.state.data}
 						setData={this.setData}
 						createView={this.createView}
-						updateNodeViews={this.updateNodeViews}
+						updateNodesFromNodeViews={this.updateNodesFromNodeViews}
+						updateNodesColor={this.updateNodesColor}
+						deleteNodeViewFromNodes={this.deleteNodeViewFromNodes}
 					/>
 				</FormContainer>
 			</>

@@ -16,7 +16,7 @@ export class ClusterHistogram extends Component {
         }
 
         if (prevProps.histogramTicks !== this.props.histogramTicks) {
-            LOG("Updating histogram...", true)
+            LOG("Updating histogram...")
             this.generateHistogram();
             LOG("Done updating histogram...")
         }
