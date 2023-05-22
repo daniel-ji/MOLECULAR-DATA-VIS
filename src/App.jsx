@@ -13,7 +13,7 @@ import CreateViews from './components/form/form_steps/CreateViews'
 
 import './App.scss'
 
-import { DEFAULT_DATA, LOG, NODE_GRAPH_CANVAS_ID, NODE_GRAPH_CONFIG } from './constants';
+import { DEFAULT_DATA, LOG, NODE_GRAPH_CANVAS_ID, NODE_GRAPH_CONFIG, CALCULATE_ASSORT_PY } from './constants';
 import { Graph } from '@cosmograph/cosmos'
 
 export class App extends Component {
@@ -31,11 +31,16 @@ export class App extends Component {
 			},
 			threshold: 0.015,
 			thresholdValid: true,
+			pyodide: undefined,
 		}
 	}
 
-	componentDidMount() {
+	async componentDidMount() {
 		this.setState({ nodeGraph: new Graph(document.getElementById(NODE_GRAPH_CANVAS_ID), NODE_GRAPH_CONFIG) }, this.setNodesGraph)
+		// this.setState({ pyodide: await window.loadPyodide() }, async () => {
+		// 	await this.state.pyodide.loadPackage('networkx');
+		// 	await this.state.pyodide.loadPackage("scipy");
+		// })
 	}
 
 	setData = (newData, callback) => {
@@ -174,7 +179,7 @@ export class App extends Component {
 			clusterNodes.push({
 				cluster,
 				size: cluster.size,
-				triangleCount
+				triangleCount: triangleCount / 6,
 			});
 			clusterSizes.push(cluster.size);
 			clusterDistribution.set(cluster.size, (clusterDistribution.get(cluster.size) || 0) + 1);
@@ -186,11 +191,13 @@ export class App extends Component {
 
 		clusterNodes.sort((a, b) => a.cluster.size - b.cluster.size)
 		clusterSizes.sort((a, b) => a - b);
+		console.log(clusterNodes, clusterSizes, clusterDistribution)
 		this.setData({ cluster: { clusterNodes, clusterSizes, clusterDistribution } }, callback)
 		LOG("Done generating clusters...")
 	}
 
 	updateSummaryStats = () => {
+		console.log(this.state.data);
 		// alias
 		const data = this.state.data;
 
@@ -217,6 +224,7 @@ export class App extends Component {
 		for (let i = 0; i < data.cluster.clusterNodes.length; i++) {
 			triangleCount += data.cluster.clusterNodes[i].triangleCount;
 		}
+
 		// get number of possible connected triples
 		let triples = 0;
 		for (const node of data.nodes) {
@@ -224,9 +232,9 @@ export class App extends Component {
 			triples += adjacentNodeCount * (adjacentNodeCount - 1) / 2;
 		}
 		triples /= 3;
-		// TODO: Don't reinvent the wheel, use a library for this
+
 		// calculate transitivity
-		const transitivity = (triangleCount / triples).toFixed(2);
+		const transitivity = (triangleCount / triples).toFixed(6);
 
 		// calculate assortativity
 		let sourceAverage = 0;
@@ -250,7 +258,13 @@ export class App extends Component {
 			targetVariance += Math.pow(data.nodesMap.get(link.target).adjacentNodes.size - targetAverage, 2);
 		}
 
-		const assortativity = (assortNumerator / Math.sqrt(sourceVariance * targetVariance)).toFixed(8);
+		const assortativity = (assortNumerator / Math.sqrt(sourceVariance * targetVariance)).toFixed(6);
+
+		// this.state.pyodide.globals.set("G", this.state.pyodide.toPy(data.links.map(link => [link.sourceNumericID, link.targetNumericID])));
+		// this.state.pyodide.runPython(CALCULATE_ASSORT_PY);
+		// const assortativity = this.state.pyodide.globals.get("assortativity");
+		// const transitivity = this.state.pyodide.globals.get("transitivity");
+		// const triangleCount = this.state.pyodide.globals.get("triangle_count");
 
 		this.setData({ stats: { clusterMedian, clusterMean, transitivity, triangleCount, meanPairwiseDistance, medianPairwiseDistance, assortativity } })
 	}

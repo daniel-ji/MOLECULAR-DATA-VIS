@@ -165,7 +165,7 @@ export class UploadData extends Component {
         }
 
         // update state
-        this.props.setData({demographicData: { data: demoData, categories: demoCategories }}, callback);
+        this.props.setData({ demographicData: { data: demoData, categories: demoCategories } }, callback);
 
         // // generate quantitative data intervals
         // generateQuantIntervals();
@@ -175,7 +175,8 @@ export class UploadData extends Component {
 
     getPairwiseDistances = async (callback) => {
         const allLinks = new Map();
-        const allNodes = new Set();
+        const allNodes = new Map();
+        const allNodesArray = [];
 
         const file = document.getElementById("upload-pairwise-file").files[0];
         console.log("\n\n\n-------- READING FILE -------- \n\n\n")
@@ -220,6 +221,21 @@ export class UploadData extends Component {
                     continue;
                 }
 
+                // skip empty lines / lines with missing data
+                if (columns[0] === undefined || columns[0] === "" || columns[1] === undefined || columns[1] === "") {
+                    continue;
+                }
+
+                // add nodes to set of all nodes
+                if (!allNodes.has(columns[0])) {
+                    allNodesArray.push(columns[0]);
+                    allNodes.set(columns[0], allNodesArray.length - 1);
+                }
+                if (!allNodes.has(columns[1])) {
+                    allNodesArray.push(columns[1]);
+                    allNodes.set(columns[1], allNodesArray.length - 1);
+                }
+
                 // add to map of all pairwise distances if below threshold
                 if (parseFloat(columns[2]) < MAX_THRESHOLD) {
                     const min = columns[0].localeCompare(columns[1]) < 0 ? columns[0] : columns[1];
@@ -227,21 +243,12 @@ export class UploadData extends Component {
                     allLinks.set(min + "-" + max, {
                         id: min + "-" + max,
                         source: columns[0],
+                        sourceNumericID: allNodes.get(columns[0]),
                         target: columns[1],
+                        targetNumericID: allNodes.get(columns[1]),
                         value: parseFloat(columns[2]),
                     })
                 }
-
-                // skip empty lines / lines with missing data
-                if (columns[0] === undefined || columns[0] === "" || columns[1] === undefined || columns[1] === "") {
-                    continue;
-                }
-
-
-
-                // add nodes to set of all nodes
-                allNodes.add(columns[0]);
-                allNodes.add(columns[1]);
             }
         }
 

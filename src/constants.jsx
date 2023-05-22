@@ -1,11 +1,12 @@
 export const CHUNK_SIZE = 1024 * 1024 * 10;
 export const MAX_THRESHOLD = 0.05;
 export const MAX_INDIVIDUAL_CATEGORIES = 255;
+export const CALCULATE_ASSORT_PY = await (await fetch("./python/calculate_stats.py")).text();
 
 export const DEFAULT_DATA = {
     nodes: [],
     nodesMap: new Map(),
-    allNodes: new Set(),
+    allNodes: new Map(),
     nodeViews: new Map(),
     links: [],
     linksMap: new Map(),
@@ -68,7 +69,7 @@ export const READ_FILE_ASYNC = async (file, asText = false) => {
 
 let basetime = performance.now();
 export const LOG = (message) => {
-    if (performance.now() - basetime > 2000) {
+    if (performance.now() - basetime > 10000) {
         basetime = performance.now();
     }
 
