@@ -1,44 +1,84 @@
-import React, { Component } from 'react'
+import React from 'react'
 
-export class AdjustIntervals extends Component {
+import FormStep from './FormStep'
+
+export class AdjustIntervals extends FormStep {
     constructor(props) {
         super(props)
 
         this.state = {
             intervals: [],
+            intervalElements: [],
         }
     }
 
     componentDidMount() {
-        this.renderIntervals();
+        this.getIntervals(this.renderIntervals)
     }
 
-    selectCategory = (e) => {
-        this.renderIntervals();
+    // @Override
+    checkStepValidity = () => {
+        return false;
+    }
+
+    selectCategory = () => {
+        this.getIntervals(this.renderIntervals)
     }
 
     // TODO: handle when interval is used in a view, or when interval is out of bounds / not between other intervals
     addInterval = (index) => {
-        const intervals = this.getIntervals();
-        intervals.splice(index + 1, 0, (intervals[index] + intervals[index + 1]) / 2);
-        this.renderIntervals();
+        const intervals = this.state.intervals;
+        const newIntervals = [
+            [...intervals.slice(0, index + 1)],
+            {
+                interval: (intervals[index] + intervals[index + 1]) / 2,
+                valid: true
+            },
+            [...intervals.slice(index + 1)]
+        ]
+
+        this.setState({ intervals: newIntervals }, this.renderIntervals)
     }
 
     setInterval = (index, value) => {
-        const intervals = this.getIntervals();
-        intervals[index] = parseFloat(value);
-        this.renderIntervals();
+        const intervals = this.state.intervals;
+        const newIntervals = [...intervals];
+        newIntervals[index] = {
+            interval: parseFloat(value),
+            valid: true
+        };
+
+        if (index !== 0 && newIntervals[index].interval <= newIntervals[index - 1].interval) {
+            newIntervals[index].valid = false;
+        }
+
+        if (index !== newIntervals.length - 1 && newIntervals[index].interval >= newIntervals[index + 1].interval) {
+            newIntervals[index].valid = false;
+        }
+
+        this.setState({ intervals: newIntervals }, this.renderIntervals)
     }
 
     deleteInterval = (index) => {
-        const intervals = this.getIntervals();
-        intervals.splice(index, 1);
-        this.renderIntervals();
+        const intervals = this.state.intervals;
+        const newIntervals = [
+            [...intervals.slice(0, index)],
+            [...intervals.slice(index + 1)]
+        ];
+
+        this.setState({ intervals: newIntervals }, this.renderIntervals)
     }
 
-    getIntervals = () => {
+    getIntervals = (callback) => {
         const category = document.getElementById("number-category-intervals-select").value;
-        return this.props.data.demographicData.categories.get(category).intervals;
+        this.setState({
+            intervals: this.props.data.demographicData.categories.get(category).intervals.map(interval => {
+                return {
+                    interval,
+                    valid: true
+                }
+            })
+        }, callback);
     }
 
     renderIntervals = () => {
@@ -48,34 +88,22 @@ export class AdjustIntervals extends Component {
             return;
         }
 
-        const intervals = this.props.data.demographicData.categories.get(category).intervals;
-
+        const intervals = this.state.intervals;
+        
         this.setState({
-            intervals: intervals.map((interval, index) => {
+            intervalElements: intervals.map((intervalsObject, index) => {
+                const interval = intervalsObject.interval;
+                const valid = intervalsObject.valid;
+
                 return (
                     <div key={index} className="d-flex align-items-center">
-                        <input type="number" step="0.01" className="form-control my-3" value={parseFloat(interval.toFixed(2))} onChange={(e) => this.setInterval(index, e.target.value)} />
+                        <input type="number" step="0.01" className={`form-control my-3 ${!valid && 'is-invalid'}`} value={parseFloat(interval.toFixed(2))} onChange={(e) => this.setInterval(index, e.target.value)} />
                         {index !== 0 && index !== intervals.length - 1 ? <button className="btn btn-danger ms-4" onClick={() => this.deleteInterval(index)}><i className="bi bi-trash"></i></button> : null}
                         {index !== intervals.length - 1 ? <button className="btn btn-primary ms-4" onClick={() => this.addInterval(index)}><i className="bi bi-plus"></i></button> : null}
                     </div>
                 )
             })
         })
-
-        // add event listener to update intervals
-        // input.addEventListener("input", (e) => {
-        //     const value = parseFloat(e.target.value);
-        //     if (value <= intervals[j - 1] || value >= intervals[j + 1]) {
-        //         // error, add red border
-        //         input.classList.add("border-danger");
-        //         return;
-        //     }
-
-        //     // remove red border if any
-        //     input.classList.remove("border-danger");
-        //     intervals[j] = parseFloat(e.target.value);
-        //     updateNodeView(categoryIndex);
-        // })
     }
 
     render() {
@@ -96,7 +124,7 @@ export class AdjustIntervals extends Component {
 
                 <div id="number-category-list-container" className="mb-5">
                     <h4 className="text-center">Intervals</h4>
-                    {this.state.intervals}
+                    {this.state.intervalElements}
                 </div>
             </div>
         )

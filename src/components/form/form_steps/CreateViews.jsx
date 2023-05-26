@@ -1,6 +1,8 @@
-import React, { Component } from 'react'
+import React from 'react'
 
-export class CreateViews extends Component {
+import FormStep from './FormStep'
+
+export class CreateViews extends FormStep {
     constructor(props) {
         super(props)
 

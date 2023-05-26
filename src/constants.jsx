@@ -2,6 +2,7 @@ export const CHUNK_SIZE = 1024 * 1024 * 10;
 export const MAX_THRESHOLD = 0.05;
 export const MAX_INDIVIDUAL_CATEGORIES = 255;
 export const CALCULATE_ASSORT_PY = await (await fetch("./python/calculate_stats.py")).text();
+export const FORM_STEPS = 3;
 
 export const DEFAULT_DATA = {
     nodes: [],

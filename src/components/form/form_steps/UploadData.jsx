@@ -1,8 +1,10 @@
-import React, { Component } from 'react'
+import React from 'react'
+
+import FormStep from './FormStep'
 
 import { MAX_THRESHOLD, MAX_INDIVIDUAL_CATEGORIES, READ_FILE_ASYNC, LOG, CHUNK_SIZE } from '../../../constants'
 
-export class UploadData extends Component {
+export class UploadData extends FormStep {
     constructor(props) {
         super(props)
 

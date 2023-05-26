@@ -7,9 +7,6 @@ import ClusterHistogram from './components/diagrams/histograms/ClusterHistogram'
 import SummaryStats from './components/diagrams/stats/SummaryStats'
 
 import FormContainer from './components/form/FormContainer'
-import UploadData from './components/form/form_steps/UploadData'
-import AdjustIntervals from './components/form/form_steps/AdjustIntervals'
-import CreateViews from './components/form/form_steps/CreateViews'
 
 import './App.scss'
 
@@ -37,10 +34,10 @@ export class App extends Component {
 
 	async componentDidMount() {
 		this.setState({ nodeGraph: new Graph(document.getElementById(NODE_GRAPH_CANVAS_ID), NODE_GRAPH_CONFIG) }, this.setNodesGraph)
-		// this.setState({ pyodide: await window.loadPyodide() }, async () => {
-		// 	await this.state.pyodide.loadPackage('networkx');
-		// 	await this.state.pyodide.loadPackage("scipy");
-		// })
+		this.setState({ pyodide: await window.loadPyodide() }, async () => {
+			await this.state.pyodide.loadPackage('networkx');
+			await this.state.pyodide.loadPackage("scipy");
+		})
 	}
 
 	setData = (newData, callback) => {
@@ -191,13 +188,11 @@ export class App extends Component {
 
 		clusterNodes.sort((a, b) => a.cluster.size - b.cluster.size)
 		clusterSizes.sort((a, b) => a - b);
-		console.log(clusterNodes, clusterSizes, clusterDistribution)
 		this.setData({ cluster: { clusterNodes, clusterSizes, clusterDistribution } }, callback)
 		LOG("Done generating clusters...")
 	}
 
 	updateSummaryStats = () => {
-		console.log(this.state.data);
 		// alias
 		const data = this.state.data;
 
@@ -219,52 +214,52 @@ export class App extends Component {
 		data.links.sort((a, b) => a.value - b.value);
 		const medianPairwiseDistance = data.links[Math.floor(data.links.length / 2)].value.toFixed(6);
 
-		// get triangle count
-		let triangleCount = 0;
-		for (let i = 0; i < data.cluster.clusterNodes.length; i++) {
-			triangleCount += data.cluster.clusterNodes[i].triangleCount;
-		}
+		// // get triangle count
+		// let triangleCount = 0;
+		// for (let i = 0; i < data.cluster.clusterNodes.length; i++) {
+		// 	triangleCount += data.cluster.clusterNodes[i].triangleCount;
+		// }
 
-		// get number of possible connected triples
-		let triples = 0;
-		for (const node of data.nodes) {
-			const adjacentNodeCount = node.adjacentNodes.size;
-			triples += adjacentNodeCount * (adjacentNodeCount - 1) / 2;
-		}
-		triples /= 3;
+		// // get number of possible connected triples
+		// let triples = 0;
+		// for (const node of data.nodes) {
+		// 	const adjacentNodeCount = node.adjacentNodes.size;
+		// 	triples += adjacentNodeCount * (adjacentNodeCount - 1) / 2;
+		// }
+		// triples /= 3;
 
-		// calculate transitivity
-		const transitivity = (triangleCount / triples).toFixed(6);
+		// // calculate transitivity
+		// const transitivity = (triangleCount / triples).toFixed(6);
 
-		// calculate assortativity
-		let sourceAverage = 0;
-		let targetAverage = 0;
-		for (const link of data.links) {
-			sourceAverage += data.nodesMap.get(link.source).adjacentNodes.size;
-			targetAverage += data.nodesMap.get(link.target).adjacentNodes.size;
-		}
+		// // calculate assortativity
+		// let sourceAverage = 0;
+		// let targetAverage = 0;
+		// for (const link of data.links) {
+		// 	sourceAverage += data.nodesMap.get(link.source).adjacentNodes.size;
+		// 	targetAverage += data.nodesMap.get(link.target).adjacentNodes.size;
+		// }
 
-		sourceAverage /= data.links.length;
-		targetAverage /= data.links.length;
+		// sourceAverage /= data.links.length;
+		// targetAverage /= data.links.length;
 
 
-		let assortNumerator = 0; // similar to covariance
-		let sourceVariance = 0;
-		let targetVariance = 0;
+		// let assortNumerator = 0; // similar to covariance
+		// let sourceVariance = 0;
+		// let targetVariance = 0;
 
-		for (const link of data.links) {
-			assortNumerator += (data.nodesMap.get(link.source).adjacentNodes.size - sourceAverage) * (data.nodesMap.get(link.target).adjacentNodes.size - targetAverage);
-			sourceVariance += Math.pow(data.nodesMap.get(link.source).adjacentNodes.size - sourceAverage, 2);
-			targetVariance += Math.pow(data.nodesMap.get(link.target).adjacentNodes.size - targetAverage, 2);
-		}
+		// for (const link of data.links) {
+		// 	assortNumerator += (data.nodesMap.get(link.source).adjacentNodes.size - sourceAverage) * (data.nodesMap.get(link.target).adjacentNodes.size - targetAverage);
+		// 	sourceVariance += Math.pow(data.nodesMap.get(link.source).adjacentNodes.size - sourceAverage, 2);
+		// 	targetVariance += Math.pow(data.nodesMap.get(link.target).adjacentNodes.size - targetAverage, 2);
+		// }
 
-		const assortativity = (assortNumerator / Math.sqrt(sourceVariance * targetVariance)).toFixed(6);
+		// const assortativity = (assortNumerator / Math.sqrt(sourceVariance * targetVariance)).toFixed(6);
 
-		// this.state.pyodide.globals.set("G", this.state.pyodide.toPy(data.links.map(link => [link.sourceNumericID, link.targetNumericID])));
-		// this.state.pyodide.runPython(CALCULATE_ASSORT_PY);
-		// const assortativity = this.state.pyodide.globals.get("assortativity");
-		// const transitivity = this.state.pyodide.globals.get("transitivity");
-		// const triangleCount = this.state.pyodide.globals.get("triangle_count");
+		this.state.pyodide.globals.set("G", this.state.pyodide.toPy(data.links.map(link => [link.sourceNumericID, link.targetNumericID])));
+		this.state.pyodide.runPython(CALCULATE_ASSORT_PY);
+		const assortativity = this.state.pyodide.globals.get("assortativity");
+		const transitivity = this.state.pyodide.globals.get("transitivity");
+		const triangleCount = this.state.pyodide.globals.get("triangle_count");
 
 		this.setData({ stats: { clusterMedian, clusterMean, transitivity, triangleCount, meanPairwiseDistance, medianPairwiseDistance, assortativity } })
 	}
@@ -411,30 +406,21 @@ export class App extends Component {
 						data={this.state.data}
 					/>
 				</DiagramsContainer>
-				<FormContainer>
-					{/** each of the following components is a step in the form **/}
-					<UploadData
-						threshold={this.state.threshold}
-						thresholdValid={this.state.thresholdValid}
-						nodeGraph={this.state.nodeGraph}
-						setThreshold={this.setThreshold}
-						setThresholdValid={this.setThresholdValid}
-						resetData={this.resetData}
-						setData={this.setData}
-						updateDiagrams={this.updateDiagrams}
-					/>
-					<AdjustIntervals
-						data={this.state.data}
-					/>
-					<CreateViews
-						data={this.state.data}
-						setData={this.setData}
-						createView={this.createView}
-						updateNodesFromNodeViews={this.updateNodesFromNodeViews}
-						updateNodesColor={this.updateNodesColor}
-						deleteNodeViewFromNodes={this.deleteNodeViewFromNodes}
-					/>
-				</FormContainer>
+				<FormContainer
+					data={this.state.data}
+					setData={this.setData}
+					resetData={this.resetData}
+					threshold={this.state.threshold}
+					thresholdValid={this.state.thresholdValid}
+					nodeGraph={this.state.nodeGraph}
+					setThreshold={this.setThreshold}
+					setThresholdValid={this.setThresholdValid}
+					updateDiagrams={this.updateDiagrams}
+					createView={this.createView}
+					updateNodesFromNodeViews={this.updateNodesFromNodeViews}
+					updateNodesColor={this.updateNodesColor}
+					deleteNodeViewFromNodes={this.deleteNodeViewFromNodes}
+				/>
 			</>
 		)
 	}

@@ -5,7 +5,7 @@ if (G is None):
     print("Error: G is not defined")
     exit()
 
-# calculate assortativity
+# calculate assortativity, transitivity, and triangle count
 G = nx.Graph([tuple(l) for l in G])
 assortativity = nx.degree_pearson_correlation_coefficient(G)
 transitivity = nx.transitivity(G)
