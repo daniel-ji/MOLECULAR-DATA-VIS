@@ -23,5 +23,8 @@ dist-ssr
 *.sln
 *.sw?
 
-# test / dev files
-test/
+# test files that are too large
+test_too_large/
+
+# to keep track of progress
+todo.txt
