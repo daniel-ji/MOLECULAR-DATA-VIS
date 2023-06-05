@@ -1,25 +1,42 @@
-import React from 'react'
-
-import FormStep from './FormStep'
+import { React, Component } from 'react'
 
 import { MAX_THRESHOLD, MAX_INDIVIDUAL_CATEGORIES, READ_FILE_ASYNC, LOG, CHUNK_SIZE } from '../../../constants'
 
-export class UploadData extends FormStep {
+/**
+ * Component to upload pairwise distance data files.
+ * 
+ * STEP VALID CONDITION: Pairwise distance file is valid or data is already uploaded.
+ */
+export class UploadData extends Component {
     constructor(props) {
         super(props)
 
         this.state = {
-            thresholdTimeout: undefined,
+            thresholdTimeout: undefined, // Throttle threshold input updates (prevent lag)
             uploadSuccess: false,
             uploadLoading: false,
+
+            pairwiseFile: undefined,
+            dataFile: undefined,
+
+            pairwiseDistanceInvalid: false,
         }
     }
 
+    componentDidUpdate(prevProps, prevState) {
+        if (!prevProps.checkStepValidFlag && this.props.checkStepValidFlag) {
+            if (this.props.data.nodes.length > 0) {
+                this.props.setStepValid(true);
+            } else {
+                this.setState({ pairwiseDistanceInvalid: true })
+                this.props.setStepValid(false);
+            }
+        }
+    }
+
+    // Update threshold value and update diagrams if valid
     updateThreshold = (e) => {
-        this.props.setThreshold(e.target.value);
-        const thresholdValid = e.target.value !== "" && e.target.value >= 0 && e.target.value <= MAX_THRESHOLD;
-        this.props.setThresholdValid(thresholdValid);
-        if (thresholdValid) {
+        if (this.props.setThreshold(e.target.value)) {
             clearTimeout(this.state.thresholdTimeout);
             this.setState({
                 thresholdTimeout: setTimeout(() => {
@@ -32,24 +49,30 @@ export class UploadData extends FormStep {
         }
     }
 
-    updatePairwiseFile = (e) => {
-        this.setState({ uploadSuccess: false, uploadLoading: false })
+    clickPairwiseFile = () => {
         document.getElementById("upload-pairwise-file").value = "";
     }
 
-    updateDataFile = (e) => {
-        this.setState({ uploadSuccess: false, uploadLoading: false });
+    updatePairwiseFile = (e) => {
+        this.setState({ uploadSuccess: false, uploadLoading: false, pairwiseFile: e.target.files[0] })
+    }
+
+    clickDataFile = () => {
         document.getElementById("upload-data-file").value = "";
+    }
+
+    updateDataFile = (e) => {
+        this.setState({ uploadSuccess: false, uploadLoading: false, dataFile: e.target.files[0] });
     }
 
     readData = async () => {
         if (!document.getElementById("upload-pairwise-file").files[0]) {
-            alert("Please select a pairwise distances file.");
+            this.setState({ pairwiseDistanceInvalid: true })
             return;
         }
 
         // update status
-        this.setState({ uploadLoading: true, uploadSuccess: false });
+        this.setState({ uploadLoading: true, uploadSuccess: false, pairwiseDistanceInvalid: false });
 
         // reset data, get individual demographic data, and get pairwise distances (actual node / link data)
         this.props.resetData();
@@ -159,7 +182,7 @@ export class UploadData extends FormStep {
             const max = values[values.length - 1];
             const step = (max - min) / 5;
             for (let j = min; j < max + step; j += step) {
-                demoCategories.get(demoCategoriesKeys[i]).intervals.push(j);
+                demoCategories.get(demoCategoriesKeys[i]).intervals.push({ interval: j, valid: true });
             }
 
             // delete elements
@@ -168,9 +191,6 @@ export class UploadData extends FormStep {
 
         // update state
         this.props.setData({ demographicData: { data: demoData, categories: demoCategories } }, callback);
-
-        // // generate quantitative data intervals
-        // generateQuantIntervals();
 
         LOG("Done parsing node supplementary data...")
     }
@@ -275,13 +295,14 @@ export class UploadData extends FormStep {
 
                 <label htmlFor="upload-pairwise-file" className="form-label w-100 text-center">Upload pairwise distances
                     file: <i className="bi bi-asterisk text-danger"></i></label>
-                <input type="file" className="form-control" id="upload-pairwise-file" onClick={this.updatePairwiseFile} />
+                <input type="file" className={`form-control ${this.state.pairwiseDistanceInvalid && "is-invalid"}`} id="upload-pairwise-file" onChange={this.updatePairwiseFile} onClick={this.clickPairwiseFile} />
+                {this.state.pairwiseDistanceInvalid && <div className="invalid-feedback">Please upload a valid pairwise distance file. Submit to apply changes.</div>}
 
                 <label htmlFor="upload-data-file" className="form-label w-100 text-center mt-3">Upload supplementary data
                     file:</label>
                 <input type="file" className="form-control" id="upload-data-file" onClick={this.updateDataFile} />
 
-                <button id="read-file" className="btn btn-primary mt-3" onClick={this.readData}>Submit</button>
+                {this.state.pairwiseFile && <button id="read-file" className="btn btn-primary mt-3" onClick={this.readData}>Submit</button>}
                 <p className={`mt-3 text-success text-center ${!this.state.uploadLoading && !this.state.uploadSuccess && 'd-none'}`} id="upload-success">
                     {this.state.uploadLoading && "Loading..."}
                     {this.state.uploadSuccess && "Done!"}

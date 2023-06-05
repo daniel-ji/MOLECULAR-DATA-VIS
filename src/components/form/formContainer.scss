@@ -17,14 +17,14 @@
         align-items: center;
         width: 100%;
         height: 100%;
-        padding: 0 2vw;
+        padding: 0 1vw;
         overflow-y: scroll;
-    
+
         .bi-asterisk {
             vertical-align: top;
             font-size: 0.5rem;
         }
-    
+
         .input-step {
             display: flex;
             flex-direction: column;
@@ -37,7 +37,7 @@
                 justify-content: center;
                 align-items: center;
             }
-    
+
             .view-entry-preview {
                 display: inline-flex;
                 justify-content: space-between;
@@ -52,8 +52,19 @@
                 }
             }
         }
+
+        #summary-table {
+            width: 100%;
+
+            td {
+                min-width: 100px;
+                padding: 0.6rem;
+                border-color: black;
+                border-width: 2px;
+            }
+        }
     }
-    
+
     #step-action {
         display: inline-flex;
         justify-content: space-between;

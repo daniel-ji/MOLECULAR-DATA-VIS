@@ -1,8 +1,9 @@
 export const CHUNK_SIZE = 1024 * 1024 * 10;
 export const MAX_THRESHOLD = 0.05;
 export const MAX_INDIVIDUAL_CATEGORIES = 255;
-export const CALCULATE_ASSORT_PY = await (await fetch("./python/calculate_stats.py")).text();
-export const FORM_STEPS = 3;
+export const CALCULATE_ASSORT_PY = "./python/calculate_stats.py";
+export const FORM_STEPS = 4;
+export const DIAGRAMS_COUNT = 4;
 
 export const DEFAULT_DATA = {
     nodes: [],
@@ -12,9 +13,9 @@ export const DEFAULT_DATA = {
     links: [],
     linksMap: new Map(),
     allLinks: new Map(),
-    cluster: {
+    clusterData: {
         clusterDistribution: new Map(),
-        clusterNodes: [],
+        clusters: [],
         clusterSizes: [],
     },
     stats: {
@@ -33,7 +34,7 @@ export const DEFAULT_DATA = {
 };
 
 export const NODE_GRAPH_CANVAS_ID = "node-graph";
-export const NODE_GRAPH_CONFIG = {
+export const NODE_GRAPH_BASE_CONFIG = {
     backgroundColor: "#ffffff",
     nodeColor: (node) => {
         return node.color ?? "#000000";
@@ -51,10 +52,10 @@ export const NODE_GRAPH_CONFIG = {
         scaleNodesOnZoom: true,
         friction: 1,
         linkDistance: 50,
-        gravity: 0.2,
+        gravity: 0.12,
         decay: 99999999,
         linkSpring: 0.1,
-    }
+    },
 }
 
 export const READ_FILE_ASYNC = async (file, asText = false) => {

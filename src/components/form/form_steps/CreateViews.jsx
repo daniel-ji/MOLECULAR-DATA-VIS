@@ -1,26 +1,38 @@
-import React from 'react'
+import { React, Component, Fragment } from 'react'
 
-import FormStep from './FormStep'
-
-export class CreateViews extends FormStep {
+/**
+ * Component for creating views.
+ * 
+ * STEP VALID CONDITION: None.
+ */
+export class CreateViews extends Component {
     constructor(props) {
         super(props)
 
         this.state = {
             views: [],
             viewSelectColor: "#198754",
-            viewTimeout: undefined,
+            viewTimeout: undefined, // Throttle view color updates
         }
     }
 
+    // Load in view creation form
     componentDidMount() {
         this.renderViews();
     }
 
+    componentDidUpdate(prevProps, prevState) {
+        if (!prevProps.checkStepValidFlag && this.props.checkStepValidFlag) {
+            this.props.setStepValid(true);
+        }
+    }
+
+    // Set view color when color picker is changed (for creating new views)
     setViewSelectColor = (e) => {
         this.setState({ viewSelectColor: e.target.value });
     }
 
+    // Set view color when color picker is changed (for editing existing views)
     setViewColor = (viewID, color) => {
         const nodeViews = new Map(this.props.data.nodeViews);
         nodeViews.get(viewID).color = color;
@@ -31,53 +43,7 @@ export class CreateViews extends FormStep {
         })
     }
 
-    deleteView = (viewID) => {
-        const nodeViews = new Map(this.props.data.nodeViews);
-        nodeViews.delete(viewID);
-        this.props.setData({ nodeViews }, () => this.props.deleteNodeViewFromNodes(viewID))
-    }
-
-    renderViews = () => {
-        const categories = [...this.props.data.demographicData.categories.keys()];
-
-        const views = categories.map((categoryKey, index) => {
-            if (index === 0) {
-                return;
-            }
-
-            const category = this.props.data.demographicData.categories.get(categoryKey);
-
-            let options = [];
-
-            if (category.intervals) {
-                options = category.intervals.map((value, index) => {
-                    if (index === category.intervals.length - 1) {
-                        return;
-                    }
-
-                    return <option key={index} value={value.toFixed(4) + " - " + category.intervals[index + 1].toFixed(4)}>
-                        {value.toFixed(4) + " - " + category.intervals[index + 1].toFixed(4)}</option>
-                });
-            } else {
-                options = [...category.elements.values()].map((value, index) => {
-                    return <option key={index} value={value}>{value}</option>
-                });
-            }
-
-            // add "All" option
-            options.unshift(<option key={-1} value="All">All</option>);
-
-            return <div key={index} className="pairwise-view mb-3 w-100">
-                <label htmlFor={"view-category-select-" + index} className="form-label w-100 text-center">{"View by " + categoryKey.toLowerCase() + ": "}</label>
-                <select id={"view-category-select-" + index} className="form-select view-category-select" category={categoryKey}>
-                    {options}
-                </select>
-            </div>;
-        })
-
-        this.setState({ views })
-    }
-
+    // Create new view
     createView = () => {
         // ID is based on selected categories
         let viewID = "";
@@ -100,8 +66,8 @@ export class CreateViews extends FormStep {
                 // if intervals, add interval range to view name
                 if (category.intervals) {
                     viewName += viewCategories[i].getAttribute("category") + ": " +
-                        category.intervals[viewCategories[i].selectedIndex - 1].toFixed(4) + "-" +
-                        category.intervals[viewCategories[i].selectedIndex].toFixed(4) + ", ";
+                        category.intervals[viewCategories[i].selectedIndex - 1].interval.toFixed(4) + "-" +
+                        category.intervals[viewCategories[i].selectedIndex].interval.toFixed(4) + ", ";
                 } else {
                     viewName += viewCategories[i].getAttribute("category") + ": " + viewCategories[i].value + ", ";
                 }
@@ -128,38 +94,95 @@ export class CreateViews extends FormStep {
         }, () => this.props.updateNodesFromNodeViews(viewID))
     }
 
+    // Delete view
+    deleteView = (viewID) => {
+        const nodeViews = new Map(this.props.data.nodeViews);
+        nodeViews.delete(viewID);
+        this.props.setData({ nodeViews }, () => this.props.deleteNodeViewFromNodes(viewID))
+    }
+
+    // Render view creation form
+    renderViews = () => {
+        const categories = [...this.props.data.demographicData.categories.keys()];
+
+        const views = categories.map((categoryKey, index) => {
+            if (index === 0) {
+                return;
+            }
+
+            const category = this.props.data.demographicData.categories.get(categoryKey);
+
+            let options = [];
+
+            if (category.intervals) {
+                console.log(category.intervals);
+                options = category.intervals.map((value, index) => {
+                    if (index === category.intervals.length - 1) {
+                        return;
+                    }
+
+                    return <option key={index} value={value.interval.toFixed(4) + " - " + category.intervals[index + 1].interval.toFixed(4)}>
+                        {value.interval.toFixed(4) + " - " + category.intervals[index + 1].interval.toFixed(4)}</option>
+                });
+            } else {
+                options = [...category.elements.values()].map((value, index) => {
+                    return <option key={index} value={value}>{value}</option>
+                });
+            }
+
+            // add "All" option
+            options.unshift(<option key={-1} value="All">All</option>);
+
+            return <div key={index} className="pairwise-view mb-3 w-100">
+                <label htmlFor={"view-category-select-" + index} className="form-label w-100 text-center">{"View by " + categoryKey.toLowerCase() + ": "}</label>
+                <select id={"view-category-select-" + index} className="form-select view-category-select" category={categoryKey}>
+                    {options}
+                </select>
+            </div>;
+        })
+
+        this.setState({ views })
+    }
+
     render() {
         return (
             <div id="create-views" className="input-step">
                 <h3 className="w-100 text-center mb-5">Step 3: Create Node Views</h3>
 
-                <div id="views-container">{this.state.views}</div>
+                {this.state.views.length === 0 ?
+                    <p className="text-warning text-center"> No supplementary data has been uploaded.</p> :
+                    <Fragment>
+                        <div id="views-container">{this.state.views}</div>
 
-                <div id="select-view-color" className="w-100 mt-4">
-                    <label htmlFor="view-color">Select View Color:</label>
-                    <input type="color" className="form-control form-control-color ms-3 border-secondary" id="view-color" value={this.state.viewSelectColor}
-                        onChange={this.setViewSelectColor} title="Choose your color" />
-                </div>
-                <div id="create-view">
-                    <button className="btn btn-primary mt-3 w-100" id="create-view-button" onClick={this.createView}>Create View</button>
-                </div>
+                        <div id="select-view-color" className="w-100 mt-4">
+                            <label htmlFor="view-color">Select View Color:</label>
+                            <input type="color" className="form-control form-control-color ms-3 border-secondary" id="view-color" value={this.state.viewSelectColor}
+                                onChange={this.setViewSelectColor} title="Choose your color" />
+                        </div>
+                        <div id="create-view">
+                            <button className="btn btn-primary mt-3 w-100" id="create-view-button" onClick={this.createView}>Create View</button>
+                        </div>
 
-                <h5 className="w-100 mt-5 mb-3 text-center">Created Node Views:</h5>
-                <div id="view-entry-container" className="mb-5">{
-                    [...this.props.data.nodeViews.keys()].map((viewID, index) => {
-                        const viewData = this.props.data.nodeViews.get(viewID);
+                        <h5 className="w-100 mt-5 mb-3 text-center">Created Node Views:</h5>
+                        <div id="view-entry-container" className="mb-5">{
+                            [...this.props.data.nodeViews.keys()].map((viewID, index) => {
+                                const viewData = this.props.data.nodeViews.get(viewID);
 
-                        return (
-                            <div className="view-entry my-3 w-100" id={`view-entry-${viewID}`} key={viewID}>
-                                <div className="view-entry-preview w-100" id={`view-entry-preview-${viewID}`}>
-                                    <button className="btn btn-secondary view-entry-button" id={`view-entry-button-${viewID}`}>{viewData.name}</button>
-                                    <input type="color" className="view-entry-color form-control form-control-color border-secondary" id={`view-entry-color-${viewID}`} value={viewData.color}
-                                        onChange={(e) => this.setViewColor(viewID, e.target.value)} />
-                                    <button className="btn btn-danger view-entry-delete" id={`view-entry-delete-${viewID}`} onClick={() => this.deleteView(viewID)}><i className="bi bi-trash" /></button>
-                                </div>
-                            </div>);
-                    })
-                }</div>
+                                // map views to view entries visible on the page
+                                return (
+                                    <div className="view-entry my-3 w-100" id={`view-entry-${viewID}`} key={viewID}>
+                                        <div className="view-entry-preview w-100" id={`view-entry-preview-${viewID}`}>
+                                            <button className="btn btn-secondary view-entry-button" id={`view-entry-button-${viewID}`}>{viewData.name}</button>
+                                            <input type="color" className="view-entry-color form-control form-control-color border-secondary" id={`view-entry-color-${viewID}`} value={viewData.color}
+                                                onChange={(e) => this.setViewColor(viewID, e.target.value)} />
+                                            <button className="btn btn-danger view-entry-delete" id={`view-entry-delete-${viewID}`} onClick={() => this.deleteView(viewID)}><i className="bi bi-trash" /></button>
+                                        </div>
+                                    </div>);
+                            })
+                        }</div>
+                    </Fragment>
+                }
+
             </div>
         )
     }

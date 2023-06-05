@@ -7,22 +7,6 @@ import arrowRight from '../../assets/images/arrow-right.svg'
 export class DiagramsContainer extends Component {
     constructor(props) {
         super(props)
-
-        this.state = {
-            diagramCounter: 0,
-        }
-    }
-
-    incrementCounter = () => {
-        this.setState({ diagramCounter: Math.min(this.state.diagramCounter + 1, this.props.children.length - 1) })
-    }
-
-    decrementCounter = () => {
-        if (this.state.diagramCounter - 1 === 0) {
-            this.props.nodeGraphFitView();
-        }
-
-        this.setState({ diagramCounter: Math.max(this.state.diagramCounter - 1, 0) })
     }
 
     render() {
@@ -30,13 +14,13 @@ export class DiagramsContainer extends Component {
             <div id="diagrams-container">
                 {this.props.children.map((child, index) => {
                     return (
-                    <div key={index} className={`${this.state.diagramCounter !== index && 'd-none'}`}>
+                    <div key={index} className={`${this.props.diagramCounter !== index && 'd-none'}`}>
                         {child}
                     </div>);
                 })}
-                <img src={arrowLeft} id="graph-arrow-left" title="Previous Diagram" onClick={this.decrementCounter} />
-                <img src={arrowRight} id="graph-arrow-right" title="Next Diagram" onClick={this.incrementCounter} />
-                <h5 id="footer-label">Diagram {this.state.diagramCounter + 1} of {this.props.children.length}</h5>
+                <img src={arrowLeft} id="graph-arrow-left" title="Previous Diagram" onClick={this.props.decrementDiagramCounter} />
+                <img src={arrowRight} id="graph-arrow-right" title="Next Diagram" onClick={this.props.incrementDiagramCounter} />
+                <h5 id="footer-label">Diagram {this.props.diagramCounter + 1} of {this.props.children.length}</h5>
             </div>
         )
     }

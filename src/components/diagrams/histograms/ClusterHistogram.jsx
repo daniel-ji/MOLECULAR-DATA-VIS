@@ -25,7 +25,7 @@ export class ClusterHistogram extends Component {
     generateHistogram = () => {
         const data = this.props.data;
 
-        if (data.cluster.clusterSizes.length === 0) {
+        if (data.clusterData.clusterSizes.length === 0) {
             return;
         }
 
@@ -50,7 +50,7 @@ export class ClusterHistogram extends Component {
 
         // X axis: scale and draw:
         const x = d3.scaleLinear()
-            .domain([0, Math.max(...data.cluster.clusterSizes) * 1.05])
+            .domain([0, Math.max(...data.clusterData.clusterSizes) * 1.05])
             .range([0, width]);
         svg.append("g")
             .attr("transform", `translate(0, ${height})`)
@@ -70,7 +70,7 @@ export class ClusterHistogram extends Component {
             .thresholds(x.ticks(this.props.histogramTicks)); // then the numbers of bins
 
         // And apply this function to data to get the bins
-        const bins = histogram(data.cluster.clusterSizes);
+        const bins = histogram(data.clusterData.clusterSizes);
 
         // Y axis: scale and draw:
         const y = d3.scaleLinear()
@@ -114,12 +114,12 @@ export class ClusterHistogram extends Component {
     render() {
         return (
             <div className="graph-element" id="cluster-graph-container">
-                <h1 className="graph-title">Cluster Size Histogram</h1>
+                <h2 className="graph-title">Cluster Size Histogram</h2>
                 <div id="cluster-histogram"></div>
                 <div id="cluster-histogram-controls">
                     <h5 className="mb-3">Bar Tick Intervals Count:</h5>
                     <input className="form-control w-50" type="number" id="cluster-histogram-bar-count" min="1" value={this.props.histogramTicks} onChange={this.setIntervals} />
-                    <div className="form-text" id="cluster-histogram-bar-hint">Max (Intervals of 1): {this.props.maxHistogramTicks}</div>
+                    <div className="form-text" id="cluster-histogram-bar-hint">Max: {this.props.maxHistogramTicks}</div>
                 </div>
             </div>
         )

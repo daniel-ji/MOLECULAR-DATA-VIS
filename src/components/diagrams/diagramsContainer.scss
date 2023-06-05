@@ -55,7 +55,8 @@
             width: 60%;
             padding: 2vh 2vw;
 
-            td {
+            td, th {
+                min-width: 100px;
                 padding: 0.6rem;
                 border-color: black;
                 border-width: 2px;
