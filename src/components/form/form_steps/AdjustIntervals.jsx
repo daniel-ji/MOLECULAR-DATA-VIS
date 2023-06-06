@@ -1,5 +1,7 @@
 import { React, Component, Fragment } from 'react'
 
+import { INVALID_INTERVALS_TEXT } from '../../../constants';
+
 /**
  * Component for adjusting intervals for quantitative demographic data categories.
  * 
@@ -26,7 +28,18 @@ export class AdjustIntervals extends Component {
      */
     componentDidUpdate(prevProps, prevState) {
         if (!prevProps.checkStepValidFlag && this.props.checkStepValidFlag) {
-            this.props.setStepValid(this.getAllIntervalsValid());
+            const valid = this.getAllIntervalsValid();
+            this.props.setStepValid(valid);
+            if (valid) {
+                if (this.props.notificationMessage?.messageText === INVALID_INTERVALS_TEXT) {
+                    this.props.setNotificationMessage(undefined);
+                }
+            } else {
+                this.props.setNotificationMessage({
+                    messageText: INVALID_INTERVALS_TEXT,
+                    messageType: "danger",
+                });
+            }
         }
     }
 
@@ -84,11 +97,12 @@ export class AdjustIntervals extends Component {
             valid: true
         };
 
-        console.log(newIntervals[index])
-
         this.setState({ intervals: newIntervals }, () => {
             this.updateIntervalsValid(() => {
-                this.props.setIntervals(document.getElementById("number-category-intervals-select").value, newIntervals)
+                if (this.getAllIntervalsValid() && this.props.notificationMessage?.messageText === INVALID_INTERVALS_TEXT) {
+                    this.props.setNotificationMessage(undefined);
+                }
+                this.props.setIntervals(document.getElementById("number-category-intervals-select").value, this.state.intervals)
                 this.renderIntervals();
             });
         })
@@ -107,7 +121,12 @@ export class AdjustIntervals extends Component {
         ];
 
         this.props.setIntervals(document.getElementById("number-category-intervals-select").value, newIntervals)
-        this.setState({ intervals: newIntervals }, this.renderIntervals)
+        this.setState({ intervals: newIntervals }, () => {
+            if (this.getAllIntervalsValid() && this.props.notificationMessage?.messageText === INVALID_INTERVALS_TEXT) {
+                this.props.setNotificationMessage(undefined);
+            }
+            this.renderIntervals();
+        })
     }
 
     /**

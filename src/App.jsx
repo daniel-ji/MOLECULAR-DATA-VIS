@@ -35,6 +35,13 @@ export class App extends Component {
 			thresholdValid: true,
 			selectingCluster: false,
 			selectedClusterIndex: undefined,
+			/** GLOBAL STATE */
+			notificationMessage: {
+				messageType: undefined,
+				messageText: undefined,
+				messageDuration: undefined,
+			},
+			notificationMessageTimeout: undefined,
 		}
 	}
 
@@ -192,7 +199,8 @@ export class App extends Component {
 	updateNodesGraph = () => {
 		LOG("Setting nodes graph...")
 		this.state.nodeGraph.setData(this.state.data.nodes, this.state.data.links);
-		setTimeout(() => { this.state.nodeGraph.fitView() }, 750)
+		setTimeout(() => { this.state.nodeGraph.fitView() }, 1000)
+		setTimeout(() => { this.state.nodeGraph.setZoomLevel(this.state.nodeGraph.getZoomLevel() * 0.8, 250) }, 1500)
 		LOG("Done setting nodes graph.")
 	}
 
@@ -523,6 +531,25 @@ export class App extends Component {
 		this.setState({ data: DEFAULT_DATA, selectedClusterIndex: undefined, selectingCluster: false })
 	}
 
+	/**
+	 * Set notificaiton message.
+	 * 
+	 * @param {Object} message Must include a messageType, messageText, and messageDuration property.
+	 * @param {String} message.messageType Must be one of the following: "success", "info", "warning", "danger".
+	 * @param {String} message.messageText The text to display in the notification.
+	 * @param {Number} message.messageDuration The duration in milliseconds to display the notification, 
+	 * 		if undefined, the notification will be displayed indefinitely until clicked
+	 */
+	setNotificationMessage = (message) => {
+		clearTimeout(this.state.notificationMessageTimeout);
+		this.setState({
+			notificationMessage: message, notificationMessageTimeout:
+				setTimeout(() => {
+					this.setState({ notificationMessage: undefined });
+				}, message?.messageDuration ?? 9999999)
+		});
+	}
+
 	render() {
 		return (
 			<>
@@ -567,7 +594,14 @@ export class App extends Component {
 					selectingCluster={this.state.selectingCluster}
 					setSelectingCluster={this.setSelectingCluster}
 					setDiagram={this.setDiagram}
+					notificationMessage={this.state.notificationMessage}
+					setNotificationMessage={this.setNotificationMessage}
 				/>
+				{this.state.notificationMessage?.messageText !== undefined &&
+					<div id="notification-message" className={`alert alert-${this.state.notificationMessage.messageType} my-3`} role="alert" onClick={() => this.setNotificationMessage(undefined)}>
+						{this.state.notificationMessage.messageText} <i className="bi bi-x-lg ms-3"></i>
+					</div>
+				}
 			</>
 		)
 	}

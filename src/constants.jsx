@@ -5,6 +5,9 @@ export const CALCULATE_ASSORT_PY = "./python/calculate_stats.py";
 export const FORM_STEPS = 4;
 export const DIAGRAMS_COUNT = 4;
 
+export const INVALID_INTERVALS_TEXT = "Please enter valid intervals.";
+export const INVALID_PAIRWISE_FILE_TEXT = "Please upload and submit a valid pairwise distance file.";
+
 export const DEFAULT_DATA = {
     nodes: [],
     nodesMap: new Map(),
@@ -39,7 +42,9 @@ export const NODE_GRAPH_BASE_CONFIG = {
     nodeColor: (node) => {
         return node.color ?? "#000000";
     },
-    nodeSize: 7,
+    nodeSize: (node) => {
+        return node.color ? 9 : 7;
+    },
     linkColor: "#a3a3a3",
     linkArrows: false,
     linkWidth: 0.2,

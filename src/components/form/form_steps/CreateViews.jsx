@@ -115,7 +115,6 @@ export class CreateViews extends Component {
             let options = [];
 
             if (category.intervals) {
-                console.log(category.intervals);
                 options = category.intervals.map((value, index) => {
                     if (index === category.intervals.length - 1) {
                         return;

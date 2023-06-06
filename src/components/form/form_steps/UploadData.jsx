@@ -1,6 +1,6 @@
-import { React, Component } from 'react'
+import { React, Component, Fragment } from 'react'
 
-import { MAX_THRESHOLD, MAX_INDIVIDUAL_CATEGORIES, READ_FILE_ASYNC, LOG, CHUNK_SIZE } from '../../../constants'
+import { MAX_THRESHOLD, MAX_INDIVIDUAL_CATEGORIES, READ_FILE_ASYNC, LOG, CHUNK_SIZE, INVALID_PAIRWISE_FILE_TEXT } from '../../../constants'
 
 /**
  * Component to upload pairwise distance data files.
@@ -28,6 +28,10 @@ export class UploadData extends Component {
             if (this.props.data.nodes.length > 0) {
                 this.props.setStepValid(true);
             } else {
+                this.props.setNotificationMessage({
+                    messageType: "danger",
+                    messageText: INVALID_PAIRWISE_FILE_TEXT,
+                })
                 this.setState({ pairwiseDistanceInvalid: true })
                 this.props.setStepValid(false);
             }
@@ -51,6 +55,7 @@ export class UploadData extends Component {
 
     clickPairwiseFile = () => {
         document.getElementById("upload-pairwise-file").value = "";
+        this.setState({ pairwiseFile: undefined })
     }
 
     updatePairwiseFile = (e) => {
@@ -59,6 +64,7 @@ export class UploadData extends Component {
 
     clickDataFile = () => {
         document.getElementById("upload-data-file").value = "";
+        this.setState({ dataFile: undefined })
     }
 
     updateDataFile = (e) => {
@@ -68,10 +74,17 @@ export class UploadData extends Component {
     readData = async () => {
         if (!document.getElementById("upload-pairwise-file").files[0]) {
             this.setState({ pairwiseDistanceInvalid: true })
+            this.props.setNotificationMessage({
+                messageType: "danger",
+                messageText: INVALID_PAIRWISE_FILE_TEXT,
+            })
             return;
         }
 
         // update status
+        if (this.props.notificationMessage?.messageText === INVALID_PAIRWISE_FILE_TEXT) {
+            this.props.setNotificationMessage(undefined);
+        }
         this.setState({ uploadLoading: true, uploadSuccess: false, pairwiseDistanceInvalid: false });
 
         // reset data, get individual demographic data, and get pairwise distances (actual node / link data)
@@ -295,14 +308,18 @@ export class UploadData extends Component {
 
                 <label htmlFor="upload-pairwise-file" className="form-label w-100 text-center">Upload pairwise distances
                     file: <i className="bi bi-asterisk text-danger"></i></label>
-                <input type="file" className={`form-control ${this.state.pairwiseDistanceInvalid && "is-invalid"}`} id="upload-pairwise-file" onChange={this.updatePairwiseFile} onClick={this.clickPairwiseFile} />
-                {this.state.pairwiseDistanceInvalid && <div className="invalid-feedback">Please upload a valid pairwise distance file. Submit to apply changes.</div>}
+                <input type="file" className={`form-control ${this.state.pairwiseDistanceInvalid && !this.state.pairwiseFile && "is-invalid"}`} id="upload-pairwise-file" onChange={this.updatePairwiseFile} onClick={this.clickPairwiseFile} />
 
-                <label htmlFor="upload-data-file" className="form-label w-100 text-center mt-3">Upload supplementary data
-                    file:</label>
-                <input type="file" className="form-control" id="upload-data-file" onClick={this.updateDataFile} />
+                {this.state.pairwiseFile &&
+                    <Fragment>
+                        <label htmlFor="upload-data-file" className="form-label w-100 text-center mt-3">Upload supplementary data
+                            file:</label>
+                        <input type="file" className="form-control" id="upload-data-file" onClick={this.updateDataFile} />
+                    </Fragment>
+                }
 
-                {this.state.pairwiseFile && <button id="read-file" className="btn btn-primary mt-3" onClick={this.readData}>Submit</button>}
+                {this.state.pairwiseFile && <button id="read-file" className="btn btn-primary mt-3" onClick={this.readData}>Submit Files</button>}
+                {this.state.pairwiseDistanceInvalid && <div className="text-danger text-center">Please submit uploaded files.</div>}
                 <p className={`mt-3 text-success text-center ${!this.state.uploadLoading && !this.state.uploadSuccess && 'd-none'}`} id="upload-success">
                     {this.state.uploadLoading && "Loading..."}
                     {this.state.uploadSuccess && "Done!"}

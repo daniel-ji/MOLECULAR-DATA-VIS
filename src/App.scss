@@ -11,3 +11,10 @@ body {
     justify-content: center;
     align-items: center;
 }
+
+#notification-message {
+    position: absolute;
+    top: 0;
+    font-size: 0.9rem;
+    cursor: pointer;
+}

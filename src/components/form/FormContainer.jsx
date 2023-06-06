@@ -32,11 +32,11 @@ export class FormContainer extends Component {
     }
 
     incrementDiagramCounter = () => {
-        this.setState({ stepValid: undefined, formDecrementOnValid: false, checkStepValidFlag: true})
+        this.setState({ stepValid: undefined, formDecrementOnValid: false, checkStepValidFlag: true })
     }
 
     decrementDiagramCounter = () => {
-        this.setState({ stepValid: undefined, formDecrementOnValid: true, checkStepValidFlag: true})
+        this.setState({ stepValid: undefined, formDecrementOnValid: true, checkStepValidFlag: true })
     }
 
     setStepValid = (valid) => {
@@ -61,12 +61,16 @@ export class FormContainer extends Component {
                             data={this.props.data}
                             setData={this.props.setData}
                             updateDiagrams={this.props.updateDiagrams}
+                            notificationMessage={this.props.notificationMessage}
+                            setNotificationMessage={this.props.setNotificationMessage}
                         />,
                         <AdjustIntervals
                             checkStepValidFlag={this.state.checkStepValidFlag}
                             setStepValid={this.setStepValid}
                             data={this.props.data}
                             setIntervals={this.props.setIntervals}
+                            notificationMessage={this.props.notificationMessage}
+                            setNotificationMessage={this.props.setNotificationMessage}
                         />,
                         <CreateViews
                             checkStepValidFlag={this.state.checkStepValidFlag}
@@ -78,7 +82,7 @@ export class FormContainer extends Component {
                             updateNodesColor={this.props.updateNodesColor}
                             deleteNodeViewFromNodes={this.props.deleteNodeViewFromNodes}
                         />,
-                        <ClusterInspection 
+                        <ClusterInspection
                             checkStepValidFlag={this.state.checkStepValidFlag}
                             setStepValid={this.setStepValid}
                             selectedClusterIndex={this.props.selectedClusterIndex}
@@ -86,6 +90,7 @@ export class FormContainer extends Component {
                             selectingCluster={this.props.selectingCluster}
                             setSelectingCluster={this.props.setSelectingCluster}
                             setDiagram={this.props.setDiagram}
+                            data={this.props.data}
                         />
                     ][this.state.formCounter]}
                 </div>
