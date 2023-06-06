@@ -4,7 +4,7 @@ body {
     height: 100vh;
 }
 
-#root {
+#app {
     width: 100vw;
     height: 100vh;
     display: flex;
@@ -12,9 +12,29 @@ body {
     align-items: center;
 }
 
-#notification-message {
+#width-adjust-slider-grab {
+    position: absolute;
+    top: 0;
+    display: flex;
+    justify-content: center;
+    width: 24px;
+    height: 100%;
+    cursor: col-resize;
+
+    #width-adjust-slider {
+        width: 4px;
+        height: 100%;
+        background-color: #000000;
+    }
+}
+
+#alert-message {
     position: absolute;
     top: 0;
     font-size: 0.9rem;
     cursor: pointer;
+}
+
+.disable-select {
+    user-select: none;
 }

@@ -45,7 +45,7 @@ export class FormContainer extends Component {
 
     render() {
         return (
-            <div id="form-container">
+            <div id="form-container" style={{width: `${this.props.formWidth}px`}}>
                 <h2 className="text-center mt-4 mb-4">Pairwise Distance Graph Visualization</h2>
                 <div id="input-form-content">
                     {/** each of the following components is a step in the form **/}
@@ -61,16 +61,16 @@ export class FormContainer extends Component {
                             data={this.props.data}
                             setData={this.props.setData}
                             updateDiagrams={this.props.updateDiagrams}
-                            notificationMessage={this.props.notificationMessage}
-                            setNotificationMessage={this.props.setNotificationMessage}
+                            alertMessage={this.props.alertMessage}
+                            setAlertMessage={this.props.setAlertMessage}
                         />,
                         <AdjustIntervals
                             checkStepValidFlag={this.state.checkStepValidFlag}
                             setStepValid={this.setStepValid}
                             data={this.props.data}
                             setIntervals={this.props.setIntervals}
-                            notificationMessage={this.props.notificationMessage}
-                            setNotificationMessage={this.props.setNotificationMessage}
+                            alertMessage={this.props.alertMessage}
+                            setAlertMessage={this.props.setAlertMessage}
                         />,
                         <CreateViews
                             checkStepValidFlag={this.state.checkStepValidFlag}

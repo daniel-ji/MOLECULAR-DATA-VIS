@@ -5,6 +5,10 @@ export const CALCULATE_ASSORT_PY = "./python/calculate_stats.py";
 export const FORM_STEPS = 4;
 export const DIAGRAMS_COUNT = 4;
 
+export const DEFAULT_DIAGRAM_WIDTH = 0.65;
+export const DEFAULT_SLIDER_WIDTH = 24;
+export const SLIDER_BOUNDS = [0.3, 0.7];
+
 export const INVALID_INTERVALS_TEXT = "Please enter valid intervals.";
 export const INVALID_PAIRWISE_FILE_TEXT = "Please upload and submit a valid pairwise distance file.";
 

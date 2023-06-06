@@ -11,7 +11,7 @@ export class DiagramsContainer extends Component {
 
     render() {
         return (
-            <div id="diagrams-container">
+            <div id="diagrams-container" style={{width: `${this.props.diagramWidth}px`}}>
                 {this.props.children.map((child, index) => {
                     return (
                     <div key={index} className={`${this.props.diagramCounter !== index && 'd-none'}`}>

@@ -31,11 +31,11 @@ export class AdjustIntervals extends Component {
             const valid = this.getAllIntervalsValid();
             this.props.setStepValid(valid);
             if (valid) {
-                if (this.props.notificationMessage?.messageText === INVALID_INTERVALS_TEXT) {
-                    this.props.setNotificationMessage(undefined);
+                if (this.props.alertMessage?.messageText === INVALID_INTERVALS_TEXT) {
+                    this.props.setAlertMessage(undefined);
                 }
             } else {
-                this.props.setNotificationMessage({
+                this.props.setAlertMessage({
                     messageText: INVALID_INTERVALS_TEXT,
                     messageType: "danger",
                 });
@@ -99,8 +99,8 @@ export class AdjustIntervals extends Component {
 
         this.setState({ intervals: newIntervals }, () => {
             this.updateIntervalsValid(() => {
-                if (this.getAllIntervalsValid() && this.props.notificationMessage?.messageText === INVALID_INTERVALS_TEXT) {
-                    this.props.setNotificationMessage(undefined);
+                if (this.getAllIntervalsValid() && this.props.alertMessage?.messageText === INVALID_INTERVALS_TEXT) {
+                    this.props.setAlertMessage(undefined);
                 }
                 this.props.setIntervals(document.getElementById("number-category-intervals-select").value, this.state.intervals)
                 this.renderIntervals();
@@ -122,8 +122,8 @@ export class AdjustIntervals extends Component {
 
         this.props.setIntervals(document.getElementById("number-category-intervals-select").value, newIntervals)
         this.setState({ intervals: newIntervals }, () => {
-            if (this.getAllIntervalsValid() && this.props.notificationMessage?.messageText === INVALID_INTERVALS_TEXT) {
-                this.props.setNotificationMessage(undefined);
+            if (this.getAllIntervalsValid() && this.props.alertMessage?.messageText === INVALID_INTERVALS_TEXT) {
+                this.props.setAlertMessage(undefined);
             }
             this.renderIntervals();
         })

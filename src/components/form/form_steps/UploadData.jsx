@@ -28,7 +28,7 @@ export class UploadData extends Component {
             if (this.props.data.nodes.length > 0) {
                 this.props.setStepValid(true);
             } else {
-                this.props.setNotificationMessage({
+                this.props.setAlertMessage({
                     messageType: "danger",
                     messageText: INVALID_PAIRWISE_FILE_TEXT,
                 })
@@ -74,7 +74,7 @@ export class UploadData extends Component {
     readData = async () => {
         if (!document.getElementById("upload-pairwise-file").files[0]) {
             this.setState({ pairwiseDistanceInvalid: true })
-            this.props.setNotificationMessage({
+            this.props.setAlertMessage({
                 messageType: "danger",
                 messageText: INVALID_PAIRWISE_FILE_TEXT,
             })
@@ -82,8 +82,8 @@ export class UploadData extends Component {
         }
 
         // update status
-        if (this.props.notificationMessage?.messageText === INVALID_PAIRWISE_FILE_TEXT) {
-            this.props.setNotificationMessage(undefined);
+        if (this.props.alertMessage?.messageText === INVALID_PAIRWISE_FILE_TEXT) {
+            this.props.setAlertMessage(undefined);
         }
         this.setState({ uploadLoading: true, uploadSuccess: false, pairwiseDistanceInvalid: false });
 

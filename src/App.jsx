@@ -10,7 +10,7 @@ import FormContainer from './components/form/FormContainer'
 
 import './App.scss'
 
-import { DEFAULT_DATA, LOG, NODE_GRAPH_CANVAS_ID, NODE_GRAPH_BASE_CONFIG, CALCULATE_ASSORT_PY, DIAGRAMS_COUNT } from './constants';
+import { DEFAULT_DATA, LOG, NODE_GRAPH_CANVAS_ID, NODE_GRAPH_BASE_CONFIG, CALCULATE_ASSORT_PY, DIAGRAMS_COUNT, DEFAULT_DIAGRAM_WIDTH, DEFAULT_SLIDER_WIDTH, SLIDER_BOUNDS } from './constants';
 import { Graph } from '@cosmograph/cosmos'
 
 export class App extends Component {
@@ -21,6 +21,7 @@ export class App extends Component {
 			/** PAIRWISE DISTANCE DATA / STATS */
 			data: DEFAULT_DATA,
 			/** DIAGRAMS DATA */
+			diagramWidth: DEFAULT_DIAGRAM_WIDTH * screen.width,
 			diagramCounter: 0,
 			nodeGraph: undefined,
 			clusterHistogram: {
@@ -31,17 +32,19 @@ export class App extends Component {
 			pyodide: undefined,
 			CALCULATE_STATS_PYTHON_CODE: undefined,
 			/** FORM DATA */
+			formWidth: (1 - DEFAULT_DIAGRAM_WIDTH) * screen.width - DEFAULT_SLIDER_WIDTH,
 			threshold: 0.015,
 			thresholdValid: true,
 			selectingCluster: false,
 			selectedClusterIndex: undefined,
 			/** GLOBAL STATE */
-			notificationMessage: {
+			alertMessage: {
 				messageType: undefined,
 				messageText: undefined,
 				messageDuration: undefined,
 			},
-			notificationMessageTimeout: undefined,
+			alertMessageTimeout: undefined,
+			adjustingWidth: false,
 		}
 	}
 
@@ -536,24 +539,46 @@ export class App extends Component {
 	 * 
 	 * @param {Object} message Must include a messageType, messageText, and messageDuration property.
 	 * @param {String} message.messageType Must be one of the following: "success", "info", "warning", "danger".
-	 * @param {String} message.messageText The text to display in the notification.
-	 * @param {Number} message.messageDuration The duration in milliseconds to display the notification, 
-	 * 		if undefined, the notification will be displayed indefinitely until clicked
+	 * @param {String} message.messageText The text to display in the alert.
+	 * @param {Number} message.messageDuration The duration in milliseconds to display the alert, 
+	 * 		if undefined, the alert will be displayed indefinitely until clicked
 	 */
-	setNotificationMessage = (message) => {
-		clearTimeout(this.state.notificationMessageTimeout);
+	setAlertMessage = (message) => {
+		clearTimeout(this.state.alertMessageTimeout);
 		this.setState({
-			notificationMessage: message, notificationMessageTimeout:
+			alertMessage: message, alertMessageTimeout:
 				setTimeout(() => {
-					this.setState({ notificationMessage: undefined });
+					this.setState({ alertMessage: undefined });
 				}, message?.messageDuration ?? 9999999)
 		});
 	}
 
+	startAdjustWidth = (e) => {
+		this.setState({ adjustingWidth: true })
+		document.addEventListener("mousemove", this.adjustWidthFunction)
+	}
+
+	endAdjustWidth = (e) => {
+		this.setState({ adjustingWidth: false })
+		document.removeEventListener("mousemove", this.adjustWidthFunction)
+	}
+
+	adjustWidthFunction = (e) => {
+		if (e.clientX < SLIDER_BOUNDS[0] * screen.width || e.clientX > SLIDER_BOUNDS[1] * screen.width) {
+			return;
+		}
+
+		this.setState({
+			diagramWidth: e.clientX,
+			formWidth: screen.width - e.clientX - DEFAULT_SLIDER_WIDTH,
+		})
+	}
+
 	render() {
 		return (
-			<>
+			<div id="app" className={`${this.state.adjustingWidth && `disable-select`}`}>
 				<DiagramsContainer
+					diagramWidth={this.state.diagramWidth}
 					nodeGraphFixFitView={this.nodeGraphFixFitView}
 					diagramCounter={this.state.diagramCounter}
 					incrementDiagramCounter={this.incrementDiagramCounter}
@@ -575,6 +600,14 @@ export class App extends Component {
 						selectedClusterIndex={this.state.selectedClusterIndex}
 					/>
 				</DiagramsContainer>
+				<div
+					id="width-adjust-slider-grab"
+					onMouseDown={this.startAdjustWidth}
+					onMouseUp={this.endAdjustWidth}
+					style={{ left: this.state.diagramWidth }}
+				>
+					<div id="width-adjust-slider" />
+				</div>
 				<FormContainer
 					data={this.state.data}
 					setData={this.setData}
@@ -594,15 +627,16 @@ export class App extends Component {
 					selectingCluster={this.state.selectingCluster}
 					setSelectingCluster={this.setSelectingCluster}
 					setDiagram={this.setDiagram}
-					notificationMessage={this.state.notificationMessage}
-					setNotificationMessage={this.setNotificationMessage}
+					alertMessage={this.state.alertMessage}
+					setAlertMessage={this.setAlertMessage}
+					formWidth={this.state.formWidth}
 				/>
-				{this.state.notificationMessage?.messageText !== undefined &&
-					<div id="notification-message" className={`alert alert-${this.state.notificationMessage.messageType} my-3`} role="alert" onClick={() => this.setNotificationMessage(undefined)}>
-						{this.state.notificationMessage.messageText} <i className="bi bi-x-lg ms-3"></i>
+				{this.state.alertMessage?.messageText !== undefined &&
+					<div id="alert-message" className={`alert alert-${this.state.alertMessage.messageType} my-3`} role="alert" onClick={() => this.setAlertMessage(undefined)}>
+						{this.state.alertMessage.messageText} <i className="bi bi-x-lg ms-3"></i>
 					</div>
 				}
-			</>
+			</div>
 		)
 	}
 }
