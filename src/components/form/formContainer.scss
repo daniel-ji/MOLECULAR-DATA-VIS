@@ -69,4 +69,13 @@
         justify-content: space-between;
         width: 100%;
     }
+
+    .cluster-view-sort {
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .cluster-view-sort-selected {
+        background-color: #E8E8E8;
+    }
 }

@@ -93,7 +93,7 @@ export class AdjustIntervals extends Component {
         const intervals = this.state.intervals;
         const newIntervals = [...intervals];
         newIntervals[index] = {
-            interval: isNaN(parseFloat(value)) ? '' : parseFloat(value),
+            interval: isNaN(value) ? '' : parseFloat(value),
             valid: true
         };
 

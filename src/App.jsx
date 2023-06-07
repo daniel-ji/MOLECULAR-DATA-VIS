@@ -89,6 +89,11 @@ export class App extends Component {
 		// initialize cosmograph
 		this.setState({ nodeGraph: new Graph(document.getElementById(NODE_GRAPH_CANVAS_ID), nodeGraphConfig) }, this.updateNodesGraph)
 
+		document.addEventListener("mousemove", this.adjustWidthFunction)
+		window.addEventListener('blur', () => {
+			this.setState({ adjustingWidth: false })
+		})
+
 		// this.setState({ pyodide: await window.loadPyodide() }, async () => {
 		// 	await this.state.pyodide.loadPackage('networkx');
 		// 	await this.state.pyodide.loadPackage("scipy");
@@ -555,15 +560,17 @@ export class App extends Component {
 
 	startAdjustWidth = (e) => {
 		this.setState({ adjustingWidth: true })
-		document.addEventListener("mousemove", this.adjustWidthFunction)
 	}
 
 	endAdjustWidth = (e) => {
 		this.setState({ adjustingWidth: false })
-		document.removeEventListener("mousemove", this.adjustWidthFunction)
 	}
 
 	adjustWidthFunction = (e) => {
+		if (!this.state.adjustingWidth) {
+			return;
+		}
+
 		if (e.clientX < SLIDER_BOUNDS[0] * screen.width || e.clientX > SLIDER_BOUNDS[1] * screen.width) {
 			return;
 		}

@@ -1,5 +1,7 @@
 import { React, Component, Fragment } from 'react'
 
+import { DEFAULT_CLUSTER_INSPECT_ICON } from '../../../constants'
+
 /**
  * Component for selecting and inspecting individual clusters.
  * 
@@ -10,7 +12,42 @@ export class ClusterInspection extends Component {
         super(props)
 
         this.state = {
+            sortStates: Array(this.props.data.demographicData.categories.size).fill(DEFAULT_CLUSTER_INSPECT_ICON),
+            clusterTableData: [],
         }
+    }
+
+    componentDidMount() {
+        this.renderClusterTableData();
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        if (!prevProps.checkStepValidFlag && this.props.checkStepValidFlag) {
+            this.props.setStepValid(true);
+        }
+
+        if (prevProps.selectedClusterIndex !== this.props.selectedClusterIndex && this.props.selectedClusterIndex !== undefined) {
+            this.renderClusterTableData();
+        }
+    }
+
+    renderClusterTableData = () => {
+        if (this.props.selectedClusterIndex === undefined) {
+            return;
+        }
+
+        const clusterTableData = [...this.props.data.clusterData.clusters[this.props.selectedClusterIndex].clusterNodes].map((node, index) => {
+            const nodeData = this.props.data.nodesMap.get(node);
+            const individualData = this.props.data.demographicData.data.get(nodeData.individualID);
+
+            return {
+                node: node,
+                individualID: nodeData.individualID,
+                individualData: Object.values(individualData),
+            }
+        })
+
+        this.setState({ clusterTableData });
     }
 
     /**
@@ -31,10 +68,37 @@ export class ClusterInspection extends Component {
         this.props.setSelectedCluster(undefined);
     }
 
-    componentDidUpdate(prevProps, prevState) {
-        if (!prevProps.checkStepValidFlag && this.props.checkStepValidFlag) {
-            this.props.setStepValid(true);
+    sortClusterBy = (index) => {
+        const icon = this.state.sortStates[index];
+        const newSortStates = Array(this.state.sortStates.length).fill(DEFAULT_CLUSTER_INSPECT_ICON);
+        if (icon === 'bi-arrow-down-up') {
+            newSortStates[index] = 'bi-arrow-up';
+        } else if (icon === 'bi-arrow-up') {
+            newSortStates[index] = 'bi-arrow-down';
+        } else {
+            newSortStates[index] = 'bi-arrow-down-up';
         }
+
+        const newClusterTableData = [...this.state.clusterTableData];
+        newClusterTableData.sort((a, b) => {
+            if (icon === 'bi-arrow-down-up') {
+                let temp = a;
+                a = b;
+                b = temp;
+            }
+
+            if (index === 0) {
+                return parseFloat(a.individualID) - parseFloat(b.individualID);
+            } else {
+                if (isNaN(a.individualData[index - 1])) {
+                    return a.individualData[index - 1].localeCompare(b.individualData[index - 1]);
+                } else {
+                    return parseFloat(a.individualData[index - 1]) - parseFloat(b.individualData[index - 1]);
+                }
+            }
+        });
+
+        this.setState({ sortStates: newSortStates, clusterTableData: newClusterTableData });
     }
 
     render() {
@@ -50,26 +114,23 @@ export class ClusterInspection extends Component {
                         <tr>
                             {[...this.props.data.demographicData.categories.keys()].map((categoryKey, index) => {
                                 return (
-                                    <th>{categoryKey}</th>
+                                    <th key={index}
+                                        className={`cluster-view-sort ${this.state.sortStates[index] !== DEFAULT_CLUSTER_INSPECT_ICON && 'cluster-view-sort-selected'}`}
+                                        onClick={() => this.sortClusterBy(index)}
+                                    >
+                                        {categoryKey} <i className={`bi ${this.state.sortStates[index]}`} />
+                                    </th>
                                 )
                             })}
                         </tr>
                     </thead>
                     <tbody>
                         {
-                            this.props.selectedClusterIndex !== undefined &&
-                            [...this.props.data.clusterData.clusters[this.props.selectedClusterIndex].clusterNodes].map((node, index) => {
-                                const nodeData = this.props.data.nodesMap.get(node);
-                                const individualData = this.props.data.demographicData.data.get(nodeData.individualID);
-
+                            this.state.clusterTableData.map((entry, index) => {
                                 return (
-                                    <tr>
-                                        <td>{nodeData.individualID}</td>
-                                        {Object.values(individualData).map((value, index) => {
-                                            return (
-                                                <td>{value}</td>
-                                            )
-                                        })}
+                                    <tr key={index}>
+                                        <td>{entry.individualID}</td>
+                                        {entry.individualData.map((value, index) => <td key={index}>{value}</td>)}
                                     </tr>
                                 )
                             })

@@ -12,6 +12,8 @@ export const SLIDER_BOUNDS = [0.3, 0.7];
 export const INVALID_INTERVALS_TEXT = "Please enter valid intervals.";
 export const INVALID_PAIRWISE_FILE_TEXT = "Please upload and submit a valid pairwise distance file.";
 
+export const DEFAULT_CLUSTER_INSPECT_ICON = "bi-arrow-down-up";
+
 export const DEFAULT_DATA = {
     nodes: [],
     nodesMap: new Map(),

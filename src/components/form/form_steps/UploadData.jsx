@@ -319,7 +319,7 @@ export class UploadData extends Component {
                 }
 
                 {this.state.pairwiseFile && <button id="read-file" className="btn btn-primary mt-3" onClick={this.readData}>Submit Files</button>}
-                {this.state.pairwiseDistanceInvalid && <div className="text-danger text-center">Please submit uploaded files.</div>}
+                {this.state.pairwiseDistanceInvalid && <div className="text-danger text-center mt-3">Please submit uploaded files.</div>}
                 <p className={`mt-3 text-success text-center ${!this.state.uploadLoading && !this.state.uploadSuccess && 'd-none'}`} id="upload-success">
                     {this.state.uploadLoading && "Loading..."}
                     {this.state.uploadSuccess && "Done!"}
