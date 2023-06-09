@@ -1,87 +1,106 @@
 #diagrams-container {
-    position: relative;
-    height: 100%;
+	position: relative;
+	height: 100%;
+	top: 0;
+	left: 0;
 
-    .graph-element {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-        top: 0;
-        left: 0;
+	#diagram-tabs {
+		position: relative;
+		top: 0;
+		left: 0;
+		display: flex;
+		justify-content: space-between;
+		width: 100%;
+		height: 8%;
+		border-bottom: 3px solid black;
 
-        .graph-title {
-            position: absolute;
-            top: 4vh;
-            left: 50%;
-            transform: translate(-50%, 0);
-        }
-    }
+		.diagram-tab {
+			display: flex;
+			flex: 1 1 0;
+			justify-content: center;
+			align-items: center;
+			width: 0;
+			height: 100%;
+			cursor: pointer;
+			border-right: 3px solid black;
+			box-sizing: content-box;
 
-    #node-graph-container {
-        #zoom-to-fit {
-            position: absolute;
-            top: 2vh;
-            right: 2vh;
-            height: 45px;
-            cursor: pointer;
-        }
-    }
+			&:last-child {
+				border-right: none;
+			}
+		}
 
-    #cluster-graph-container {
-        #cluster-histogram-controls {
-            position: absolute;
-            top: 0;
-            right: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            border-left: 3px solid black;
-            border-bottom: 3px solid black;
-            padding: 1.5vw 2vw 2vw 2vw;
-        }
-    }
+		.diagram-tab-selected {
+			background-color: #E8E8E8;
+		}
 
-    #summary-stats {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
+	}
+}
 
-        #summary-table {
-            width: 60%;
-            padding: 2vh 2vw;
+#diagrams-content {
+	position: relative;
+	left: 0;
+	height: 92%;
+	width: 100%;
 
-            td, th {
-                min-width: 100px;
-                padding: 0.6rem;
-                border-color: black;
-                border-width: 2px;
-            }
-        }
-    }
+	.graph-element {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		overflow: hidden;
 
-    #graph-arrow-right {
-        position: absolute;
-        top: 50%;
-        right: 3vw;
-        height: 5vh;
-        cursor: pointer;
-    }
+		.graph-title {
+			position: absolute;
+			top: 4vh;
+			left: 50%;
+			transform: translate(-50%, 0);
+		}
+	}
 
-    #graph-arrow-left {
-        position: absolute;
-        top: 50%;
-        left: 3vw;
-        height: 5vh;
-        cursor: pointer;
-    }
+	#node-graph-container {
+		#zoom-to-fit {
+			position: absolute;
+			top: 2vh;
+			right: 2vh;
+			height: 45px;
+			cursor: pointer;
+		}
+	}
 
-    #footer-label {
-        position: absolute;
-        bottom: 4vh;
-        left: 50%;
-        transform: translate(-50%, 0);
-    }
+	#cluster-graph-container {
+		#cluster-histogram-controls {
+			position: absolute;
+			top: 0;
+			right: 0;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: flex-start;
+			border-left: 3px solid black;
+			border-bottom: 3px solid black;
+			padding: 1.5vw 2vw 2vw 2vw;
+		}
+	}
+
+	#summary-stats {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+
+		#summary-table {
+			width: 60%;
+			padding: 2vh 2vw;
+
+			td,
+			th {
+				min-width: 100px;
+				padding: 0.6rem;
+				border-color: black;
+				border-width: 2px;
+			}
+		}
+	}
 }

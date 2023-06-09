@@ -1,81 +1,99 @@
 #form-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    height: 100%;
-    padding: 0vh 2vw;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	height: 100%;
+	padding: 0vh 2vw;
 
-    h1 {
-        text-align: center;
-    }
+	h1 {
+		text-align: center;
+	}
 
-    #input-form-content {
-        position: relative;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        width: 100%;
-        height: 100%;
-        padding: 0 1vw;
-        overflow-y: scroll;
+	#input-form-content {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		width: 100%;
+		height: 100%;
+		padding: 0 1vw;
+		overflow-y: scroll;
 
-        .bi-asterisk {
-            vertical-align: top;
-            font-size: 0.5rem;
-        }
+		.bi-asterisk {
+			vertical-align: top;
+			font-size: 0.5rem;
+		}
 
-        .input-step {
-            display: flex;
-            flex-direction: column;
-            width: 100%;
-        }
+		.input-step {
+			display: flex;
+			flex-direction: column;
+			width: 100%;
+		}
 
-        #create-views {
-            #select-view-color {
-                display: inline-flex;
-                justify-content: center;
-                align-items: center;
-            }
+		#create-views {
+			#category-select-container {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				user-select: none;	
+			}
 
-            .view-entry-preview {
-                display: inline-flex;
-                justify-content: space-between;
-                align-items: center;
+			#select-view-color {
+				display: inline-flex;
+				justify-content: center;
+				align-items: center;
+			}
 
-                .view-entry-button {
-                    width: 75%;
-                }
+			.view-entry-preview {
+				display: inline-flex;
+				justify-content: space-between;
+				align-items: center;
 
-                .view-entry-delete {
-                    width: 10%;
-                }
-            }
-        }
+				.view-entry-button {
+					width: 75%;
+				}
 
-        #summary-table {
-            width: 100%;
+				.view-entry-delete {
+					width: 10%;
+				}
+			}
+		}
 
-            td {
-                min-width: 100px;
-                padding: 0.6rem;
-                border-color: black;
-                border-width: 2px;
-            }
-        }
-    }
+		#inspect-clusters {
+			.cluster-view-sort {
+				cursor: pointer;
+				user-select: none;
+			}
 
-    #step-action {
-        display: inline-flex;
-        justify-content: space-between;
-        width: 100%;
-    }
+			.cluster-view-sort-selected {
+				background-color: #E8E8E8;
+			}
 
-    .cluster-view-sort {
-        cursor: pointer;
-        user-select: none;
-    }
+			.cluster-view-entry {
+				cursor: pointer;
+			}
 
-    .cluster-view-sort-selected {
-        background-color: #E8E8E8;
-    }
+			.cluster-view-entry-highlighted {
+				background-color: #E8E8E8;
+			}
+		}
+		
+		#summary-table {
+			width: 100%;
+
+			td {
+				min-width: 100px;
+				padding: 0.6rem;
+				border-color: black;
+				border-width: 2px;
+			}
+		}
+	}
+
+	#step-action {
+		display: inline-flex;
+		justify-content: space-between;
+		width: 100%;
+	}
+
 }

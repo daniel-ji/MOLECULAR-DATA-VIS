@@ -218,7 +218,8 @@ export class UploadData extends Component {
         LOG("Reading file...")
 
         const array = await READ_FILE_ASYNC(file);
-        LOG("Done reading file...")
+		const delimiter = file.name.endsWith(".csv") ? "," : "\t";
+		LOG("Done reading file...")
 
         const decoder = new TextDecoder("utf-8");
         // for when the chunk_size split doesn't match a full line
@@ -234,7 +235,7 @@ export class UploadData extends Component {
                 // line represents a single pairwise distance entry
                 let line = lines[j];
                 // split line into data entry columns
-                let columns = line.split("\t");
+                let columns = line.split(delimiter);
 
                 // edge case: very first line of file (header line)
                 if (i === 0 && j === 0) {
@@ -246,7 +247,7 @@ export class UploadData extends Component {
                     // add it to the splitString and reset split string
                     line = splitString + line;
                     splitString = "";
-                    columns = line.split("\t")
+                    columns = line.split(delimiter)
                 }
 
                 // edge case: last line is split (part of the line is in the next chunk)

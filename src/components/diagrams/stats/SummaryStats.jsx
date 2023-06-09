@@ -75,7 +75,7 @@ export class SummaryStats extends Component {
 
         return (
             <div className="graph-element" id="summary-stats">
-                <h2 className="graph-title">Cluster Summary Statistics</h2>
+                <h4 className="graph-title">Cluster Summary Statistics</h4>
                 <table className="table table-bordered mt-4" id="summary-table">
                     <thead>
                         <tr>

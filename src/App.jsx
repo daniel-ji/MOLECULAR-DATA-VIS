@@ -162,6 +162,10 @@ export class App extends Component {
 		} else {
 			const selectedNodes = [...this.state.data.clusterData.clusters[value].clusterNodes.values()]
 			this.state.nodeGraph.selectNodesByIds(selectedNodes);
+			this.state.nodeGraph.fitViewByNodeIds(selectedNodes);
+			setTimeout(() => {
+				this.state.nodeGraph.setZoomLevel(this.state.nodeGraph.getZoomLevel() * 2, 250)
+			}, 300)
 		}
 
 		this.setState({ selectedClusterIndex: value })
@@ -193,6 +197,10 @@ export class App extends Component {
 		}
 
 		this.setState({ diagramCounter: Math.max(this.state.diagramCounter - 1, 0) })
+	}
+
+	setDiagramCounter = (value) => {
+		this.setState({ diagramCounter: value })
 	}
 
 	nodeGraphFixFitView = () => {
@@ -590,6 +598,7 @@ export class App extends Component {
 					diagramCounter={this.state.diagramCounter}
 					incrementDiagramCounter={this.incrementDiagramCounter}
 					decrementDiagramCounter={this.decrementDiagramCounter}
+					setDiagramCounter={this.setDiagramCounter}
 				>
 					{/** each of the following components is a diagram **/}
 					<NodesGraph
@@ -608,13 +617,11 @@ export class App extends Component {
 					/>
 				</DiagramsContainer>
 				<div
-					id="width-adjust-slider-grab"
+					id="width-adjust-slider"
 					onMouseDown={this.startAdjustWidth}
 					onMouseUp={this.endAdjustWidth}
 					style={{ left: this.state.diagramWidth }}
-				>
-					<div id="width-adjust-slider" />
-				</div>
+				/>
 				<FormContainer
 					data={this.state.data}
 					setData={this.setData}
