@@ -452,21 +452,16 @@ export class App extends Component {
 			nodeViews.set(viewDataArray[i].viewID, viewDataArray[i]);
 		}
 
-		this.setData({ nodeViews }, () => this.updateNodesFromNodeViews(undefined, callback));
+		this.setData({ nodeViews }, () => this.updateNodesFromNodeViews(callback));
 	}
 
-	updateNodesFromNodeViews = (viewID, callback = () => { }) => {
+	updateNodesFromNodeViews = (callback = () => { }) => {
 		LOG("Updating node views...")
-		const nodeViews = this.state.data.nodeViews;
+		const nodeViews = new Map(this.state.data.nodeViews);
 		const nodesMap = new Map(this.state.data.nodesMap);
 
-		let viewDataArray;
-
-		if (viewID === undefined) {
-			viewDataArray = [...nodeViews.keys()];
-		} else {
-			viewDataArray = [viewID];
-		}
+		const viewDataArray = [...nodeViews.keys()];
+		const viewNodeCount = Array(nodeViews.size).fill(0);
 
 		const nodeKeys = [...nodesMap.keys()];
 
@@ -481,9 +476,13 @@ export class App extends Component {
 			const individualDemoKeys = Object.keys(correspondingIndividual);
 			const individualDemoValues = Object.values(correspondingIndividual);
 
+			// initially clear all views for node
+			nodesMap.get(node).views = new Set();
+
 			// check if sequence's corresponding individual matches view
-			for (const viewIDKey of viewDataArray) {
+			for (let i = 0; i < viewDataArray.length; i++) {
 				let add = true;
+				const viewIDKey = viewDataArray[i];
 				const viewData = nodeViews.get(viewIDKey);
 
 				for (let j = 0; j < individualDemoKeys.length; j++) {
@@ -507,6 +506,7 @@ export class App extends Component {
 
 				if (add) {
 					nodesMap.get(node).views.add(viewIDKey)
+					viewNodeCount[i]++;
 				}
 			}
 
@@ -514,12 +514,28 @@ export class App extends Component {
 			nodesMap.get(node).color = this.getNodeColor(node);
 		}
 
-		this.setData({ nodesMap, nodes: [...nodesMap.values()] }, () => {
+		// remove unused views
+		let unusedViews = "";
+		for (let i = 0; i < viewNodeCount.length; i++) {
+			if (viewNodeCount[i] === 0) {
+				unusedViews += `\n${viewDataArray[i]}`;
+			}
+
+			nodeViews.get(viewDataArray[i]).nodeCount = viewNodeCount[i];
+		}
+
+		if (unusedViews.length > 0) {
+			unusedViews = "The following views have no nodes:" + unusedViews;
+			this.setAlertMessage({
+				messageType: "warning",
+				messageText: unusedViews,
+			})
+		}
+
+		this.setData({ nodeViews, nodesMap, nodes: [...nodesMap.values()] }, () => {
 			this.updateNodesGraph();
 			LOG("Done updating node views.")
-			if (callback) {
-				callback();
-			}
+			callback();
 		});
 	}
 
@@ -739,8 +755,9 @@ export class App extends Component {
 					formWidth={this.state.formWidth}
 				/>
 				{this.state.alertMessage?.messageText !== undefined &&
-					<div id="alert-message" className={`alert alert-${this.state.alertMessage.messageType} my-3`} role="alert" onClick={() => this.setAlertMessage(undefined)}>
-						{this.state.alertMessage.messageText} <i className="bi bi-x-lg ms-3"></i>
+					<div id="alert-message" className={`text-center alert alert-${this.state.alertMessage.messageType} my-3`} role="alert" onClick={() => this.setAlertMessage(undefined)}>
+						<i className="bi bi-x-lg me-3"></i>
+						{this.state.alertMessage.messageText} 
 					</div>
 				}
 			</div>

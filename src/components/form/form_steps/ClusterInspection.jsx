@@ -46,8 +46,6 @@ export class ClusterInspection extends Component {
 
 			const individualData = this.props.data.demographicData.data.get(nodeData.individualID);
 
-			console.log(individualData);
-
 			return {
 				node: node,
 				individualID: nodeData.individualID,

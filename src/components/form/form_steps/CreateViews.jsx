@@ -49,9 +49,8 @@ export class CreateViews extends Component {
 
 	// Create new view
 	createView = () => {
-		// ID is based on selected categories
+		// ID and name are based on selected categories
 		let viewID = "";
-		// view name is based on selected categories, excluding "All", user-facing name
 		let viewName = "";
 		// view values are based on selected categories, used to filter nodes
 		let viewData = [];
@@ -60,35 +59,22 @@ export class CreateViews extends Component {
 		for (let i = 0; i < viewCategories.length; i++) {
 			// add selected value to view data
 			viewData.push(viewCategories[i].value)
-
-			// add selected value to view name if not "All" (index 0)
-			if (viewCategories[i].selectedIndex !== 0) {
-				// get type of input (intervals or elements)
-				const category = this.props.data.demographicData.categories.get(viewCategories[i].getAttribute("category"));
-				// if intervals, add interval range to view name
-				if (category.intervals) {
-					viewName += viewCategories[i].getAttribute("category") + ": " +
-						category.intervals[viewCategories[i].selectedIndex - 1].interval.toFixed(INTERVAL_DECIMAL_PRECISION) + "-" +
-						category.intervals[viewCategories[i].selectedIndex].interval.toFixed(INTERVAL_DECIMAL_PRECISION) + ", ";
-				} else {
-					viewName += viewCategories[i].getAttribute("category") + ": " + viewCategories[i].value + ", ";
-				}
-			}
 		}
 
 		viewID = viewData.join(", ");
-
-		// check if view element exists
-		if (document.getElementById("view-entry-" + viewID) !== null) {
-			alert("View already exists.");
-			return;
-		}
+		viewName = viewData.filter((value) => value !== "All").join(", ");
 
 		if (viewName === "") {
 			viewName = "All";
-		} else {
-			// slice off last comma and space
-			viewName = viewName.slice(0, -2);
+		}
+
+		// check if view element exists
+		if (document.getElementById("view-entry-" + viewID) !== null) {
+			this.props.setAlertMessage({
+				messageType: "danger",
+				messageText: "View already exists."
+			})
+			return;
 		}
 
 		this.props.createViews([{
@@ -100,7 +86,6 @@ export class CreateViews extends Component {
 	}
 
 	// Create multiple views, one for each value of the permutations of selected categories
-	// TODO: do not create views with no nodes
 	createCategoryView = () => {
 		const categories = [...this.props.data.demographicData.categories.keys()];
 		const selectedCategories = this.state.categoryChecked.map((checked, index) => {
@@ -144,11 +129,17 @@ export class CreateViews extends Component {
 
 			for (let i = 0; i < categoryPermutations.length; i++) {
 				const categoryPermutation = categoryPermutations[i];
+				const viewID = categoryPermutation.join(", ");
+				let viewName = categoryPermutation.filter((value) => value !== "All").join(", ");
+
+				if (viewName === "") {
+					viewName = "All";
+				}
 
 				newViewsData.push({
-					viewID: categoryPermutation.join(", "),
+					viewID,
 					color: DEFAULT_VIEW_COLORS[i],
-					name: categoryPermutation.join(", "),
+					name: viewName,
 					values: categoryPermutation
 				});
 			}
@@ -275,11 +266,12 @@ export class CreateViews extends Component {
 								return (
 									<div className="view-entry my-3 w-100" id={`view-entry-${viewID}`} key={viewID}>
 										<div className="view-entry-preview w-100" id={`view-entry-preview-${viewID}`}>
-											<button className="btn btn-secondary view-entry-button" id={`view-entry-button-${viewID}`}>{viewData.name}</button>
+											<button className={`btn btn-${viewData.nodeCount === 0 ? 'warning' : 'success'} view-entry-button`} id={`view-entry-button-${viewID}`}>{viewData.name}</button>
 											<input type="color" className="view-entry-color form-control form-control-color border-secondary" id={`view-entry-color-${viewID}`} value={viewData.color}
 												onChange={(e) => this.setViewColor(viewID, e.target.value)} />
 											<button className="btn btn-danger view-entry-delete" id={`view-entry-delete-${viewID}`} onClick={() => this.deleteView(viewID)}><i className="bi bi-trash" /></button>
 										</div>
+										<div class={`form-text text-${viewData.nodeCount === 0 ? 'warning' : 'success'}`} id={`view-entry-help-${viewID}`}>Views' applied nodes: {viewData.nodeCount}</div>
 									</div>);
 							})
 						}</div>

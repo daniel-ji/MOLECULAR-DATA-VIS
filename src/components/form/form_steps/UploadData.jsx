@@ -92,7 +92,6 @@ export class UploadData extends Component {
 		this.props.resetData();
 		await this.getDemoData();
 		await this.getPairwiseDistances(() => {
-			console.log(this.props.data);
 			if (this.props.data.allNodes.size === 0) {
 				this.props.setAlertMessage({
 					messageType: "danger",
