@@ -323,6 +323,7 @@ export class UploadData extends Component {
                 {this.state.pairwiseDistanceInvalid && <div className="text-danger text-center mt-3">Please submit uploaded files.</div>}
                 <p className={`mt-3 text-success text-center ${!this.state.uploadLoading && !this.state.uploadSuccess && 'd-none'}`} id="upload-success">
                     {this.state.uploadLoading && "Loading..."}
+					{/* TODO: Should error instead of say done when error occurs (like invalid file) */}
                     {this.state.uploadSuccess && "Done!"}
                 </p>
 

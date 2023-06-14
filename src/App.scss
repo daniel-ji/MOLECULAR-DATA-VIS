@@ -24,8 +24,10 @@ body {
 #alert-message {
 	position: absolute;
 	top: 0;
+	left: 50%;
 	font-size: 0.9rem;
 	cursor: pointer;
+	transform: translate(-50%, 0);
 }
 
 .disable-select {

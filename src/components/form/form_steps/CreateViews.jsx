@@ -1,4 +1,5 @@
 import { React, Component, Fragment } from 'react'
+import { DEFAULT_VIEW_COLORS, INTERVAL_DECIMAL_PRECISION } from '../../../constants';
 
 /**
  * Component for creating views.
@@ -13,7 +14,7 @@ export class CreateViews extends Component {
 			categoryChecked: [],
 			categoryCheckboxes: [],
 			views: [],
-			viewSelectColor: "#198754",
+			viewSelectColor: DEFAULT_VIEW_COLORS[0],
 			viewTimeout: undefined, // Throttle view color updates
 		}
 	}
@@ -57,8 +58,6 @@ export class CreateViews extends Component {
 		// loop through categories and create ID based on selected 
 		const viewCategories = document.getElementsByClassName("view-category-select");
 		for (let i = 0; i < viewCategories.length; i++) {
-			// add selected index to ID
-			viewID += viewCategories[i].selectedIndex + (i === viewCategories.length - 1 ? "" : "-");
 			// add selected value to view data
 			viewData.push(viewCategories[i].value)
 
@@ -69,13 +68,15 @@ export class CreateViews extends Component {
 				// if intervals, add interval range to view name
 				if (category.intervals) {
 					viewName += viewCategories[i].getAttribute("category") + ": " +
-						category.intervals[viewCategories[i].selectedIndex - 1].interval.toFixed(4) + "-" +
-						category.intervals[viewCategories[i].selectedIndex].interval.toFixed(4) + ", ";
+						category.intervals[viewCategories[i].selectedIndex - 1].interval.toFixed(INTERVAL_DECIMAL_PRECISION) + "-" +
+						category.intervals[viewCategories[i].selectedIndex].interval.toFixed(INTERVAL_DECIMAL_PRECISION) + ", ";
 				} else {
 					viewName += viewCategories[i].getAttribute("category") + ": " + viewCategories[i].value + ", ";
 				}
 			}
 		}
+
+		viewID = viewData.join(", ");
 
 		// check if view element exists
 		if (document.getElementById("view-entry-" + viewID) !== null) {
@@ -90,11 +91,72 @@ export class CreateViews extends Component {
 			viewName = viewName.slice(0, -2);
 		}
 
-		this.props.createView(viewID, {
+		this.props.createViews([{
+			viewID,
 			color: document.getElementById("view-color").value,
 			name: viewName,
 			values: viewData
-		}, () => this.props.updateNodesFromNodeViews(viewID))
+		}])
+	}
+
+	// Create multiple views, one for each value of the permutations of selected categories
+	// TODO: do not create views with no nodes
+	createCategoryView = () => {
+		const categories = [...this.props.data.demographicData.categories.keys()];
+		const selectedCategories = this.state.categoryChecked.map((checked, index) => {
+			if (checked) {
+				return categories[index];
+			} else {
+				return 'All';
+			}
+		})
+
+		const selectedCategoriesValues = selectedCategories.map((entry) => {
+			if (entry === 'All') {
+				return ['All'];
+			}
+
+			const category = this.props.data.demographicData.categories.get(entry);
+			if (category.elements) {
+				return [...category.elements.values()];
+			} else {
+				const result = [];
+				for (let i = 0; i < category.intervals.length - 1; i++) {
+					result.push(category.intervals[i].interval.toFixed(INTERVAL_DECIMAL_PRECISION) + " - " + category.intervals[i + 1].interval.toFixed(INTERVAL_DECIMAL_PRECISION));
+				}
+				return result;
+			}
+		})
+
+		let categoryPermutations = [[]];
+		for (let i = 1; i < selectedCategoriesValues.length; i++) {
+			const newPermutations = [];
+			for (let j = 0; j < selectedCategoriesValues[i].length; j++) {
+				for (let k = 0; k < categoryPermutations.length; k++) {
+					newPermutations.push([...categoryPermutations[k], selectedCategoriesValues[i][j]]);
+				}
+			}
+			categoryPermutations = newPermutations;
+		}
+
+		if (categoryPermutations.length < DEFAULT_VIEW_COLORS.length) {
+			const newViewsData = [];
+
+			for (let i = 0; i < categoryPermutations.length; i++) {
+				const categoryPermutation = categoryPermutations[i];
+
+				newViewsData.push({
+					viewID: categoryPermutation.join(", "),
+					color: DEFAULT_VIEW_COLORS[i],
+					name: categoryPermutation.join(", "),
+					values: categoryPermutation
+				});
+			}
+
+			this.props.createViews(newViewsData);
+		}
+
+		// TODO: error
 	}
 
 	// Delete view
@@ -153,8 +215,9 @@ export class CreateViews extends Component {
 						return;
 					}
 
-					return <option key={index} value={value.interval.toFixed(4) + " - " + category.intervals[index + 1].interval.toFixed(4)}>
-						{value.interval.toFixed(4) + " - " + category.intervals[index + 1].interval.toFixed(4)}</option>
+					const intervalValue = value.interval.toFixed(INTERVAL_DECIMAL_PRECISION) + " - " + category.intervals[index + 1].interval.toFixed(INTERVAL_DECIMAL_PRECISION);
+
+					return <option key={index} value={intervalValue}>{intervalValue}</option>
 				});
 			} else {
 				options = [...category.elements.values()].map((value, index) => {

@@ -77,7 +77,7 @@ export class FormContainer extends Component {
                             setStepValid={this.setStepValid}
                             data={this.props.data}
                             setData={this.props.setData}
-                            createView={this.props.createView}
+                            createViews={this.props.createViews}
                             updateNodesFromNodeViews={this.props.updateNodesFromNodeViews}
                             updateNodesColor={this.props.updateNodesColor}
                             deleteNodeViewFromNodes={this.props.deleteNodeViewFromNodes}
@@ -89,6 +89,8 @@ export class FormContainer extends Component {
                             setSelectedCluster={this.props.setSelectedCluster}
                             selectingCluster={this.props.selectingCluster}
                             setSelectingCluster={this.props.setSelectingCluster}
+							selectedNodes={this.props.selectedNodes}
+							toggleSelectedNode={this.props.toggleSelectedNode}
                             setDiagram={this.props.setDiagram}
                             data={this.props.data}
                         />

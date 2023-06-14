@@ -1,13 +1,12 @@
 import { React, Component, Fragment } from 'react'
 
-import { INVALID_INTERVALS_TEXT } from '../../../constants';
+import { INTERVAL_DECIMAL_PRECISION, INVALID_INTERVALS_TEXT } from '../../../constants';
 
 /**
  * Component for adjusting intervals for quantitative demographic data categories.
  * 
  * STEP VALID CONDITION: All intervals must be valid.
  */
-// TODO: Add error message for invalid intervals
 export class AdjustIntervals extends Component {
     constructor(props) {
         super(props)
@@ -112,7 +111,6 @@ export class AdjustIntervals extends Component {
      * Delete interval at provided index.
      * @param {*} index Index of interval to delete
     */
-    // TODO: Alert user about views using interval and confirm deletion
     deleteInterval = (index) => {
         const intervals = this.state.intervals;
         const newIntervals = [
@@ -145,7 +143,7 @@ export class AdjustIntervals extends Component {
         this.setState({
             intervalElements: intervals.map((intervalsObject, index) => {
                 const interval = intervalsObject.interval;
-                const intervalValue = interval === '' ? '' : parseFloat(intervalsObject.interval.toFixed(2));
+                const intervalValue = interval === '' ? '' : parseFloat(intervalsObject.interval.toFixed(INTERVAL_DECIMAL_PRECISION));
                 const valid = intervalsObject.valid;
 
                 return (

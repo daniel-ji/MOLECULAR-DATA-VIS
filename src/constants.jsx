@@ -14,77 +14,103 @@ export const INVALID_PAIRWISE_FILE_TEXT = "Please upload and submit a valid pair
 
 export const DEFAULT_CLUSTER_INSPECT_ICON = "bi-arrow-down-up";
 
+export const INTERVAL_DECIMAL_PRECISION = 4;
+
 export const DEFAULT_DATA = {
-    nodes: [],
-    nodesMap: new Map(),
-    allNodes: new Map(),
-    nodeViews: new Map(),
-    links: [],
-    linksMap: new Map(),
-    allLinks: new Map(),
-    clusterData: {
-        clusterDistribution: new Map(),
-        clusters: [],
-        clusterSizes: [],
-    },
-    stats: {
-        clusterMedian: 0,
-        clusterMean: 0,
-        assortativity: 0,
-        transitivity: 0,
-        triangleCount: 0,
-        meanPairwiseDistance: 0,
-        medianPairwiseDistance: 0,
-    },
-    demographicData: {
-        categories: new Map(), 
-        data: new Map(),
-    }
+	nodes: [],
+	nodesMap: new Map(),
+	allNodes: new Map(),
+	nodeViews: new Map(),
+	links: [],
+	linksMap: new Map(),
+	allLinks: new Map(),
+	clusterData: {
+		clusterDistribution: new Map(),
+		clusters: [],
+		clusterSizes: [],
+	},
+	stats: {
+		clusterMedian: 0,
+		clusterMean: 0,
+		assortativity: 0,
+		transitivity: 0,
+		triangleCount: 0,
+		meanPairwiseDistance: 0,
+		medianPairwiseDistance: 0,
+	},
+	demographicData: {
+		categories: new Map(),
+		data: new Map(),
+	}
 };
 
 export const NODE_GRAPH_CANVAS_ID = "node-graph";
 export const NODE_GRAPH_BASE_CONFIG = {
-    backgroundColor: "#ffffff",
-    nodeColor: (node) => {
-        return node.color ?? "#000000";
-    },
-    nodeSize: (node) => {
-        return node.color ? 9 : 7;
-    },
-    linkColor: "#a3a3a3",
-    linkArrows: false,
-    linkWidth: 0.2,
-    linkVisibilityMinTransparency: 1,
-    randomSeed: 0,
-    simulation: {
-        repulsion: 2,
-        repulsionFromMouse: 0,
-        linkDistRandomVariationRange: [1, 1],
-        scaleNodesOnZoom: true,
-        friction: 1,
-        linkDistance: 50,
-        gravity: 0.12,
-        decay: 99999999,
-        linkSpring: 0.1,
-    },
+	backgroundColor: "#ffffff",
+	nodeColor: (node) => {
+		return node.color ?? "#000000";
+	},
+	nodeSize: (node) => {
+		return node.selected ? 12 : (node.color ? 9 : 7);
+	},
+	linkColor: "#dedede",
+	linkArrows: false,
+	linkWidth: 0.2,
+	linkVisibilityMinTransparency: 1,
+	highlightedNodeRingColor: "#0257c7",
+	randomSeed: 0,
+	simulation: {
+		repulsion: 4,
+		repulsionFromMouse: 0,
+		linkDistRandomVariationRange: [1, 1],
+		scaleNodesOnZoom: true,
+		friction: 2,
+		linkDistance: 50,
+		gravity: 0.12,
+		decay: 99999999,
+		linkSpring: 0.1,
+	},
 }
 
+export const DEFAULT_VIEW_COLORS = [
+	"#40655e",
+	"#df2a69",
+	"#0df38f",
+	"#e03cc2",
+	"#51f310",
+	"#761e7e",
+	"#aae3a4",
+	"#943112",
+	"#21a645",
+	"#eca2d5",
+	"#b1e632",
+	"#270fe2",
+	"#fcd107",
+	"#5073cc",
+	"#fd8f2f",
+	"#1eacc9",
+	"#fe2b1c",
+	"#658114",
+	"#846dff",
+	"#a27f27"
+];
+
 export const READ_FILE_ASYNC = async (file, asText = false) => {
-    const reader = new FileReader();
-    return new Promise((resolve, reject) => {
-        reader.onload = (e) => {
-            resolve(e.target.result);
-        };
-        reader.onerror = reject;
-        asText ? reader.readAsText(file) : reader.readAsArrayBuffer(file);
-    })
+	const reader = new FileReader();
+	return new Promise((resolve, reject) => {
+		reader.onload = (e) => {
+			resolve(e.target.result);
+		};
+		reader.onerror = reject;
+		asText ? reader.readAsText(file) : reader.readAsArrayBuffer(file);
+	})
 }
 
 let basetime = performance.now();
 export const LOG = (message) => {
-    if (performance.now() - basetime > 10000) {
-        basetime = performance.now();
-    }
+	if (performance.now() - basetime > 10000) {
+		basetime = performance.now();
+	}
 
-    console.log(message + "\n" + "Time: " + (performance.now() - basetime) + "ms");
+	console.log(message + "\n" + "Time: " + (performance.now() - basetime) + "ms");
 }

@@ -30,6 +30,10 @@ export class ClusterInspection extends Component {
 		if (prevProps.selectedClusterIndex !== this.props.selectedClusterIndex && this.props.selectedClusterIndex !== undefined) {
 			this.renderClusterTableData();
 		}
+
+		if (JSON.stringify(prevProps.selectedNodes) !== JSON.stringify(this.props.selectedNodes)) {
+			this.updateHighlightedNodes();
+		}
 	}
 
 	renderClusterTableData = () => {
@@ -45,7 +49,7 @@ export class ClusterInspection extends Component {
 				node: node,
 				individualID: nodeData.individualID,
 				individualData: Object.values(individualData),
-				highlighted: false,
+				highlighted: this.props.selectedNodes.includes(node),
 				degree: nodeData.adjacentNodes.size,
 			}
 		})
@@ -109,18 +113,27 @@ export class ClusterInspection extends Component {
 	highlightClusterEntry = (index) => {
 		const newClusterTableData = [...this.state.clusterTableData];
 
-		if (!newClusterTableData[index].highlighted) {
-			for (const entry of newClusterTableData) {
-				entry.highlighted = false;
-			}
-
-			// TODO: Highlight the node in the diagram
-		}
-
 		newClusterTableData[index].highlighted = !newClusterTableData[index].highlighted;
+
+		this.props.toggleSelectedNode(newClusterTableData[index].node);
 
 		this.setState({ clusterTableData: newClusterTableData });
 	}
+
+	updateHighlightedNodes = () => {
+		const newClusterTableData = [...this.state.clusterTableData];
+
+		for (const entry of newClusterTableData) {
+			if (this.props.selectedNodes.includes(entry.node)) {
+				entry.highlighted = true;
+			} else {
+				entry.highlighted = false;
+			}
+		}
+
+		this.setState({ clusterTableData: newClusterTableData });
+	}
+
 
 	render() {
 		return (
