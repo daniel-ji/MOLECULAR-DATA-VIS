@@ -11,6 +11,7 @@ export const SLIDER_BOUNDS = [0.3, 0.7];
 
 export const INVALID_INTERVALS_TEXT = "Please enter valid intervals.";
 export const INVALID_PAIRWISE_FILE_TEXT = "Please upload and submit a valid pairwise distance file.";
+export const INVALID_DEMOGRAPHIC_FILE_TEXT = "Please upload and submit a valid demographic file.";
 
 export const DEFAULT_CLUSTER_INSPECT_ICON = "bi-arrow-down-up";
 
@@ -37,6 +38,8 @@ export const DEFAULT_DATA = {
 		triangleCount: 0,
 		meanPairwiseDistance: 0,
 		medianPairwiseDistance: 0,
+		meanNodeDegree: 0,
+		medianNodeDegree: 0,
 	},
 	demographicData: {
 		categories: new Map(),
@@ -73,6 +76,16 @@ export const NODE_GRAPH_BASE_CONFIG = {
 }
 
 export const DEFAULT_VIEW_COLORS = [
+	"#5073cc",
+	"#b1e632",
+	"#270fe2",
+	"#fcd107",
+	"#fd8f2f",
+	"#1eacc9",
+	"#fe2b1c",
+	"#658114",
+	"#846dff",
+	"#a27f27",
 	"#40655e",
 	"#df2a69",
 	"#0df38f",
@@ -82,17 +95,7 @@ export const DEFAULT_VIEW_COLORS = [
 	"#aae3a4",
 	"#943112",
 	"#21a645",
-	"#eca2d5",
-	"#b1e632",
-	"#270fe2",
-	"#fcd107",
-	"#5073cc",
-	"#fd8f2f",
-	"#1eacc9",
-	"#fe2b1c",
-	"#658114",
-	"#846dff",
-	"#a27f27"
+	"#eca2d5"
 ];
 
 export const READ_FILE_ASYNC = async (file, asText = false) => {

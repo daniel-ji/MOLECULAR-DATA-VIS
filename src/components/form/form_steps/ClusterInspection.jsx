@@ -12,8 +12,8 @@ export class ClusterInspection extends Component {
 		super(props)
 
 		this.state = {
-			// + 1 for degree column
-			sortStates: Array(this.props.data.demographicData.categories.size + 1).fill(DEFAULT_CLUSTER_INSPECT_ICON),
+			// + 1 for id, + 1 for degree, if categories.size is 0, then don't subtract 1
+			sortStates: Array(1 + Math.max(this.props.data.demographicData.categories.size - 1, 0) + 1).fill(DEFAULT_CLUSTER_INSPECT_ICON),
 			clusterTableData: [],
 		}
 	}
@@ -43,12 +43,15 @@ export class ClusterInspection extends Component {
 
 		const clusterTableData = [...this.props.data.clusterData.clusters[this.props.selectedClusterIndex].clusterNodes].map((node, index) => {
 			const nodeData = this.props.data.nodesMap.get(node);
+
 			const individualData = this.props.data.demographicData.data.get(nodeData.individualID);
+
+			console.log(individualData);
 
 			return {
 				node: node,
 				individualID: nodeData.individualID,
-				individualData: Object.values(individualData),
+				individualData: individualData === undefined ? [] : Object.values(individualData),
 				highlighted: this.props.selectedNodes.includes(node),
 				degree: nodeData.adjacentNodes.size,
 			}
@@ -146,7 +149,17 @@ export class ClusterInspection extends Component {
 				<table className="table table-bordered">
 					<thead>
 						<tr>
+							<th
+								className={`cluster-view-sort ${this.state.sortStates[0] !== DEFAULT_CLUSTER_INSPECT_ICON && 'cluster-view-sort-selected'}`}
+								onClick={() => this.sortClusterBy(0)}
+							>
+								id <i className={`bi ${this.state.sortStates[0]}`} />
+							</th>
 							{[...this.props.data.demographicData.categories.keys()].map((categoryKey, index) => {
+								// dont render id column for tr, already rendered
+								if (index === 0) {
+									return;
+								}
 								return (
 									<th key={index}
 										className={`cluster-view-sort ${this.state.sortStates[index] !== DEFAULT_CLUSTER_INSPECT_ICON && 'cluster-view-sort-selected'}`}

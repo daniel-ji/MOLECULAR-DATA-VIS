@@ -1,6 +1,5 @@
 import React, { Component } from 'react'
 
-// TODO: add degree?
 export class SummaryStats extends Component {
     constructor(props) {
         super(props)
@@ -12,6 +11,8 @@ export class SummaryStats extends Component {
             transitivity: undefined,
             meanPairwiseDistance: undefined,
             medianPairwiseDistance: undefined,
+			meanNodeDegree: undefined,
+			medianNodeDegree: undefined,
         }
     }
 
@@ -26,6 +27,8 @@ export class SummaryStats extends Component {
             let transitivity = undefined;
             let meanPairwiseDistance = undefined;
             let medianPairwiseDistance = undefined;
+			let meanNodeDegree = undefined;
+			let medianNodeDegree = undefined;
 
             // only calculate cluster stats if a cluster is selected
             if (selectedCluster !== undefined) {
@@ -59,14 +62,22 @@ export class SummaryStats extends Component {
                 // calculate transitivity
                 transitivity = selectedCluster.triangleCount / selectedCluster.tripleCount;
 
-                // calculate mean and median pairwise distance{
+                // calculate mean and median pairwise distance
                 const pairiwseDistance = clusterLinks.map(link => link.value);
                 pairiwseDistance.sort((a, b) => a - b);
                 meanPairwiseDistance = pairiwseDistance.reduce((a, b) => a + b, 0) / pairiwseDistance.length;
                 medianPairwiseDistance = pairiwseDistance[Math.floor(pairiwseDistance.length / 2)];
+
+				// calculate mean and median node degree
+				const nodeDegrees = [...selectedCluster.clusterNodes.values()].map(node => {
+					return data.nodesMap.get(node).adjacentNodes.size;
+				})
+				nodeDegrees.sort((a, b) => a - b);
+				meanNodeDegree = nodeDegrees.reduce((a, b) => a + b, 0) / nodeDegrees.length;
+				medianNodeDegree = nodeDegrees[Math.floor(nodeDegrees.length / 2)];
             }
 
-            this.setState({ selectedCluster, clusterLinks, assortativity, transitivity, meanPairwiseDistance, medianPairwiseDistance });
+            this.setState({ selectedCluster, clusterLinks, assortativity, transitivity, meanPairwiseDistance, medianPairwiseDistance, meanNodeDegree, medianNodeDegree });
         }
     }
 
@@ -140,6 +151,16 @@ export class SummaryStats extends Component {
                             <td id="summary-pairwise-median">{this.props.data.stats.medianPairwiseDistance?.toFixed(6)}</td>
                             <td id="cluster-summary-pairwise-median">{this.state.medianPairwiseDistance?.toFixed(6) ?? 0}</td>
                         </tr>
+						<tr>
+							<td>Mean Node Degree:</td>
+							<td id="summary-mean-degree">{this.props.data.stats.meanNodeDegree?.toFixed(2)}</td>
+							<td id="cluster-summary-mean-degree">{this.state.meanNodeDegree?.toFixed(2) ?? 0}</td>
+						</tr>
+						<tr>
+							<td>Median Node Degree:</td>
+							<td id="summary-median-degree">{this.props.data.stats.medianNodeDegree?.toFixed(2)}</td>
+							<td id="cluster-summary-median-degree">{this.state.medianNodeDegree?.toFixed(2) ?? 0}</td>
+						</tr>
                     </tbody>
                 </table>
             </div>

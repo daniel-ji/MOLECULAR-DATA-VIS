@@ -154,9 +154,12 @@ export class CreateViews extends Component {
 			}
 
 			this.props.createViews(newViewsData);
+		} else {
+			this.props.setAlertMessage({
+				messageType: "danger",
+				messageText: "Too many views to create (" + categoryPermutations.length + "). Please select fewer categories."
+			})
 		}
-
-		// TODO: error
 	}
 
 	// Delete view

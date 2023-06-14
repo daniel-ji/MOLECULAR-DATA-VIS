@@ -81,6 +81,7 @@ export class FormContainer extends Component {
                             updateNodesFromNodeViews={this.props.updateNodesFromNodeViews}
                             updateNodesColor={this.props.updateNodesColor}
                             deleteNodeViewFromNodes={this.props.deleteNodeViewFromNodes}
+							setAlertMessage={this.props.setAlertMessage}
                         />,
                         <ClusterInspection
                             checkStepValidFlag={this.state.checkStepValidFlag}

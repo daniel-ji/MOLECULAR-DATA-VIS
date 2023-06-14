@@ -290,7 +290,7 @@ export class App extends Component {
 		}, 1000)
 		setTimeout(() => { this.state.nodeGraph.setZoomLevel(this.state.nodeGraph.getZoomLevel() * 0.8, 250) }, 1500)
 		clearTimeout(this.state.pauseGraphTimeout)
-		this.setState({ 
+		this.setState({
 			pauseGraphTimeout: setTimeout(() => { this.state.nodeGraph.pause() }, 15000)
 		})
 		LOG("Done setting nodes graph.")
@@ -446,7 +446,7 @@ export class App extends Component {
 	}
 
 	/** NODE VIEWS & COLOR FUNCTIONS */
-	createViews = (viewDataArray, callback = () => {}) => {
+	createViews = (viewDataArray, callback = () => { }) => {
 		const nodeViews = new Map(this.state.data.nodeViews);
 		for (let i = 0; i < viewDataArray.length; i++) {
 			nodeViews.set(viewDataArray[i].viewID, viewDataArray[i]);
@@ -455,7 +455,7 @@ export class App extends Component {
 		this.setData({ nodeViews }, () => this.updateNodesFromNodeViews(undefined, callback));
 	}
 
-	updateNodesFromNodeViews = (viewID, callback = () => {}) => {
+	updateNodesFromNodeViews = (viewID, callback = () => { }) => {
 		LOG("Updating node views...")
 		const nodeViews = this.state.data.nodeViews;
 		const nodesMap = new Map(this.state.data.nodesMap);
@@ -480,7 +480,7 @@ export class App extends Component {
 			// get individual's (demographic) data
 			const individualDemoKeys = Object.keys(correspondingIndividual);
 			const individualDemoValues = Object.values(correspondingIndividual);
-			
+
 			// check if sequence's corresponding individual matches view
 			for (const viewIDKey of viewDataArray) {
 				let add = true;
@@ -571,15 +571,6 @@ export class App extends Component {
 		const clusterMedian = data.clusterData.clusterSizes[Math.floor(data.clusterData.clusterSizes.length / 2)];
 		const clusterMean = (data.clusterData.clusterSizes.reduce((a, b) => a + b, 0) / data.clusterData.clusterSizes.length);
 
-		// calculate mean pairwise distance
-		let sum = 0;
-		for (const link of data.links) {
-			sum += link.value;
-		}
-		const meanPairwiseDistance = (sum / data.links.length);
-		// calculate median pairwise distance
-		const medianPairwiseDistance = data.links[Math.floor(data.links.length / 2)].value;
-
 		// calculate assortativity
 		let sourceAverage = 0;
 		let targetAverage = 0;
@@ -620,7 +611,28 @@ export class App extends Component {
 		// const transitivity = this.state.pyodide.globals.get("transitivity");
 		// const triangleCount = this.state.pyodide.globals.get("triangle_count");
 
-		this.setData({ stats: { clusterMedian, clusterMean, transitivity, triangleCount, meanPairwiseDistance, medianPairwiseDistance, assortativity } })
+		// calculate mean pairwise distance
+		let sum = 0;
+		for (const link of data.links) {
+			sum += link.value;
+		}
+		const meanPairwiseDistance = (sum / data.links.length);
+		// calculate median pairwise distance
+		const medianPairwiseDistance = data.links[Math.floor(data.links.length / 2)].value;
+
+		// calculate mean degree
+		const degrees = [];
+		let sumDegree = 0;
+		for (const node of data.nodes) {
+			sumDegree += node.adjacentNodes.size;
+			degrees.push(node.adjacentNodes.size);
+		}
+		const meanNodeDegree = (sumDegree / data.nodes.length);
+		// calculate median degree
+		degrees.sort((a, b) => a - b);
+		const medianNodeDegree = degrees[Math.floor(degrees.length / 2)];
+
+		this.setData({ stats: { clusterMedian, clusterMean, assortativity, transitivity, triangleCount, meanPairwiseDistance, medianPairwiseDistance, meanNodeDegree, medianNodeDegree } })
 	}
 
 	resetData = () => {
