@@ -154,10 +154,6 @@ export class ClusterInspection extends Component {
 								id <i className={`bi ${this.state.sortStates[0]}`} />
 							</th>
 							{[...this.props.data.demographicData.categories.keys()].map((categoryKey, index) => {
-								// dont render id column for tr, already rendered
-								if (index === 0) {
-									return;
-								}
 								return (
 									<th key={index}
 										className={`cluster-view-sort ${this.state.sortStates[index] !== DEFAULT_CLUSTER_INSPECT_ICON && 'cluster-view-sort-selected'}`}

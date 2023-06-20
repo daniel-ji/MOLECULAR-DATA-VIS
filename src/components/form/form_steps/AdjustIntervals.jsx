@@ -79,7 +79,7 @@ export class AdjustIntervals extends Component {
             return;
         }
 
-        const category = document.getElementById("number-category-intervals-select").value;
+        const category = [...this.props.data.demographicData.categories].filter(category => category[1].type === "number")[0][0];
         this.setState({ intervals: this.props.data.demographicData.categories.get(category).intervals }, callback);
     }
 

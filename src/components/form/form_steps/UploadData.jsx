@@ -131,6 +131,8 @@ export class UploadData extends Component {
 		const lines = text.split("\n")
 		// first line is categories
 		const categories = lines[0].split(delimiter);
+		// remove id column
+		categories.shift();
 		// edge case to remove empty line at end of file
 		if (lines[lines.length - 1] === "") {
 			lines.pop();
@@ -139,11 +141,12 @@ export class UploadData extends Component {
 		const demoCategories = new Map();
 		// create new category for each column
 		for (let i = 0; i < categories.length; i++) {
-			demoCategories.set(categories[i], { type: 'string', elements: new Set() })
+			// TODO: calculate type via percentage of data that matches type?
+			demoCategories.set(categories[i], { type: 'number', elements: new Set(), intervals: [] })
 		}
 
 		// validation by checking number of data entry columns
-		if (this.props.size < 2 || demoCategories.size > MAX_INDIVIDUAL_CATEGORIES) {
+		if (demoCategories.size > MAX_INDIVIDUAL_CATEGORIES) {
 			this.props.setAlertMessage({
 				messageType: "danger",
 				messageText: INVALID_DEMOGRAPHIC_FILE_TEXT,
@@ -158,7 +161,9 @@ export class UploadData extends Component {
 		// create individual demographic data
 		for (let i = 1; i < lines.length; i++) {
 			const dataEntry = lines[i].split(delimiter);
-			// validation by checking if number of data entry columns matches number of categories
+			// remove id column
+			const id = dataEntry.shift();
+			// validation by checking if number of data entry columns (excluding id column) matches number of categories
 			if (dataEntry.length !== demoCategories.size) {
 				this.props.setAlertMessage({
 					messageType: "danger",
@@ -171,31 +176,38 @@ export class UploadData extends Component {
 			// create object for each data entry, corresponds to a node
 			const dataEntryObject = {};
 
-			for (let j = 1; j < categories.length; j++) {
+			for (let j = 0; j < categories.length; j++) {
 				const demoCategory = demoCategories.get(categories[j]);
-				if (!isNaN(dataEntry[j])) {
-					demoCategory.type = 'number';
-					demoCategory.intervals = [];
+
+				// if this is first data entry, determine type of category
+				if (i === 1) {
+					if (/^\d{5}(?:[-\s]\d{4})?$/.test(dataEntry[j])) {
+						demoCategory.type = 'zip';
+					} else if (!isNaN(dataEntry[j])) {
+						demoCategory.type = 'number';
+					} else {
+						demoCategory.type = 'string';
+					}
 				}
 
-				if (demoCategory.type === 'string') {
-					dataEntryObject[categories[j]] = dataEntry[j];
-					demoCategory.elements.add(dataEntry[j])
+				if (demoCategory.type === 'number') {
+					dataEntryObject[categories[j]] = parseFloat(dataEntry[j]); // add data entry to individual demographic data object
+					demoCategory.elements.add(parseFloat(dataEntry[j])) // add data entry to category
 				} else {
-					dataEntryObject[categories[j]] = parseFloat(dataEntry[j]);
-					demoCategory.elements.add(parseFloat(dataEntry[j]))
+					dataEntryObject[categories[j]] = dataEntry[j]; // add data entry to individual demographic data object
+					demoCategory.elements.add(dataEntry[j]) // add data entry to category
 				}
 			}
 
 			// add data entry to individual demographic data
-			demoData.set(dataEntry[0], dataEntryObject)
+			demoData.set(id, dataEntryObject)
 		}
 
 		// sort categories
 		for (let i = 0; i < categories.length; i++) {
 			const sortedElements = [...demoCategories.get(categories[i]).elements.values()]
 
-			if (demoCategories.get(categories[i]).type === 'string') {
+			if (demoCategories.get(categories[i]).type === 'string' || demoCategories.get(categories[i]).type === 'zip') {
 				sortedElements.sort()
 			} else {
 				sortedElements.sort((a, b) => a - b)
@@ -213,15 +225,9 @@ export class UploadData extends Component {
 
 			const values = [...demoCategories.get(demoCategoriesKeys[i]).elements]
 			// create intervals for numerical data (default of 5 even splits)
-			const min = values[0];
-			const max = values[values.length - 1];
-			const step = (max - min) / 5;
-			for (let j = min; j < max + step; j += step) {
-				demoCategories.get(demoCategoriesKeys[i]).intervals.push({ interval: j, valid: true });
+			for (let j = 0; j < values.length; j += ((values.length - 1) / 5)) {
+				demoCategories.get(demoCategoriesKeys[i]).intervals.push({ interval: values[Math.ceil(j)], valid: true });
 			}
-
-			// delete elements
-			demoCategories.get(demoCategoriesKeys[i]).elements = undefined;
 		}
 
 		// update state

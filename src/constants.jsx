@@ -30,6 +30,7 @@ export const DEFAULT_DATA = {
 		clusters: [],
 		clusterSizes: [],
 	},
+	zipCodeData: new Map(), // zip code -> {individualIDs: new Set(individual IDs), clusterIDs: new Map(clusterID -> count)} 
 	stats: {
 		clusterMedian: 0,
 		clusterMean: 0,

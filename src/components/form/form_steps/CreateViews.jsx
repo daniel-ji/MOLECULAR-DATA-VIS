@@ -96,25 +96,29 @@ export class CreateViews extends Component {
 			}
 		})
 
+		console.log(selectedCategories)
+
 		const selectedCategoriesValues = selectedCategories.map((entry) => {
 			if (entry === 'All') {
 				return ['All'];
 			}
 
 			const category = this.props.data.demographicData.categories.get(entry);
-			if (category.elements) {
+			if (category.type !== 'number') {
 				return [...category.elements.values()];
-			} else {
-				const result = [];
-				for (let i = 0; i < category.intervals.length - 1; i++) {
-					result.push(category.intervals[i].interval.toFixed(INTERVAL_DECIMAL_PRECISION) + " - " + category.intervals[i + 1].interval.toFixed(INTERVAL_DECIMAL_PRECISION));
-				}
-				return result;
 			}
+
+			const result = [];
+			for (let i = 0; i < category.intervals.length - 1; i++) {
+				result.push(category.intervals[i].interval.toFixed(INTERVAL_DECIMAL_PRECISION) + " - " + category.intervals[i + 1].interval.toFixed(INTERVAL_DECIMAL_PRECISION));
+			}
+			return result;
 		})
 
+		console.log(selectedCategoriesValues)
+
 		let categoryPermutations = [[]];
-		for (let i = 1; i < selectedCategoriesValues.length; i++) {
+		for (let i = 0; i < selectedCategoriesValues.length; i++) {
 			const newPermutations = [];
 			for (let j = 0; j < selectedCategoriesValues[i].length; j++) {
 				for (let k = 0; k < categoryPermutations.length; k++) {
@@ -173,10 +177,6 @@ export class CreateViews extends Component {
 
 		const categoryChecked = new Array(categories.length).fill(false);
 		const categoryCheckboxes = categories.map((categoryKey, index) => {
-			if (index === 0) {
-				return;
-			}
-
 			return (
 				<div className="form-check mb-2" key={index}>
 					<input className="form-check-input" type="checkbox" value={this.state.categoryChecked[index]} id={`create-view-category-checkbox-${index}`} onChange={(e) => this.setCategoryChecked(e, index)} />
@@ -195,15 +195,11 @@ export class CreateViews extends Component {
 		const categories = [...this.props.data.demographicData.categories.keys()];
 
 		const views = categories.map((categoryKey, index) => {
-			if (index === 0) {
-				return;
-			}
-
 			const category = this.props.data.demographicData.categories.get(categoryKey);
 
 			let options = [];
 
-			if (category.intervals) {
+			if (category.type === 'number') {
 				options = category.intervals.map((value, index) => {
 					if (index === category.intervals.length - 1) {
 						return;
@@ -271,7 +267,7 @@ export class CreateViews extends Component {
 												onChange={(e) => this.setViewColor(viewID, e.target.value)} />
 											<button className="btn btn-danger view-entry-delete" id={`view-entry-delete-${viewID}`} onClick={() => this.deleteView(viewID)}><i className="bi bi-trash" /></button>
 										</div>
-										<div class={`form-text text-${viewData.nodeCount === 0 ? 'warning' : 'success'}`} id={`view-entry-help-${viewID}`}>Views' applied nodes: {viewData.nodeCount}</div>
+										<div className={`form-text text-${viewData.nodeCount === 0 ? 'warning' : 'success'}`} id={`view-entry-help-${viewID}`}>Views' applied nodes: {viewData.nodeCount}</div>
 									</div>);
 							})
 						}</div>

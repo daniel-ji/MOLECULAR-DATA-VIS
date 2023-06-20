@@ -369,14 +369,20 @@ export class App extends Component {
 		const clusterSizes = [];
 		// map of cluster size to number of clusters of that size
 		const clusterDistribution = new Map();
+		// zip code demographic data
+		const zipCodeData = new Map();
+		// zip code demographic data key
+		const zipCodeDataKey = [...this.state.data.demographicData.categories].filter(category => category[1].type === "zip")?.[0]?.[0];
 
 		// iterate over all nodes, perform BFS
 		let nodesIterator = nodes.values();
 		while (nodes.size > 0) {
+			let clusterID = undefined;
 			const clusterNodes = new Set();
 			const clusterLinks = new Set();
 			// get first node in set (id string)
 			const starterNode = nodesIterator.next().value;
+			clusterID = starterNode;
 			clusterNodes.add(starterNode);
 			nodes.delete(starterNode)
 			// queue of nodes to visit, which are id strings
@@ -422,8 +428,42 @@ export class App extends Component {
 			triangleCount /= 6;
 			edgeCount /= 2;
 
+			if (zipCodeDataKey) {
+				// iterate over all nodes in cluster, update zip code demographic data
+				for (const node of clusterNodes) {
+					// first get individualID of node
+					const individualID = nodesMap.get(node).individualID;
+					if (individualID === undefined) {
+						continue;
+					}
+					// then get zip code from individualID
+					const zipCode = this.state.data.demographicData.data.get(individualID)?.[zipCodeDataKey];
+					if (zipCode === undefined) {
+						continue;
+					}
+
+					// check if zip code is already in zipCodeData
+					if (!zipCodeData.has(zipCode)) {
+						zipCodeData.set(zipCode, {
+							individualIDs: new Set(),
+							clusterIDs: new Map(),
+						});
+					}
+
+					const zipCodeEntry = zipCodeData.get(zipCode);
+
+					// update zip code data
+					zipCodeEntry.individualIDs.add(individualID);
+					if (!zipCodeEntry.clusterIDs.has(clusterID)) {
+						zipCodeEntry.clusterIDs.set(clusterID, 0);
+					}
+					zipCodeEntry.clusterIDs.set(clusterID, zipCodeEntry.clusterIDs.get(clusterID) + 1);
+				}
+			}
+
 			// update cluster data
 			clusters.push({
+				id: clusterID,
 				clusterNodes,
 				clusterLinks,
 				size: clusterNodes.size,
@@ -441,7 +481,7 @@ export class App extends Component {
 
 		clusters.sort((a, b) => a.clusterNodes.size - b.clusterNodes.size)
 		clusterSizes.sort((a, b) => a - b);
-		this.setData({ clusterData: { clusters, clusterSizes, clusterDistribution } }, callback)
+		this.setData({ clusterData: { clusters, clusterSizes, clusterDistribution }, zipCodeData }, callback)
 		LOG("Done generating clusters...")
 	}
 
@@ -757,7 +797,7 @@ export class App extends Component {
 				{this.state.alertMessage?.messageText !== undefined &&
 					<div id="alert-message" className={`text-center alert alert-${this.state.alertMessage.messageType} my-3`} role="alert" onClick={() => this.setAlertMessage(undefined)}>
 						<i className="bi bi-x-lg me-3"></i>
-						{this.state.alertMessage.messageText} 
+						{this.state.alertMessage.messageText}
 					</div>
 				}
 			</div>
