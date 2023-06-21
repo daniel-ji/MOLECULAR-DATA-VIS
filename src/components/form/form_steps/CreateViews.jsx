@@ -96,8 +96,6 @@ export class CreateViews extends Component {
 			}
 		})
 
-		console.log(selectedCategories)
-
 		const selectedCategoriesValues = selectedCategories.map((entry) => {
 			if (entry === 'All') {
 				return ['All'];
@@ -114,8 +112,6 @@ export class CreateViews extends Component {
 			}
 			return result;
 		})
-
-		console.log(selectedCategoriesValues)
 
 		let categoryPermutations = [[]];
 		for (let i = 0; i < selectedCategoriesValues.length; i++) {
@@ -257,7 +253,7 @@ export class CreateViews extends Component {
 						<div id="view-entry-container" className="mb-5">{
 							[...this.props.data.nodeViews.keys()].map((viewID, index) => {
 								const viewData = this.props.data.nodeViews.get(viewID);
-
+								
 								// map views to view entries visible on the page
 								return (
 									<div className="view-entry my-3 w-100" id={`view-entry-${viewID}`} key={viewID}>
@@ -267,7 +263,7 @@ export class CreateViews extends Component {
 												onChange={(e) => this.setViewColor(viewID, e.target.value)} />
 											<button className="btn btn-danger view-entry-delete" id={`view-entry-delete-${viewID}`} onClick={() => this.deleteView(viewID)}><i className="bi bi-trash" /></button>
 										</div>
-										<div className={`form-text text-${viewData.nodeCount === 0 ? 'warning' : 'success'}`} id={`view-entry-help-${viewID}`}>Views' applied nodes: {viewData.nodeCount}</div>
+										<div className={`form-text text-${viewData.nodeCount === 0 ? 'warning' : 'success'}`} id={`view-entry-help-${viewID}`}>Views' applied nodes: {viewData.nodeCount} ({(viewData.nodeCount / this.props.data.nodes.length * 100).toFixed(2)}%)</div>
 									</div>);
 							})
 						}</div>

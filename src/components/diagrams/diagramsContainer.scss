@@ -11,19 +11,21 @@
 		display: flex;
 		justify-content: space-between;
 		width: 100%;
-		height: 8%;
+		height: 10%;
 		border-bottom: 3px solid black;
+		overflow-x: scroll;
 
 		.diagram-tab {
 			display: flex;
-			flex: 1 1 0;
 			justify-content: center;
 			align-items: center;
-			width: 0;
+			width: 25%;
+			min-width: 225px;
 			height: 100%;
-			cursor: pointer;
 			border-right: 3px solid black;
 			box-sizing: content-box;
+			user-select: none;
+			cursor: pointer;
 
 			&:last-child {
 				border-right: none;
@@ -40,10 +42,10 @@
 #diagrams-content {
 	position: relative;
 	left: 0;
-	height: 92%;
+	height: 90%;
 	width: 100%;
 
-	.graph-element {
+	.diagram-element {
 		position: absolute;
 		top: 0;
 		left: 0;
@@ -56,6 +58,8 @@
 			top: 4vh;
 			left: 50%;
 			transform: translate(-50%, 0);
+			z-index: 999;
+			user-select: none;
 		}
 	}
 
@@ -66,21 +70,6 @@
 			right: 2vh;
 			height: 45px;
 			cursor: pointer;
-		}
-	}
-
-	#cluster-graph-container {
-		#cluster-histogram-controls {
-			position: absolute;
-			top: 0;
-			right: 0;
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			justify-content: flex-start;
-			border-left: 3px solid black;
-			border-bottom: 3px solid black;
-			padding: 1.5vw 2vw 2vw 2vw;
 		}
 	}
 
@@ -104,6 +93,37 @@
 				border-color: black;
 				border-width: 2px;
 			}
+		}
+	}
+
+	#cluster-zips {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+
+		#cluster-zip-map {
+			position: relative;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			overflow: hidden;
+		}
+	}
+
+	#cluster-graph-container {
+		#cluster-histogram-controls {
+			position: absolute;
+			top: 0;
+			right: 0;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: flex-start;
+			border-left: 3px solid black;
+			border-bottom: 3px solid black;
+			padding: 1.5vw 2vw 2vw 2vw;
 		}
 	}
 }

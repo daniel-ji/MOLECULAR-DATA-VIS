@@ -113,7 +113,7 @@ export class ClusterHistogram extends Component {
 
     render() {
         return (
-            <div className="graph-element" id="cluster-graph-container">
+            <div className="diagram-element" id="cluster-graph-container">
                 <h4 className="graph-title">Cluster Size Histogram</h4>
                 <div id="cluster-histogram"></div>
                 <div id="cluster-histogram-controls">

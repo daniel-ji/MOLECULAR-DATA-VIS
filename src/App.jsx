@@ -5,6 +5,7 @@ import ClusterGraph from './components/diagrams/graphs/ClusterGraph'
 import NodesGraph from './components/diagrams/graphs/NodesGraph'
 import ClusterHistogram from './components/diagrams/histograms/ClusterHistogram'
 import SummaryStats from './components/diagrams/stats/SummaryStats'
+import ClusterZips from './components/diagrams/maps/ClusterZips'
 
 import FormContainer from './components/form/FormContainer'
 
@@ -752,17 +753,21 @@ export class App extends Component {
 					<NodesGraph
 						nodeGraph={this.state.nodeGraph}
 					/>
-					<ClusterGraph />
+					<SummaryStats
+						data={this.state.data}
+						selectedClusterIndex={this.state.selectedClusterIndex}
+					/>
+					<ClusterZips
+						data={this.state.data}
+						diagramCounter={this.state.diagramCounter}
+					/>
 					<ClusterHistogram
 						histogramTicks={this.state.clusterHistogram.histogramTicks}
 						maxHistogramTicks={this.state.clusterHistogram.maxHistogramTicks}
 						setClusterHistogramData={this.setClusterHistogramData}
 						data={this.state.data}
 					/>
-					<SummaryStats
-						data={this.state.data}
-						selectedClusterIndex={this.state.selectedClusterIndex}
-					/>
+					<ClusterGraph />
 				</DiagramsContainer>
 				<div
 					id="width-adjust-slider"

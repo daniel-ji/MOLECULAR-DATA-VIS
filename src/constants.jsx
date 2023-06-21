@@ -3,7 +3,7 @@ export const MAX_THRESHOLD = 0.05;
 export const MAX_INDIVIDUAL_CATEGORIES = 255;
 export const CALCULATE_ASSORT_PY = "./python/calculate_stats.py";
 export const FORM_STEPS = 4;
-export const DIAGRAMS_COUNT = 4;
+export const DIAGRAMS_COUNT = 5;
 
 export const DEFAULT_DIAGRAM_WIDTH = 0.65;
 export const DEFAULT_SLIDER_WIDTH = 24;

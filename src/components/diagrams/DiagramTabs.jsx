@@ -23,7 +23,7 @@ export class DiagramTabs extends Component {
 	render() {
 		return (
 			<div id="diagram-tabs">
-				{["Pairwise Distance Graph", "Cluster Graph", "Cluster Size Histogram", "Cluster Summary Statistics"].map((tab, index) => {
+				{["Pairwise Distance Graph", "Cluster Summary Statistics", "Clusters By Zip", "Cluster Size Histogram", "Cluster Graph"].map((tab, index) => {
 					return (
 						<div className="diagram-tab" key={index} onClick={() => { this.props.setDiagramCounter(index) }}>
 							{tab}

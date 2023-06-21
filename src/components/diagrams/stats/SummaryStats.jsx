@@ -85,7 +85,7 @@ export class SummaryStats extends Component {
         const selectedCluster = this.props.selectedClusterIndex ? this.props.data.clusterData.clusters[this.props.selectedClusterIndex] : undefined;
 
         return (
-            <div className="graph-element" id="summary-stats">
+            <div className="diagram-element" id="summary-stats">
                 <h4 className="graph-title">Cluster Summary Statistics</h4>
                 <table className="table table-bordered mt-4" id="summary-table">
                     <thead>
