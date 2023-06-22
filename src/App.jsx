@@ -181,7 +181,7 @@ export class App extends Component {
 	 * 
 	 * @param {Number} index index of the cluster to select
 	 */
-	setSelectedCluster = (index) => {
+	setSelectedCluster = (index, callback) => {
 		// cancel cluster selection, do not highlight any nodes
 		if (index === undefined) {
 			this.state.nodeGraph.unselectNodes();
@@ -194,7 +194,7 @@ export class App extends Component {
 			}, 300)
 		}
 
-		this.setState({ selectedClusterIndex: index })
+		this.setState({ selectedClusterIndex: index }, callback)
 	}
 
 	selectNodeListener = (node) => {
@@ -254,18 +254,18 @@ export class App extends Component {
 	}
 
 	incrementDiagramCounter = () => {
-		this.setState({ diagramCounter: Math.min(this.state.diagramCounter + 1, DIAGRAMS_COUNT - 1) })
+		this.setDiagramCounter(Math.min(this.state.diagramCounter + 1, DIAGRAMS_COUNT - 1))
 	}
 
 	decrementDiagramCounter = () => {
-		if (this.state.diagramCounter - 1 === 0) {
-			this.nodeGraphFixFitView();
-		}
-
-		this.setState({ diagramCounter: Math.max(this.state.diagramCounter - 1, 0) })
+		this.setDiagramCounter(Math.max(this.state.diagramCounter - 1, 0))
 	}
 
 	setDiagramCounter = (value) => {
+		if (value === 0) {
+			this.nodeGraphFixFitView();
+		}
+
 		this.setState({ diagramCounter: value })
 	}
 
@@ -429,6 +429,7 @@ export class App extends Component {
 			triangleCount /= 6;
 			edgeCount /= 2;
 
+			// checking if zip code data exists in demographic data
 			if (zipCodeDataKey) {
 				// iterate over all nodes in cluster, update zip code demographic data
 				for (const node of clusterNodes) {

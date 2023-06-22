@@ -28,3 +28,6 @@ test_too_large/
 
 # to keep track of progress
 todo.txt
+
+# geoJSON zipcodes folder
+public/zipcodes/

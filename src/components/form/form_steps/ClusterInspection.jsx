@@ -38,6 +38,7 @@ export class ClusterInspection extends Component {
 
 	renderClusterTableData = () => {
 		if (this.props.selectedClusterIndex === undefined) {
+			this.setState({ clusterTableData: [] });
 			return;
 		}
 
@@ -73,7 +74,7 @@ export class ClusterInspection extends Component {
 	 * Clears the selected cluster, resetting the selectedClusterIndex to undefined. 
 	 */
 	clearSelectedCluster = () => {
-		this.props.setSelectedCluster(undefined);
+		this.props.setSelectedCluster(undefined, this.renderClusterTableData);
 	}
 
 	sortClusterBy = (index) => {
@@ -141,7 +142,7 @@ export class ClusterInspection extends Component {
 			<div id="inspect-clusters" className="input-step">
 				<h3 className="w-100 text-center mb-5">Step 4: Inspect Specific Clusters</h3>
 				<button className={`btn btn-primary mb-3`} onClick={this.selectCluster}>{this.props.selectingCluster ? 'Cancel ' : ''}Select Cluster</button>
-				<button className={`btn btn-success mb-3`} disabled={!this.props.selectedClusterIndex} onClick={() => this.props.setDiagram(3)}>View Summary Stats</button>
+				<button className={`btn btn-success mb-3`} disabled={!this.props.selectedClusterIndex} onClick={() => this.props.setDiagram(1)}>View Summary Stats</button>
 				<button className={`btn btn-warning mb-5`} disabled={!this.props.selectedClusterIndex} onClick={this.clearSelectedCluster}>Clear Selection</button>
 				<h5 className="w-100 text-center mb-3">Selected Cluster Nodes ({this.state.clusterTableData.length} nodes)</h5>
 				<table className="table table-bordered">

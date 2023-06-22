@@ -1,5 +1,7 @@
 import { React, Component, Fragment } from 'react'
 
+import { DateTime } from 'luxon';
+
 import { MAX_THRESHOLD, MAX_INDIVIDUAL_CATEGORIES, READ_FILE_ASYNC, LOG, CHUNK_SIZE, INVALID_PAIRWISE_FILE_TEXT, INVALID_DEMOGRAPHIC_FILE_TEXT } from '../../../constants'
 
 /**
@@ -86,7 +88,7 @@ export class UploadData extends Component {
 		if (this.props.alertMessage?.messageText === INVALID_PAIRWISE_FILE_TEXT) {
 			this.props.setAlertMessage(undefined);
 		}
-		this.setState({ uploadLoading: true, uploadSuccess: false, pairwiseDistanceInvalid: false });
+		this.setState({ uploadLoading: true, uploadSuccess: false, pairwiseDistanceInvalid: false, dataFileInvalid: false });
 
 		// reset data, get individual demographic data, and get pairwise distances (actual node / link data)
 		this.props.resetData();
@@ -102,11 +104,8 @@ export class UploadData extends Component {
 			}
 
 			this.props.updateDiagrams();
-			this.setState({ uploadLoading: false, uploadSuccess: true });
+			this.setState({ uploadLoading: false, uploadSuccess: true, pairwiseDistanceInvalid: false });
 		});
-
-		// update status
-		this.setState({ uploadLoading: false, uploadSuccess: true });
 	}
 
 	getDemoData = async (callback) => {
@@ -183,6 +182,8 @@ export class UploadData extends Component {
 				if (i === 1) {
 					if (/^\d{5}(?:[-\s]\d{4})?$/.test(dataEntry[j])) {
 						demoCategory.type = 'zip';
+					} else if (DateTime.fromISO(dataEntry[j]).invalid === null) {
+						demoCategory.type = 'date';
 					} else if (!isNaN(dataEntry[j])) {
 						demoCategory.type = 'number';
 					} else {
@@ -193,6 +194,9 @@ export class UploadData extends Component {
 				if (demoCategory.type === 'number') {
 					dataEntryObject[categories[j]] = parseFloat(dataEntry[j]); // add data entry to individual demographic data object
 					demoCategory.elements.add(parseFloat(dataEntry[j])) // add data entry to category
+				} else if (demoCategory.type === 'date') {
+					dataEntryObject[categories[j]] = DateTime.fromISO(dataEntry[j]).toMillis(); // add data entry to individual demographic data object
+					demoCategory.elements.add(DateTime.fromISO(dataEntry[j]).toMillis()) // add data entry to category
 				} else {
 					dataEntryObject[categories[j]] = dataEntry[j]; // add data entry to individual demographic data object
 					demoCategory.elements.add(dataEntry[j]) // add data entry to category
@@ -202,6 +206,9 @@ export class UploadData extends Component {
 			// add data entry to individual demographic data
 			demoData.set(id, dataEntryObject)
 		}
+
+		// valid data file
+		this.setState({ dataFileInvalid: false })
 
 		// sort categories
 		for (let i = 0; i < categories.length; i++) {
