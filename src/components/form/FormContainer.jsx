@@ -46,7 +46,7 @@ export class FormContainer extends Component {
     render() {
         return (
             <div id="form-container" style={{width: `${this.props.formWidth}px`}}>
-                <h2 className="text-center mt-4 mb-4">Pairwise Distance Graph Visualization</h2>
+                <h2 className="text-center mt-4 mb-4">Molecular Cluster Graph Visualization</h2>
                 <div id="input-form-content">
                     {/** each of the following components is a step in the form **/}
                     {[
