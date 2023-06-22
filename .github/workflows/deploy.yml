@@ -21,7 +21,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Single deploy job since we're just deploying
   deploy:
     environment:
       name: github-pages
@@ -37,6 +36,8 @@ jobs:
           cache: 'npm'
       - name: Install dependencies
         run: npm install
+      - name: Extract zipcodes
+        run: tar -xf public/zipcodes.tar.gz -C public
       - name: Build
         run: npm run build
       - name: Setup Pages
