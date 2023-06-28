@@ -1,5 +1,7 @@
 import React, { Component } from 'react'
 
+import { DateTime } from 'luxon';
+
 import DiagramsContainer from './components/diagrams/DiagramsContainer'
 import ClusterGraph from './components/diagrams/graphs/ClusterGraph'
 import NodesGraph from './components/diagrams/graphs/NodesGraph'
@@ -26,6 +28,7 @@ export class App extends Component {
 			diagramWidth: DEFAULT_DIAGRAM_WIDTH * screen.width,
 			diagramCounter: 0,
 			nodeGraph: undefined,
+			zipMap: undefined,
 			clusterHistogram: {
 				histogramTicks: 0,
 				maxHistogramTicks: 0,
@@ -275,6 +278,10 @@ export class App extends Component {
 				this.state.nodeGraph.fitView();
 			}, 250)
 		}
+	}
+
+	setZipMap = (value) => {
+		this.setState({ zipMap: value })
 	}
 
 	/** PAIRWISE DISTANCE DATA FUNCTIONS */
@@ -532,9 +539,19 @@ export class App extends Component {
 						continue;
 					}
 
-					if (this.state.data.demographicData.categories.get(individualDemoKeys[j]).type === 'number') {
+					const categoryType = this.state.data.demographicData.categories.get(individualDemoKeys[j]).type;
+					if (categoryType === 'number') {
 						const range = viewData.values[j].split(" - ");
 						if (!(individualDemoValues[j] >= parseFloat(range[0]) && individualDemoValues[j] <= parseFloat(range[1]))) {
+							add = false;
+							break;
+						}
+					} else if (categoryType === 'date') {
+						const range = viewData.values[j].split (" to ");
+						const individualDate = DateTime.fromISO(individualDemoValues[j]).toMillis();
+						const startDate = DateTime.fromISO(range[0]).toMillis();
+						const endDate = DateTime.fromISO(range[1]).toMillis();
+						if (!(individualDate >= startDate && individualDate <= endDate)) {
 							add = false;
 							break;
 						}
@@ -761,6 +778,8 @@ export class App extends Component {
 					<ClusterZips
 						data={this.state.data}
 						diagramCounter={this.state.diagramCounter}
+						zipMap={this.state.zipMap}
+						setZipMap={this.setZipMap}
 					/>
 					<ClusterHistogram
 						histogramTicks={this.state.clusterHistogram.histogramTicks}

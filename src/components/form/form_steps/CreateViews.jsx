@@ -102,15 +102,21 @@ export class CreateViews extends Component {
 			}
 
 			const category = this.props.data.demographicData.categories.get(entry);
-			if (category.type !== 'number') {
+			if (category.type === 'number') {
+				const result = [];
+				for (let i = 0; i < category.intervals.length - 1; i++) {
+					result.push(category.intervals[i].interval.toFixed(INTERVAL_DECIMAL_PRECISION) + " - " + category.intervals[i + 1].interval.toFixed(INTERVAL_DECIMAL_PRECISION));
+				}
+				return result;
+			} else if (category.type === 'date') {
+				const result = [];
+				for (let i = 0; i < category.intervals.length - 1; i++) {
+					result.push(category.intervals[i].interval + " to " + category.intervals[i + 1].interval);
+				}
+				return result;
+			} else {
 				return [...category.elements.values()];
 			}
-
-			const result = [];
-			for (let i = 0; i < category.intervals.length - 1; i++) {
-				result.push(category.intervals[i].interval.toFixed(INTERVAL_DECIMAL_PRECISION) + " - " + category.intervals[i + 1].interval.toFixed(INTERVAL_DECIMAL_PRECISION));
-			}
-			return result;
 		})
 
 		let categoryPermutations = [[]];
@@ -205,6 +211,16 @@ export class CreateViews extends Component {
 
 					return <option key={index} value={intervalValue}>{intervalValue}</option>
 				});
+			} else if (category.type === 'date') {
+				options = category.intervals.map((value, index) => {
+					if (index === category.intervals.length - 1) {
+						return;
+					}
+
+					const intervalValue = value.interval + " to " + category.intervals[index + 1].interval;
+
+					return <option key={index} value={intervalValue}>{intervalValue}</option>
+				});
 			} else {
 				options = [...category.elements.values()].map((value, index) => {
 					return <option key={index} value={value}>{value}</option>
@@ -253,7 +269,7 @@ export class CreateViews extends Component {
 						<div id="view-entry-container" className="mb-5">{
 							[...this.props.data.nodeViews.keys()].map((viewID, index) => {
 								const viewData = this.props.data.nodeViews.get(viewID);
-								
+
 								// map views to view entries visible on the page
 								return (
 									<div className="view-entry my-3 w-100" id={`view-entry-${viewID}`} key={viewID}>

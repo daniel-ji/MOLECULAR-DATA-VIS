@@ -1,32 +1,35 @@
 import React, { Component } from 'react'
 
+// TODO: bug with zip vs zcta
+// TODO: talk? measure the variety of clusters in a zip? (consider dominance of clusters as well)
+// TODO: auto-coloring, auto-sizing to main zip codes
 export class ClusterZips extends Component {
-	constructor(props) {
-		super(props)
-
-		this.state = {
-			// TODO: probably move to App state
-			// TODO: bug with zip vs zcta
-			// TODO: talk? measure the variety of clusters in a zip? (consider dominance of clusters as well)
-			zipMap: undefined,
-		}
-	}
-
 	componentDidUpdate(prevProps, prevState) {
-		if (prevProps.data.zipCodeData.size !== this.props.data.zipCodeData.size &&
-			JSON.stringify([...prevProps.data.zipCodeData]) !== JSON.stringify([...this.props.data.zipCodeData])) {
-			this.renderZipMap();
+		if (this.props.data.zipCodeData.size === 0 && this.props.zipMap) {
+			this.props.zipMap?.remove();
+			this.props.setZipMap(undefined);
+		} else {
+			if (prevProps.data.zipCodeData.size !== this.props.data.zipCodeData.size &&
+				JSON.stringify([...prevProps.data.zipCodeData]) !== JSON.stringify([...this.props.data.zipCodeData])) {
+				this.renderZipMap();
+			}
+
+			// re-render map when it becomes visible
+			if (this.props.zipMap
+				&& document.getElementById('cluster-zip-map')?.offsetParent !== null) {
+				this.props.zipMap.invalidateSize();
+			}
 		}
 
-		// re-render map when it becomes visible
-		if (this.state.zipMap
-			&& document.getElementById('cluster-zip-map').offsetParent !== null) {
-			this.state.zipMap.invalidateSize();
-		}
+
 	}
 
 	renderZipMap = async () => {
-		this.state.zipMap?.remove();
+		this.props.zipMap?.remove();
+
+		if (this.props.data.zipCodeData.size === 0) {
+			return;
+		}
 
 		const zipMap = L.map('cluster-zip-map').setView([32.878902, -117.243891], 13);
 		// potential other map: 'https://tiles.stadiamaps.com/tiles/osm_bright/{z}/{x}/{y}{r}.png'
@@ -47,38 +50,42 @@ export class ClusterZips extends Component {
 
 		const zipCodeData = [...this.props.data.zipCodeData];
 
+		// TODO: don't actually hard code in numbers
 		const getZipCodeColor = (zipCodeData) => {
 			const individuals = zipCodeData.individualIDs.size;
 			return (
-				individuals > 20 ? '#eff3ff' :
-					individuals > 15 ? '#bdd7e7' :
+				individuals > 20 ? '#08519c' :
+					individuals > 15 ? '#3182bd' :
 						individuals > 10 ? '#6baed6' :
-							individuals > 5 ? '#3182bd' :
-								individuals > 1 ? '#08519c'
-									: '#000000');
+							individuals > 5 ? '#9ecae1' :
+								individuals > 1 ? '#c6dbef'
+									: '#eff3ff'
+			);
 		}
 
 		for (let i = 0; i < zipCodeData.length; i++) {
 			const zipCode = zipCodeData[i][0];
 			const zipCodeClusters = [...zipCodeData[i][1].clusterIDs];
-			const zipCodeClusterMax = Math.max(...zipCodeClusters.map(cluster => cluster[1]));
 			const zipCodeDominantClusters = zipCodeClusters.map(cluster => cluster[0]).join(', ');
 
-			fetch('/zipcodes/' + zipCode + '.json').then(res => res.json()).then(data => {
+			fetch(import.meta.env.BASE_URL + 'zipcodes/' + zipCode + '.json').then(res => res.json()).then(data => {
 				const geoJSON = L.geoJSON(data, {
 					style: {
-						color: getZipCodeColor(zipCodeData[i][1]),
+						fillColor: getZipCodeColor(zipCodeData[i][1]),
+						weight: 2,
+						opacity: 1,
+						color: 'white',
+						dashArray: '3',
+						fillOpacity: 0.7				
 					}
 				}).addTo(zipMap);
 				geoJSON.eachLayer(layer => {
-					layer.bindPopup('Zip Code: ' + zipCode + '<br>Total Individuals:' + zipCodeData[i][1].individualIDs.size +  '<br> Clusters: ' + zipCodeDominantClusters);
+					layer.bindPopup('Zip Code: ' + zipCode + '<br>Total Individuals:' + zipCodeData[i][1].individualIDs.size + '<br> Clusters: ' + zipCodeDominantClusters);
 				});
 			}).catch(err => { });
 		}
 
-
-
-		this.setState({ zipMap });
+		this.props.setZipMap(zipMap);
 	}
 
 

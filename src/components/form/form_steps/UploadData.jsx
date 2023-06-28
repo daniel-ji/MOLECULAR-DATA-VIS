@@ -195,8 +195,8 @@ export class UploadData extends Component {
 					dataEntryObject[categories[j]] = parseFloat(dataEntry[j]); // add data entry to individual demographic data object
 					demoCategory.elements.add(parseFloat(dataEntry[j])) // add data entry to category
 				} else if (demoCategory.type === 'date') {
-					dataEntryObject[categories[j]] = DateTime.fromISO(dataEntry[j]).toMillis(); // add data entry to individual demographic data object
-					demoCategory.elements.add(DateTime.fromISO(dataEntry[j]).toMillis()) // add data entry to category
+					dataEntryObject[categories[j]] = DateTime.fromISO(dataEntry[j]).toISODate(); // add data entry to individual demographic data object
+					demoCategory.elements.add(DateTime.fromISO(dataEntry[j]).toISODate()) // add data entry to category
 				} else {
 					dataEntryObject[categories[j]] = dataEntry[j]; // add data entry to individual demographic data object
 					demoCategory.elements.add(dataEntry[j]) // add data entry to category
@@ -214,8 +214,12 @@ export class UploadData extends Component {
 		for (let i = 0; i < categories.length; i++) {
 			const sortedElements = [...demoCategories.get(categories[i]).elements.values()]
 
-			if (demoCategories.get(categories[i]).type === 'string' || demoCategories.get(categories[i]).type === 'zip') {
+			const categoryType = demoCategories.get(categories[i]).type
+			if (categoryType === 'string' || categoryType === 'zip') {
 				sortedElements.sort()
+			} else if (categoryType === 'date') {
+				sortedElements.sort((a, b) => DateTime.fromISO(a).diff(DateTime.fromISO(b)).toObject().milliseconds)
+				console.log(sortedElements)
 			} else {
 				sortedElements.sort((a, b) => a - b)
 			}
@@ -226,14 +230,16 @@ export class UploadData extends Component {
 		// create initial 5 categories for quantitative data
 		const demoCategoriesKeys = [...demoCategories.keys()];
 		for (let i = 0; i < demoCategoriesKeys.length; i++) {
-			if (demoCategories.get(demoCategoriesKeys[i]).type !== 'number') {
-				continue;
-			}
-
 			const values = [...demoCategories.get(demoCategoriesKeys[i]).elements]
-			// create intervals for numerical data (default of 5 even splits)
-			for (let j = 0; j < values.length; j += ((values.length - 1) / 5)) {
-				demoCategories.get(demoCategoriesKeys[i]).intervals.push({ interval: values[Math.ceil(j)], valid: true });
+			const type = demoCategories.get(demoCategoriesKeys[i]).type;
+			
+			if (type === 'date' || type === 'number') {
+				// create intervals for numerical data (default of 5 even splits)
+				for (let j = 0; j < values.length; j += ((values.length - 1) / 5)) {
+					demoCategories.get(demoCategoriesKeys[i]).intervals.push({ interval: values[Math.ceil(j)], valid: true });
+				}
+			} else {
+				continue;
 			}
 		}
 
