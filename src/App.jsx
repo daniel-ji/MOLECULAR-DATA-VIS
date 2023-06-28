@@ -547,7 +547,7 @@ export class App extends Component {
 							break;
 						}
 					} else if (categoryType === 'date') {
-						const range = viewData.values[j].split (" to ");
+						const range = viewData.values[j].split(" to ");
 						const individualDate = DateTime.fromISO(individualDemoValues[j]).toMillis();
 						const startDate = DateTime.fromISO(range[0]).toMillis();
 						const endDate = DateTime.fromISO(range[1]).toMillis();
@@ -769,6 +769,7 @@ export class App extends Component {
 				>
 					{/** each of the following components is a diagram **/}
 					<NodesGraph
+						data={this.state.data}
 						nodeGraph={this.state.nodeGraph}
 					/>
 					<SummaryStats

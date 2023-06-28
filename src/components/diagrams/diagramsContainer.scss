@@ -71,7 +71,15 @@
 			position: absolute;
 			top: 2vh;
 			right: 2vh;
-			height: 45px;
+			height: 35px;
+			cursor: pointer;
+		}
+
+		#download-node-graph {
+			position: absolute;
+			top: 2vh;
+			right: calc(2vh + 45px);
+			height: 35px;
 			cursor: pointer;
 		}
 	}
@@ -116,17 +124,33 @@
 	}
 
 	#cluster-graph-container {
-		#cluster-histogram-controls {
+		#cluster-histogram {
+			user-select: none;
+		}
+
+		#cluster-histogram-controls-container {
+			display: flex;
+			flex-direction: column;
+			align-items: flex-end;
 			position: absolute;
 			top: 0;
 			right: 0;
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			justify-content: flex-start;
-			border-left: 3px solid black;
-			border-bottom: 3px solid black;
-			padding: 1.5vw 2vw 2vw 2vw;
+
+			#cluster-histogram-controls {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: flex-start;
+				border-left: 3px solid black;
+				border-bottom: 3px solid black;
+				padding: 1.5vw 1.5vw 1vw 1.5vw;
+			}
+
+			#download-cluster-histogram {
+				height: 30px;
+				margin: 0.5vw 1vw 0 0;
+				cursor: pointer;
+			}
 		}
 	}
 }
