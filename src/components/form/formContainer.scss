@@ -59,21 +59,31 @@
 			}
 		}
 
-		#inspect-clusters {
-			.cluster-view-sort {
+		#inspect-nodes {
+			.node-inspect-modify-selected-row {
+				display: inline-flex;
+				justify-content: space-between;
+				width: 100%;
+				
+				button {
+					width: 47.5%;
+				}
+			}
+
+			.node-inspect-view-sort {
 				cursor: pointer;
 				user-select: none;
 			}
 
-			.cluster-view-sort-selected {
+			.node-inspect-view-sort-selected {
 				background-color: #E8E8E8;
 			}
 
-			.cluster-view-entry {
+			.node-inspect-view-entry {
 				cursor: pointer;
 			}
 
-			.cluster-view-entry-highlighted {
+			.node-inspect-view-entry-highlighted {
 				background-color: #E8E8E8;
 			}
 		}

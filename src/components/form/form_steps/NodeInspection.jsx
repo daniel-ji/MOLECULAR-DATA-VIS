@@ -7,7 +7,7 @@ import { DEFAULT_CLUSTER_INSPECT_ICON } from '../../../constants'
  * 
  * STEP VALID CONDITION: None
  */
-export class ClusterInspection extends Component {
+export class NodeInspection extends Component {
 	constructor(props) {
 		super(props)
 
@@ -27,22 +27,17 @@ export class ClusterInspection extends Component {
 			this.props.setStepValid(true);
 		}
 
-		if (prevProps.selectedClusterIndex !== this.props.selectedClusterIndex && this.props.selectedClusterIndex !== undefined) {
+		if (JSON.stringify(prevProps.inspectionNodes) !== JSON.stringify(this.props.inspectionNodes)) {
 			this.renderClusterTableData();
 		}
 
-		if (JSON.stringify(prevProps.selectedNodes) !== JSON.stringify(this.props.selectedNodes)) {
+		if (prevProps.selectedNode !== this.props.selectedNode) {
 			this.updateHighlightedNodes();
 		}
 	}
 
 	renderClusterTableData = () => {
-		if (this.props.selectedClusterIndex === undefined) {
-			this.setState({ clusterTableData: [] });
-			return;
-		}
-
-		const clusterTableData = [...this.props.data.clusterData.clusters[this.props.selectedClusterIndex].clusterNodes].map((node, index) => {
+		const clusterTableData = this.props.inspectionNodes.map((node, index) => {
 			const nodeData = this.props.data.nodesMap.get(node);
 
 			const individualData = this.props.data.demographicData.data.get(nodeData.individualID);
@@ -51,7 +46,7 @@ export class ClusterInspection extends Component {
 				node: node,
 				individualID: nodeData.individualID,
 				individualData: individualData === undefined ? [] : Object.values(individualData),
-				highlighted: this.props.selectedNodes.includes(node),
+				highlighted: this.props.selectedNode === node,
 				degree: nodeData.adjacentNodes.size,
 			}
 		})
@@ -60,21 +55,38 @@ export class ClusterInspection extends Component {
 	}
 
 	/**
-	 * Toggles the selectingCluster flag, selects a cluster if the flag is true
+	 * Adds selected node to the selected nodes list.
 	 */
-	selectCluster = () => {
-		if (this.props.selectingCluster) {
-			this.props.setSelectedCluster(this.props.selectedClusterIndex);
-		}
+	addSelectedNode = () => {
+		this.props.setInspectionSelectionState(this.props.inspectionSelectionState === 'ADD-NODE' ? undefined : 'ADD-NODE');
+	}
 
-		this.props.setSelectingCluster(!this.props.selectingCluster);
+	/**
+	 * Removes selected node from the selected nodes list.
+	 */
+	removeSelectedNode = () => {
+		this.props.setInspectionSelectionState(this.props.inspectionSelectionState === 'REMOVE-NODE' ? undefined : 'REMOVE-NODE');
+	}
+
+	/**
+	 * Adds selected cluster's nodes to the selected nodes list.
+	 */
+	addSelectedCluster = () => {
+		this.props.setInspectionSelectionState(this.props.inspectionSelectionState === 'ADD-CLUSTER' ? undefined : 'ADD-CLUSTER');
+	}
+
+	/**
+	 * Removes selected cluster's nodes from the selected nodes list.
+	 */
+	removeSelectedCluster = () => {
+		this.props.setInspectionSelectionState(this.props.inspectionSelectionState === 'REMOVE-CLUSTER' ? undefined : 'REMOVE-CLUSTER');
 	}
 
 	/**
 	 * Clears the selected cluster, resetting the selectedClusterIndex to undefined. 
 	 */
-	clearSelectedCluster = () => {
-		this.props.setSelectedCluster(undefined, this.renderClusterTableData);
+	confirmClearInspectionNodes = () => {
+		this.props.clearInspectionNodes(undefined, this.renderClusterTableData);
 	}
 
 	sortClusterBy = (index) => {
@@ -115,9 +127,15 @@ export class ClusterInspection extends Component {
 	highlightClusterEntry = (index) => {
 		const newClusterTableData = [...this.state.clusterTableData];
 
-		newClusterTableData[index].highlighted = !newClusterTableData[index].highlighted;
+		for (let i = 0; i < newClusterTableData.length; i++) {
+			if (i === index) {
+				newClusterTableData[i].highlighted = true;
+			} else {
+				newClusterTableData[i].highlighted = false;
+			}
+		}
 
-		this.props.toggleSelectedNode(newClusterTableData[index].node);
+		this.props.setSelectedNode(newClusterTableData[index].node);
 
 		this.setState({ clusterTableData: newClusterTableData });
 	}
@@ -126,7 +144,9 @@ export class ClusterInspection extends Component {
 		const newClusterTableData = [...this.state.clusterTableData];
 
 		for (const entry of newClusterTableData) {
-			if (this.props.selectedNodes.includes(entry.node)) {
+			console.log(entry.node);
+			console.log(this.props.selectedNode)
+			if (this.props.selectedNode === entry.node) {
 				entry.highlighted = true;
 			} else {
 				entry.highlighted = false;
@@ -138,18 +158,28 @@ export class ClusterInspection extends Component {
 
 
 	render() {
+		const selectionState = this.props.inspectionSelectionState;
+		const noSelectionState = selectionState === undefined;
+
 		return (
-			<div id="inspect-clusters" className="input-step">
-				<h3 className="w-100 text-center mb-5">Step 4: Inspect Specific Clusters</h3>
-				<button className={`btn btn-primary mb-3`} onClick={this.selectCluster}>{this.props.selectingCluster ? 'Cancel ' : ''}Select Cluster</button>
-				<button className={`btn btn-success mb-3`} disabled={!this.props.selectedClusterIndex} onClick={() => this.props.setDiagram(1)}>View Summary Stats</button>
-				<button className={`btn btn-warning mb-5`} disabled={!this.props.selectedClusterIndex} onClick={this.clearSelectedCluster}>Clear Selection</button>
+			<div id="inspect-nodes" className="input-step">
+				<h3 className="w-100 text-center mb-5">Step 4: Inspect Specific Nodes</h3>
+				<div className="node-inspect-modify-selected-row">
+					<button className={`btn btn-primary mb-3 ${(!noSelectionState && selectionState !== 'ADD-NODE') && 'disabled'}`} onClick={this.addSelectedNode}>{selectionState === 'ADD-NODE' ? 'Cancel ' : ''}Add Node</button>
+					<button className={`btn btn-primary mb-3 ${(!noSelectionState && selectionState !== 'ADD-CLUSTER') && 'disabled'}`} onClick={this.addSelectedCluster}>{selectionState === 'ADD-CLUSTER' ? 'Cancel ' : ''}Add Cluster</button>
+				</div>
+				<div className="node-inspect-modify-selected-row">
+					<button className={`btn btn-danger mb-3 ${(!noSelectionState && selectionState !== 'REMOVE-NODE') && 'disabled'}`} onClick={this.removeSelectedNode}>{selectionState === 'REMOVE-NODE' ? 'Cancel ' : ''}Remove Node</button>
+					<button className={`btn btn-danger mb-3 ${(!noSelectionState && selectionState !== 'REMOVE-CLUSTER') && 'disabled'}`} onClick={this.removeSelectedCluster}>{selectionState === 'REMOVE-CLUSTER' ? 'Cancel ' : ''}Remove Cluster</button>
+				</div>
+				<button className={`btn btn-success mb-3`} disabled={this.props.inspectionNodes.length === 0} onClick={() => this.props.setDiagram(1)}>View Summary Stats</button>
+				<button className={`btn btn-danger mb-5`} disabled={this.props.inspectionNodes.length === 0} onClick={this.confirmClearInspectionNodes}>Clear Selection</button>
 				<h5 className="w-100 text-center mb-3">Selected Cluster Nodes ({this.state.clusterTableData.length} nodes)</h5>
 				<table className="table table-bordered">
 					<thead>
 						<tr>
 							<th
-								className={`cluster-view-sort ${this.state.sortStates[0] !== DEFAULT_CLUSTER_INSPECT_ICON && 'cluster-view-sort-selected'}`}
+								className={`node-inspect-view-sort ${this.state.sortStates[0] !== DEFAULT_CLUSTER_INSPECT_ICON && 'node-inspect-view-sort-selected'}`}
 								onClick={() => this.sortClusterBy(0)}
 							>
 								id <i className={`bi ${this.state.sortStates[0]}`} />
@@ -157,7 +187,7 @@ export class ClusterInspection extends Component {
 							{[...this.props.data.demographicData.categories.keys()].map((categoryKey, index) => {
 								return (
 									<th key={index}
-										className={`cluster-view-sort ${this.state.sortStates[index] !== DEFAULT_CLUSTER_INSPECT_ICON && 'cluster-view-sort-selected'}`}
+										className={`node-inspect-view-sort ${this.state.sortStates[index] !== DEFAULT_CLUSTER_INSPECT_ICON && 'node-inspect-view-sort-selected'}`}
 										onClick={() => this.sortClusterBy(index)}
 									>
 										{categoryKey} <i className={`bi ${this.state.sortStates[index]}`} />
@@ -165,7 +195,7 @@ export class ClusterInspection extends Component {
 								)
 							})}
 							<th
-								className={`cluster-view-sort ${this.state.sortStates[this.state.sortStates.length - 1] !== DEFAULT_CLUSTER_INSPECT_ICON && 'cluster-view-sort-selected'}`}
+								className={`node-inspect-view-sort ${this.state.sortStates[this.state.sortStates.length - 1] !== DEFAULT_CLUSTER_INSPECT_ICON && 'node-inspect-view-sort-selected'}`}
 								onClick={() => this.sortClusterBy(this.state.sortStates.length - 1)}
 							>
 								node degree <i className={`bi ${this.state.sortStates[this.state.sortStates.length - 1]}`} />
@@ -176,7 +206,7 @@ export class ClusterInspection extends Component {
 						{
 							this.state.clusterTableData.map((entry, index) => {
 								return (
-									<tr key={index} className={`cluster-view-entry ${entry.highlighted && 'cluster-view-entry-highlighted'}`}
+									<tr key={index} className={`node-inspect-view-entry ${entry.highlighted && 'node-inspect-view-entry-highlighted'}`}
 										onClick={() => this.highlightClusterEntry(index)}>
 										<td>{entry.individualID}</td>
 										{entry.individualData.map((value, index) => <td key={index}>{value}</td>)}
@@ -192,4 +222,4 @@ export class ClusterInspection extends Component {
 	}
 }
 
-export default ClusterInspection
+export default NodeInspection

@@ -3,7 +3,7 @@ import React, { Component } from 'react'
 import UploadData from './form_steps/UploadData'
 import AdjustIntervals from './form_steps/AdjustIntervals'
 import CreateViews from './form_steps/CreateViews'
-import ClusterInspection from './form_steps/ClusterInspection'
+import NodeInspection from './form_steps/NodeInspection'
 
 import { FORM_STEPS } from '../../constants'
 
@@ -83,15 +83,15 @@ export class FormContainer extends Component {
                             deleteNodeViewFromNodes={this.props.deleteNodeViewFromNodes}
 							setAlertMessage={this.props.setAlertMessage}
                         />,
-                        <ClusterInspection
+                        <NodeInspection
                             checkStepValidFlag={this.state.checkStepValidFlag}
                             setStepValid={this.setStepValid}
-                            selectedClusterIndex={this.props.selectedClusterIndex}
-                            setSelectedCluster={this.props.setSelectedCluster}
-                            selectingCluster={this.props.selectingCluster}
-                            setSelectingCluster={this.props.setSelectingCluster}
-							selectedNodes={this.props.selectedNodes}
-							toggleSelectedNode={this.props.toggleSelectedNode}
+                            inspectionNodes={this.props.inspectionNodes}
+                            clearInspectionNodes={this.props.clearInspectionNodes}
+                            inspectionSelectionState={this.props.inspectionSelectionState}
+                            setInspectionSelectionState={this.props.setInspectionSelectionState}
+							selectedNode={this.props.selectedNode}
+							setSelectedNode={this.props.setSelectedNode}
                             setDiagram={this.props.setDiagram}
                             data={this.props.data}
                         />

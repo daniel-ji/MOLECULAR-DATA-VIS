@@ -40,9 +40,9 @@ export class App extends Component {
 			formWidth: (1 - DEFAULT_DIAGRAM_WIDTH) * screen.width - DEFAULT_SLIDER_WIDTH,
 			threshold: 0.015,
 			thresholdValid: true,
-			selectingCluster: false,
-			selectedClusterIndex: undefined,
-			selectedNodes: [],
+			inspectionSelectionState: undefined,
+			inspectionNodes: [],
+			selectedNode: undefined,
 			/** GLOBAL STATE */
 			alertMessage: {
 				messageType: undefined,
@@ -62,6 +62,11 @@ export class App extends Component {
 				// when selecting a cluster, highlight all nodes in the cluster on hover
 				onNodeMouseOver: (node, index) => {
 					this.highlightClusterListener(node);
+					this.highlightNodeListener(node);
+				},
+				onNodeMouseOut: (node, index) => {
+					this.highlightClusterListener(undefined);
+					this.highlightNodeListener(undefined);
 				},
 				// select a cluster on click 
 				onClick: (node, index) => {
@@ -123,21 +128,52 @@ export class App extends Component {
 	}
 
 	/**
+	 * For specific cluster examination, set whether or not the user is currently selecting a cluster.
+	 * Part of node / cluster inspection.
+	 * 
+	 * @param {Boolean} value whether or not the user is currently selecting a cluster  
+	 */
+	setInspectionSelectionState = (state) => {
+		const diagramCounter = state !== undefined ? 0 : this.state.diagramCounter;
+		state && this.nodeGraphFixFitView();
+
+		if (this.state.inspectionNodes.length === 0) {
+			this.state.nodeGraph.unselectNodes();
+		} else {
+			this.state.nodeGraph.selectNodesByIds(this.state.inspectionNodes);
+		}
+
+		// if selecting a cluster, show the node cosmograph
+		this.setState({ inspectionSelectionState: state, diagramCounter })
+	}
+
+	/**
 	 * On node hover, highlight all nodes in the cluster that the hovered node belongs to.
 	 * Part of node / cluster inspection.
 	 * 
 	 * @param {*} node node to highlight cluster of
 	 */
 	highlightClusterListener = (node) => {
-		if (!this.state.selectingCluster) {
+		if (this.state.inspectionSelectionState !== "ADD-CLUSTER" &&
+			this.state.inspectionSelectionState !== "REMOVE-CLUSTER") {
+			return;
+		}
+
+		if (node === undefined) {
+			this.state.nodeGraph.selectNodesByIds(this.state.inspectionNodes);
 			return;
 		}
 
 		// find the cluster that the node belongs to and highlight all nodes in that cluster 
 		for (const clusterObj of this.state.data.clusterData.clusters) {
 			if (clusterObj.clusterNodes.has(node.id)) {
-				const selectedNodes = [...clusterObj.clusterNodes.values()];
-				this.state.nodeGraph.selectNodesByIds(selectedNodes);
+				if (this.state.inspectionSelectionState === "ADD-CLUSTER") {
+					const highlightedNodes = [...new Set([...clusterObj.clusterNodes.values(), ...this.state.inspectionNodes])];
+					this.state.nodeGraph.selectNodesByIds(highlightedNodes);
+				} else if (this.state.inspectionSelectionState === "REMOVE-CLUSTER") {
+					const highlightedNodes = this.state.inspectionNodes.filter((nodeId) => !clusterObj.clusterNodes.has(nodeId));
+					this.state.nodeGraph.selectNodesByIds(highlightedNodes);
+				}
 			}
 		}
 	}
@@ -149,95 +185,110 @@ export class App extends Component {
 	 * @param {*} node node to select cluster of
 	 */
 	selectClusterListener = (node) => {
-		if (!this.state.selectingCluster || node === undefined) {
+		if (node === undefined ||
+			(this.state.inspectionSelectionState !== "ADD-CLUSTER" && this.state.inspectionSelectionState !== "REMOVE-CLUSTER")) {
 			return;
 		}
 
-		this.setState({ selectingCluster: false })
 		// find the cluster that the node belongs to and set that cluster as the selected cluster 
 		for (let i = 0; i < this.state.data.clusterData.clusters.length; i++) {
 			const clusterObj = this.state.data.clusterData.clusters[i];
 			if (clusterObj.clusterNodes.has(node.id)) {
-				this.setSelectedCluster(i);
+				if (this.state.inspectionSelectionState === "ADD-CLUSTER") {
+					this.addNodesToInspectionNodes([...clusterObj.clusterNodes]);
+				} else {
+					this.removeNodesFromInspectionNodes([...clusterObj.clusterNodes]);
+				}
 				break;
 			}
 		}
 	}
 
-	/**
-	 * For specific cluster examination, set whether or not the user is currently selecting a cluster.
-	 * Part of node / cluster inspection.
-	 * 
-	 * @param {Boolean} value whether or not the user is currently selecting a cluster  
-	 */
-	setSelectingCluster = (value) => {
-		const diagramCounter = value ? 0 : this.state.diagramCounter;
-		value && this.nodeGraphFixFitView();
-
-		// if selecting a cluster, show the node cosmograph
-		this.setState({ selectingCluster: value, diagramCounter })
-	}
-
-	/**
-	 * When the user actually selects a cluster, set the selected cluster index and highlight the nodes in the cluster.
-	 * Part of node / cluster inspection.
-	 * 
-	 * @param {Number} index index of the cluster to select
-	 */
-	setSelectedCluster = (index, callback) => {
-		// cancel cluster selection, do not highlight any nodes
-		if (index === undefined) {
-			this.state.nodeGraph.unselectNodes();
-		} else {
-			const selectedNodes = [...this.state.data.clusterData.clusters[index].clusterNodes.values()]
-			this.state.nodeGraph.selectNodesByIds(selectedNodes);
-			this.state.nodeGraph.fitViewByNodeIds(selectedNodes);
-			setTimeout(() => {
-				this.state.nodeGraph.setZoomLevel(this.state.nodeGraph.getZoomLevel() * 2, 250)
-			}, 300)
+	highlightNodeListener = (node) => {
+		if (this.state.inspectionSelectionState !== "ADD-NODE" && this.state.inspectionSelectionState !== "REMOVE-NODE") {
+			return;
 		}
 
-		this.setState({ selectedClusterIndex: index }, callback)
+		if (node === undefined) {
+			this.state.nodeGraph.selectNodesByIds(this.state.inspectionNodes);
+			return;
+		}
+
+		if (this.state.inspectionSelectionState === "ADD-NODE") {
+			const highlightedNodes = [...new Set([...this.state.inspectionNodes, node.id])];
+			this.state.nodeGraph.selectNodesByIds(highlightedNodes);
+		} else if (this.state.inspectionSelectionState === "REMOVE-NODE") {
+			const highlightedNodes = this.state.inspectionNodes.filter((nodeId) => nodeId !== node.id);
+			this.state.nodeGraph.selectNodesByIds(highlightedNodes);
+		}
 	}
 
 	selectNodeListener = (node) => {
+		if (this.state.inspectionSelectionState !== "ADD-NODE" && this.state.inspectionSelectionState !== "REMOVE-NODE") {
+			return;
+		}
+
 		if (node === undefined) {
 			return;
 		}
 
-		if (this.state.selectedClusterIndex === undefined) {
+		if (this.state.inspectionSelectionState === "ADD-NODE") {
+			this.addNodesToInspectionNodes([node.id]);
+		} else if (this.state.inspectionSelectionState === "REMOVE-NODE") {
+			this.removeNodesFromInspectionNodes([node.id]);
+		}
+	}
+
+	addNodesToInspectionNodes = (nodeIds, callback) => {
+		// cancel node selection, do not highlight any nodes
+		if (nodeIds === undefined) {
 			return;
 		}
 
-		const clusterObj = this.state.data.clusterData.clusters[this.state.selectedClusterIndex];
-		if (!clusterObj.clusterNodes.has(node.id)) {
+		const newInspectionNodes = [...new Set([...this.state.inspectionNodes, ...nodeIds])]
+		this.state.nodeGraph.selectNodesByIds(newInspectionNodes);
+
+		this.setState({ inspectionNodes: newInspectionNodes }, callback)
+	}
+
+	removeNodesFromInspectionNodes = (nodeIds, callback) => {
+		console.log(nodeIds);
+		// cancel node selection, do not unhighlight any nodes
+		if (nodeIds === undefined) {
 			return;
 		}
 
-		this.toggleSelectedNode(node.id);
+		const newInspectionNodes = this.state.inspectionNodes.filter((nodeId) => !nodeIds.includes(nodeId))
+		this.state.nodeGraph.selectNodesByIds(newInspectionNodes);
+
+		this.setState({ inspectionNodes: newInspectionNodes }, callback)
 	}
 
 	/**
-	 * Update selectedNodes state to reflect the currently selected nodes. 
+	 * Update selectedNode state to reflect the currently selected nodes. 
 	 * Part of node / cluster inspection. 
 	 * 
 	 * @param {*} id 
 	 */
-	toggleSelectedNode = (id) => {
-		const newSelectedNodes = [...this.state.selectedNodes];
-
-		if (newSelectedNodes.includes(id)) {
-			newSelectedNodes.splice(newSelectedNodes.indexOf(id), 1);
-		} else {
-			newSelectedNodes.push(id);
-		}
-
+	setSelectedNode = (id) => {
 		// update graph data
 		// TODO: fix? talk about
-		const node = this.state.data.nodes.find(node => node.id === id);
-		node.selected = !node.selected;
+		for (const node of this.state.data.nodes) {
+			node.selected = false;
 
-		this.setState({ selectedNodes: newSelectedNodes })
+			if (node.id === id) {
+				node.selected = true;
+			}
+		}
+
+		console.log(this.state.nodeGraph)
+		this.state.nodeGraph.selectNodeById(id);
+		this.setState({ selectedNode: id })
+	}
+
+	clearInspectionNodes = () => {
+		this.setState({ inspectionNodes: [], inspectionSelectionState: undefined })
+		this.state.nodeGraph.unselectNodes();
 	}
 
 	/**
@@ -289,9 +340,8 @@ export class App extends Component {
 		LOG("Setting nodes graph...")
 		this.state.nodeGraph.setData(this.state.data.nodes, this.state.data.links);
 		setTimeout(() => {
-			if (this.state.selectedClusterIndex !== undefined) {
-				const selectedNodes = [...this.state.data.clusterData.clusters[this.state.selectedClusterIndex].clusterNodes.values()]
-				this.state.nodeGraph.fitViewByNodeIds(selectedNodes);
+			if (this.state.inspectionNodes.length !== 0) {
+				this.state.nodeGraph.fitViewByNodeIds(this.state.inspectionNodes);
 			} else {
 				this.state.nodeGraph.fitView()
 			}
@@ -710,8 +760,9 @@ export class App extends Component {
 		this.setData({ stats: { clusterMedian, clusterMean, assortativity, transitivity, triangleCount, meanPairwiseDistance, medianPairwiseDistance, meanNodeDegree, medianNodeDegree } })
 	}
 
+	// TODO: update
 	resetData = () => {
-		this.setState({ data: DEFAULT_DATA, selectedClusterIndex: undefined, selectingCluster: false })
+		this.setState({ data: DEFAULT_DATA, inspectionSelectionState: undefined, inspectionNodes: [] })
 	}
 
 	/**
@@ -774,7 +825,7 @@ export class App extends Component {
 					/>
 					<SummaryStats
 						data={this.state.data}
-						selectedClusterIndex={this.state.selectedClusterIndex}
+						inspectionNodes={this.state.inspectionNodes}
 					/>
 					<ClusterZips
 						data={this.state.data}
@@ -809,12 +860,12 @@ export class App extends Component {
 					updateNodesFromNodeViews={this.updateNodesFromNodeViews}
 					updateNodesColor={this.updateNodesColor}
 					deleteNodeViewFromNodes={this.deleteNodeViewFromNodes}
-					selectedClusterIndex={this.state.selectedClusterIndex}
-					setSelectedCluster={this.setSelectedCluster}
-					selectingCluster={this.state.selectingCluster}
-					setSelectingCluster={this.setSelectingCluster}
-					selectedNodes={this.state.selectedNodes}
-					toggleSelectedNode={this.toggleSelectedNode}
+					inspectionNodes={this.state.inspectionNodes}
+					clearInspectionNodes={this.clearInspectionNodes}
+					inspectionSelectionState={this.state.inspectionSelectionState}
+					setInspectionSelectionState={this.setInspectionSelectionState}
+					selectedNode={this.state.selectedNode}
+					setSelectedNode={this.setSelectedNode}
 					setDiagram={this.setDiagram}
 					alertMessage={this.state.alertMessage}
 					setAlertMessage={this.setAlertMessage}

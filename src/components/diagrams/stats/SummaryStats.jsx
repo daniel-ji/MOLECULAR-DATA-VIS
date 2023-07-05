@@ -18,6 +18,7 @@ export class SummaryStats extends Component {
 
     componentDidUpdate(prevProps, prevState) {
         // update cluster stats if the selected cluster changes
+		// TODO: fix
         if (prevProps.selectedClusterIndex !== this.props.selectedClusterIndex) {
             const data = this.props.data;
             const selectedCluster = this.props.selectedClusterIndex ?
