@@ -11,7 +11,7 @@ export class ClusterZips extends Component {
 		} else {
 			if (prevProps.data.zipCodeData.size !== this.props.data.zipCodeData.size &&
 				JSON.stringify([...prevProps.data.zipCodeData]) !== JSON.stringify([...this.props.data.zipCodeData])) {
-				this.renderZipMap();
+				// this.renderZipMap();
 			}
 
 			// re-render map when it becomes visible
@@ -49,6 +49,8 @@ export class ClusterZips extends Component {
 		}).addTo(zipMap);
 
 		const zipCodeData = [...this.props.data.zipCodeData];
+		const zipCodeDistribution = zipCodeData.map(zipCode => zipCode[1].individualIDs.size);
+		zipCodeDistribution.sort((a, b) => a - b);
 
 		// TODO: don't actually hard code in numbers
 		const getZipCodeColor = (zipCodeData) => {

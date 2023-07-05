@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 
 import * as d3 from 'd3';
+import { Canvg } from 'canvg';
 
 import downloadImg from '../../../assets/images/download.svg';
 
@@ -114,17 +115,17 @@ export class ClusterHistogram extends Component {
 	}
 
 	// from https://stackoverflow.com/questions/23218174/how-do-i-save-export-an-svg-file-after-creating-an-svg-with-d3-js-ie-safari-an
-	downloadHistogram = () => {
+	downloadHistogramSVG = async () => {
 		if (document.getElementById("cluster-histogram").innerHTML === "") {
 			return;
 		}
 
 		// get svg element.
-		var svg = document.getElementById("cluster-histogram");
+		const svg = document.getElementById("cluster-histogram");
 
 		// get svg source.
-		var serializer = new XMLSerializer();
-		var source = serializer.serializeToString(svg);
+		const serializer = new XMLSerializer();
+		let source = serializer.serializeToString(svg);
 
 		// add name spaces.
 		if (!source.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)) {
@@ -141,12 +142,26 @@ export class ClusterHistogram extends Component {
 		var url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(source);
 
 		// create temporary link to download svg file.
-		var link = document.createElement("a");
-		link.href = url;
-		link.download = "cluster-histogram.svg";
-		document.body.appendChild(link);
-		link.click();
-		document.body.removeChild(link);
+		const svgLink = document.createElement("a");
+		svgLink.href = url;
+		svgLink.download = "cluster-histogram.svg";
+		document.body.appendChild(svgLink);
+		svgLink.click();
+		document.body.removeChild(svgLink);
+
+		// convert svg to png and download
+		const canvas = document.createElement("canvas");
+		canvas.width = svg.clientWidth;
+		canvas.height = svg.clientHeight;
+		const ctx = canvas.getContext("2d");
+		(await Canvg.from(ctx, source)).start();
+		const imgData = canvas.toDataURL("image/png");
+		const imgLink = document.createElement("a");
+		imgLink.href = imgData;
+		imgLink.download = "cluster-histogram.png";
+		document.body.appendChild(imgLink);
+		imgLink.click();
+		document.body.removeChild(imgLink);
 	}
 
 	render() {
@@ -160,7 +175,7 @@ export class ClusterHistogram extends Component {
 						<input className="form-control w-50" type="number" id="cluster-histogram-bar-count" min="1" value={this.props.histogramTicks} onChange={this.setIntervals} />
 						<div className="form-text" id="cluster-histogram-bar-hint"></div>
 					</div>
-					<img src={downloadImg} id="download-cluster-histogram" title="Download Histogram" onClick={this.downloadHistogram} />
+					<img src={downloadImg} id="download-cluster-histogram" title="Download Histogram" onClick={this.downloadHistogramSVG} />
 				</div>
 			</div>
 		)

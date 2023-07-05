@@ -219,7 +219,6 @@ export class UploadData extends Component {
 				sortedElements.sort()
 			} else if (categoryType === 'date') {
 				sortedElements.sort((a, b) => DateTime.fromISO(a).diff(DateTime.fromISO(b)).toObject().milliseconds)
-				console.log(sortedElements)
 			} else {
 				sortedElements.sort((a, b) => a - b)
 			}
