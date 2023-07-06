@@ -119,12 +119,14 @@ export class SummaryStats extends Component {
                         <tr>
                             <td>Transitivity:</td>
                             <td id="summary-transitivity">{this.props.data.stats.transitivity?.toFixed(6)}</td>
-                            <td id="cluster-summary-transitivity">{this.state.transitivity?.toFixed(6) ?? 0}</td>
+							{/* TODO: FIX */}
+                            <td id="cluster-summary-transitivity">WIP</td>
                         </tr>
                         <tr>
                             <td>Triangle Count:</td>
                             <td id="summary-triangle-count">{this.props.data.stats.triangleCount}</td>
-                            <td id="cluster-summary-triangle-count">{0}</td>
+							{/* TODO: FIX */}
+                            <td id="cluster-summary-triangle-count">WIP</td>
                         </tr>
                         <tr>
                             <td>Cluster Count:</td>
