@@ -10,4 +10,4 @@ It also includes overall summary statistics for the sequences and clusters, as w
 
 Example data to use with this app can be found in the `example_data` folder.
 
-Deployed at: https://daniel-ji.github.io/FAVITES-WEB-VIS/
+Deployed at: https://daniel-ji.github.io/MOLECULAR-DATA-VIS/
