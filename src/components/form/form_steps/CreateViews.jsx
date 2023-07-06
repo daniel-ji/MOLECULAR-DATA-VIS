@@ -16,6 +16,8 @@ export class CreateViews extends Component {
 			views: [],
 			viewSelectColor: DEFAULT_VIEW_COLORS[0],
 			viewTimeout: undefined, // Throttle view color updates
+			showAutoCreate: false,
+			showManualCreate: false,
 		}
 	}
 
@@ -241,6 +243,14 @@ export class CreateViews extends Component {
 		this.setState({ views })
 	}
 
+	toggleAutoCreateShow = () => {
+		this.setState((prevState) => ({ showAutoCreate: !prevState.showAutoCreate }));
+	}
+
+	toggleManualCreateShow = () => {
+		this.setState((prevState) => ({ showManualCreate: !prevState.showManualCreate }));
+	}
+
 	render() {
 		return (
 			<div id="create-views" className="input-step">
@@ -249,21 +259,29 @@ export class CreateViews extends Component {
 				{this.state.views.length === 0 ?
 					<p className="text-warning text-center"> No supplementary data has been uploaded.</p> :
 					<Fragment>
-						<h5 className="w-100 mb-3 text-center">Generate By Categories:</h5>
-						<div id="category-select-container">{this.state.categoryCheckboxes}</div>
-						<button className="btn btn-primary mt-3 mb-3 w-100" id="create-category-view-button" onClick={this.createCategoryView}>Create Views By Categories</button>
+						<h5 className="w-100 mb-3 text-center create-view-toggle" onClick={this.toggleAutoCreateShow}>Generate By Categories: <i className={`bi bi-chevron-${this.state.showAutoCreate ? 'up' : 'down'}`}></i></h5>
+						{this.state.showAutoCreate &&
+							<Fragment>
+								<div id="category-select-container">{this.state.categoryCheckboxes}</div>
+								<button className="btn btn-primary mt-3 mb-3 w-100" id="create-category-view-button" onClick={this.createCategoryView}>Create Views By Categories</button>
+							</Fragment>
+						}
 
-						<h5 className="w-100 mt-5 mb-3 text-center">Manually Create Views:</h5>
-						<div id="views-container">{this.state.views}</div>
+						<h5 className="w-100 mt-5 mb-3 text-center create-view-toggle" onClick={this.toggleManualCreateShow}>Manually Create Views: <i className={`bi bi-chevron-${this.state.showManualCreate ? 'up' : 'down'}`}></i></h5>
+						{this.state.showManualCreate &&
+							<Fragment>
+								<div id="views-container">{this.state.views}</div>
 
-						<div id="select-view-color" className="w-100 mt-4">
-							<label htmlFor="view-color">Select View Color:</label>
-							<input type="color" className="form-control form-control-color ms-3 border-secondary" id="view-color" value={this.state.viewSelectColor}
-								onChange={this.setViewSelectColor} title="Choose your color" />
-						</div>
-						<div id="create-view">
-							<button className="btn btn-primary mt-3 w-100" id="create-view-button" onClick={this.createView}>Create Manual View</button>
-						</div>
+								<div id="select-view-color" className="w-100 mt-4">
+									<label htmlFor="view-color">Select View Color:</label>
+									<input type="color" className="form-control form-control-color ms-3 border-secondary" id="view-color" value={this.state.viewSelectColor}
+										onChange={this.setViewSelectColor} title="Choose your color" />
+								</div>
+								<div id="create-view">
+									<button className="btn btn-primary mt-3 w-100" id="create-view-button" onClick={this.createView}>Create Manual View</button>
+								</div>
+							</Fragment>
+						}
 
 						<h5 className="w-100 mt-5 mb-3 text-center">Created Node Views:</h5>
 						<div id="view-entry-container" className="mb-5">{

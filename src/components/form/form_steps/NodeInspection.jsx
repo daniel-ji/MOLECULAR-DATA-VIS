@@ -173,48 +173,50 @@ export class NodeInspection extends Component {
 				<button className={`btn btn-success mb-3`} disabled={this.props.inspectionNodes.length === 0} onClick={() => this.props.setDiagram(1)}>View Summary Stats</button>
 				<button className={`btn btn-danger mb-5`} disabled={this.props.inspectionNodes.length === 0} onClick={this.confirmClearInspectionNodes}>Clear Selection</button>
 				<h5 className="w-100 text-center mb-3">Selected Cluster Nodes ({this.state.clusterTableData.length} nodes)</h5>
-				<table className="table table-bordered">
-					<thead>
-						<tr>
-							<th
-								className={`node-inspect-view-sort ${this.state.sortStates[0] !== DEFAULT_CLUSTER_INSPECT_ICON && 'node-inspect-view-sort-selected'}`}
-								onClick={() => this.sortClusterBy(0)}
-							>
-								id <i className={`bi ${this.state.sortStates[0]}`} />
-							</th>
-							{[...this.props.data.demographicData.categories.keys()].map((categoryKey, index) => {
-								return (
-									<th key={index}
-										className={`node-inspect-view-sort ${this.state.sortStates[index] !== DEFAULT_CLUSTER_INSPECT_ICON && 'node-inspect-view-sort-selected'}`}
-										onClick={() => this.sortClusterBy(index)}
-									>
-										{categoryKey} <i className={`bi ${this.state.sortStates[index]}`} />
-									</th>
-								)
-							})}
-							<th
-								className={`node-inspect-view-sort ${this.state.sortStates[this.state.sortStates.length - 1] !== DEFAULT_CLUSTER_INSPECT_ICON && 'node-inspect-view-sort-selected'}`}
-								onClick={() => this.sortClusterBy(this.state.sortStates.length - 1)}
-							>
-								node degree <i className={`bi ${this.state.sortStates[this.state.sortStates.length - 1]}`} />
-							</th>
-						</tr>
-					</thead>
-					<tbody>
-						{
-							this.state.clusterTableData.map((entry, index) => {
-								return (
-									<tr key={index} className={`node-inspect-view-entry ${entry.highlighted && 'node-inspect-view-entry-highlighted'}`}
-										onClick={() => this.highlightClusterEntry(index)}>
-										<td>{entry.individualID}</td>
-										{entry.individualData.map((value, index) => <td key={index}>{value}</td>)}
-										<td>{entry.degree}</td>
-									</tr>
-								)
-							})
-						}
-					</tbody>
-				</table>
+				<div id="node-inspect-table-container">
+					<table className="table table-bordered">
+						<thead>
+							<tr>
+								<th
+									className={`node-inspect-view-sort ${this.state.sortStates[0] !== DEFAULT_CLUSTER_INSPECT_ICON && 'node-inspect-view-sort-selected'}`}
+									onClick={() => this.sortClusterBy(0)}
+								>
+									id <i className={`bi ${this.state.sortStates[0]}`} />
+								</th>
+								{[...this.props.data.demographicData.categories.keys()].map((categoryKey, index) => {
+									return (
+										<th key={index}
+											className={`node-inspect-view-sort ${this.state.sortStates[index] !== DEFAULT_CLUSTER_INSPECT_ICON && 'node-inspect-view-sort-selected'}`}
+											onClick={() => this.sortClusterBy(index)}
+										>
+											{categoryKey} <i className={`bi ${this.state.sortStates[index]}`} />
+										</th>
+									)
+								})}
+								<th
+									className={`node-inspect-view-sort ${this.state.sortStates[this.state.sortStates.length - 1] !== DEFAULT_CLUSTER_INSPECT_ICON && 'node-inspect-view-sort-selected'}`}
+									onClick={() => this.sortClusterBy(this.state.sortStates.length - 1)}
+								>
+									node degree <i className={`bi ${this.state.sortStates[this.state.sortStates.length - 1]}`} />
+								</th>
+							</tr>
+						</thead>
+						<tbody>
+							{
+								this.state.clusterTableData.map((entry, index) => {
+									return (
+										<tr key={index} className={`node-inspect-view-entry ${entry.highlighted && 'node-inspect-view-entry-highlighted'}`}
+											onClick={() => this.highlightClusterEntry(index)}>
+											<td>{entry.individualID}</td>
+											{entry.individualData.map((value, index) => <td key={index}>{value}</td>)}
+											<td>{entry.degree}</td>
+										</tr>
+									)
+								})
+							}
+						</tbody>
+					</table>
+				</div>
 			</div>
 		)
 	}
