@@ -625,7 +625,7 @@ export class App extends Component {
 		let unusedViews = "";
 		for (let i = 0; i < viewNodeCount.length; i++) {
 			if (viewNodeCount[i] === 0) {
-				unusedViews += `\n${viewDataArray[i]}`;
+				unusedViews += `\n${nodeViews.get(viewDataArray[i]).name}`;
 			}
 
 			nodeViews.get(viewDataArray[i]).nodeCount = viewNodeCount[i];

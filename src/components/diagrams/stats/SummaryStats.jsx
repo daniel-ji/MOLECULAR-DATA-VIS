@@ -5,7 +5,7 @@ export class SummaryStats extends Component {
         super(props)
 
         this.state = {
-            selectedCluster: undefined,
+			edgeCount: undefined,
             clusterLinks: undefined,
             assortativity: undefined,
             transitivity: undefined,
@@ -18,11 +18,8 @@ export class SummaryStats extends Component {
 
     componentDidUpdate(prevProps, prevState) {
         // update cluster stats if the selected cluster changes
-		// TODO: fix
-        if (prevProps.selectedClusterIndex !== this.props.selectedClusterIndex) {
+        if (JSON.stringify(prevProps.inspectionNodes) !== JSON.stringify(this.props.inspectionNodes)) {
             const data = this.props.data;
-            const selectedCluster = this.props.selectedClusterIndex ?
-                this.props.data.clusterData.clusters[this.props.selectedClusterIndex] : undefined;
             let clusterLinks = undefined;
             let assortativity = undefined;
             let transitivity = undefined;
@@ -32,10 +29,14 @@ export class SummaryStats extends Component {
 			let medianNodeDegree = undefined;
 
             // only calculate cluster stats if a cluster is selected
-            if (selectedCluster !== undefined) {
-                clusterLinks = [...selectedCluster.clusterLinks.values()].map((link) => {
-                    return this.props.data.linksMap.get(link);
-                });
+            if (this.props.inspectionNodes.length > 0) {
+				clusterLinks = this.props.inspectionNodes.map(node => {
+					const adjacentNodes = [...this.props.data.nodesMap.get(node).adjacentNodes];
+					return adjacentNodes.map(adjacentNode => {
+						return this.props.data.linksMap.get(node + "-" + adjacentNode) ?? this.props.data.linksMap.get(adjacentNode + "-" + node);
+					});
+				})
+				clusterLinks = clusterLinks.flat();
 
                 // calcluate assortativity
                 let sourceAverage = 0;
@@ -61,7 +62,7 @@ export class SummaryStats extends Component {
                 assortativity = (assortNumerator / Math.sqrt(sourceVariance * targetVariance));
 
                 // calculate transitivity
-                transitivity = selectedCluster.triangleCount / selectedCluster.tripleCount;
+                // transitivity = selectedCluster.triangleCount / selectedCluster.tripleCount;
 
                 // calculate mean and median pairwise distance
                 const pairiwseDistance = clusterLinks.map(link => link.value);
@@ -70,7 +71,7 @@ export class SummaryStats extends Component {
                 medianPairwiseDistance = pairiwseDistance[Math.floor(pairiwseDistance.length / 2)];
 
 				// calculate mean and median node degree
-				const nodeDegrees = [...selectedCluster.clusterNodes.values()].map(node => {
+				const nodeDegrees = this.props.inspectionNodes.map(node => {
 					return data.nodesMap.get(node).adjacentNodes.size;
 				})
 				nodeDegrees.sort((a, b) => a - b);
@@ -78,13 +79,11 @@ export class SummaryStats extends Component {
 				medianNodeDegree = nodeDegrees[Math.floor(nodeDegrees.length / 2)];
             }
 
-            this.setState({ selectedCluster, clusterLinks, assortativity, transitivity, meanPairwiseDistance, medianPairwiseDistance, meanNodeDegree, medianNodeDegree });
+            this.setState({ clusterLinks, assortativity, transitivity, meanPairwiseDistance, medianPairwiseDistance, meanNodeDegree, medianNodeDegree });
         }
     }
 
     render() {
-        const selectedCluster = this.props.selectedClusterIndex ? this.props.data.clusterData.clusters[this.props.selectedClusterIndex] : undefined;
-
         return (
             <div className="diagram-element" id="summary-stats">
                 <h4 className="graph-title">Cluster Summary Statistics</h4>
@@ -100,7 +99,7 @@ export class SummaryStats extends Component {
                         <tr>
                             <td>Node Count:</td>
                             <td id="summary-node-count">{this.props.data.nodes.length}</td>
-                            <td id="cluster-summary-node-count">{selectedCluster?.size ?? 0}</td>
+                            <td id="cluster-summary-node-count">{this.props.inspectionNodes.length}</td>
                         </tr>
                         <tr>
                             <td>Singletons:</td>
@@ -110,7 +109,7 @@ export class SummaryStats extends Component {
                         <tr>
                             <td>Edge Count:</td>
                             <td id="summary-edge-count">{this.props.data.links.length}</td>
-                            <td id="cluster-summary-edge-count">{selectedCluster?.edgeCount ?? 0}</td>
+                            <td id="cluster-summary-edge-count">{this.state.clusterLinks?.length ?? 0}</td>
                         </tr>
                         <tr>
                             <td>Assortativity:</td>
@@ -125,7 +124,7 @@ export class SummaryStats extends Component {
                         <tr>
                             <td>Triangle Count:</td>
                             <td id="summary-triangle-count">{this.props.data.stats.triangleCount}</td>
-                            <td id="cluster-summary-triangle-count">{selectedCluster?.triangleCount ?? 0}</td>
+                            <td id="cluster-summary-triangle-count">{0}</td>
                         </tr>
                         <tr>
                             <td>Cluster Count:</td>
