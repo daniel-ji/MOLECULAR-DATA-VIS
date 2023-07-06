@@ -11,7 +11,7 @@ export class ClusterZips extends Component {
 		} else {
 			if (prevProps.data.zipCodeData.size !== this.props.data.zipCodeData.size &&
 				JSON.stringify([...prevProps.data.zipCodeData]) !== JSON.stringify([...this.props.data.zipCodeData])) {
-				// this.renderZipMap();
+				this.renderZipMap();
 			}
 
 			// re-render map when it becomes visible
