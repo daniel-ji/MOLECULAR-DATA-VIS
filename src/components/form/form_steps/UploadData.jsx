@@ -2,7 +2,7 @@ import { React, Component, Fragment } from 'react'
 
 import { DateTime } from 'luxon';
 
-import { MAX_THRESHOLD, MAX_INDIVIDUAL_CATEGORIES, READ_FILE_ASYNC, LOG, CHUNK_SIZE, INVALID_PAIRWISE_FILE_TEXT, INVALID_DEMOGRAPHIC_FILE_TEXT } from '../../../constants'
+import { MAX_THRESHOLD, MAX_INDIVIDUAL_CATEGORIES, READ_FILE_ASYNC, LOG, CHUNK_SIZE, INVALID_PAIRWISE_FILE_TEXT, INVALID_DEMOGRAPHIC_FILE_TEXT, DATE_NA_VALUE, NUMBER_NA_VALUE, STRING_NA_VALUE } from '../../../constants'
 
 /**
  * Component to upload pairwise distance data files.
@@ -114,7 +114,7 @@ export class UploadData extends Component {
 		if (!file) {
 			return;
 		}
-		if (!(file.name.endsWith(".tsv") || file.name.endsWith(".csv"))) {
+		if (!(file.name.endsWith(".tsv") || file.name.endsWith(".csv") || file.name.endsWith(".txt"))) {
 			this.props.setAlertMessage({
 				messageType: "danger",
 				messageText: INVALID_DEMOGRAPHIC_FILE_TEXT,
@@ -127,7 +127,7 @@ export class UploadData extends Component {
 		const text = await READ_FILE_ASYNC(file, true)
 		const delimiter = file.name.endsWith(".csv") ? "," : "\t";
 
-		const lines = text.split("\n")
+		const lines = text.replace(/\r\n/g, "\n").split("\n");
 		// first line is categories
 		const categories = lines[0].split(delimiter);
 		// remove id column
@@ -191,6 +191,20 @@ export class UploadData extends Component {
 					}
 				}
 
+				if (demoCategory.type === 'date') {
+					dataEntry[j] = dataEntry[j].replace(".", "0");
+				}
+
+				if (dataEntry[j] === "NA" || dataEntry[j] === "N/A" || dataEntry[j] === "") {
+					if (demoCategory.type === 'date') {
+						dataEntry[j] = DATE_NA_VALUE;
+					} else if (demoCategory.type === 'number') {
+						dataEntry[j] = NUMBER_NA_VALUE;
+					} else {
+						dataEntry[j] = STRING_NA_VALUE;
+					}
+				}
+
 				if (demoCategory.type === 'number') {
 					dataEntryObject[categories[j]] = parseFloat(dataEntry[j]); // add data entry to individual demographic data object
 					demoCategory.elements.add(parseFloat(dataEntry[j])) // add data entry to category
@@ -212,7 +226,7 @@ export class UploadData extends Component {
 
 		// sort categories
 		for (let i = 0; i < categories.length; i++) {
-			const sortedElements = [...demoCategories.get(categories[i]).elements.values()]
+			const sortedElements = [...demoCategories.get(categories[i]).elements.values()].filter(element => element !== null)
 
 			const categoryType = demoCategories.get(categories[i]).type
 			if (categoryType === 'string' || categoryType === 'zip') {
@@ -229,13 +243,19 @@ export class UploadData extends Component {
 		// create initial 5 categories for quantitative data
 		const demoCategoriesKeys = [...demoCategories.keys()];
 		for (let i = 0; i < demoCategoriesKeys.length; i++) {
-			const values = [...demoCategories.get(demoCategoriesKeys[i]).elements]
 			const type = demoCategories.get(demoCategoriesKeys[i]).type;
 			
 			if (type === 'date' || type === 'number') {
+				const values = [...demoCategories.get(demoCategoriesKeys[i]).elements]
+				if (type === 'date') {
+					values.filter(value => value !== DateTime.fromISO(DATE_NA_VALUE).toISODate());
+				} else {
+					values.filter(value => value !== NUMBER_NA_VALUE);
+				}
+
 				// create intervals for numerical data (default of 5 even splits)
 				for (let j = 0; j < values.length; j += ((values.length - 1) / 5)) {
-					demoCategories.get(demoCategoriesKeys[i]).intervals.push({ interval: values[Math.ceil(j)], valid: true });
+					demoCategories.get(demoCategoriesKeys[i]).intervals.push({ interval: values[Math.floor(j)], valid: true });
 				}
 			} else {
 				continue;
@@ -270,7 +290,7 @@ export class UploadData extends Component {
 		for (let i = 0; i < array.byteLength; i += CHUNK_SIZE) {
 			// get chunk and decode it
 			const text = decoder.decode(array.slice(i, i + CHUNK_SIZE));
-			const lines = text.split("\n")
+			const lines = text.replace(/\r\n/g, "\n").split("\n");
 			for (let j = 0; j < lines.length; ++j) {
 				// line represents a single pairwise distance entry
 				let line = lines[j];
@@ -348,14 +368,14 @@ export class UploadData extends Component {
 				</div>
 
 				<label htmlFor="upload-pairwise-file" className="form-label w-100 text-center">Upload pairwise distances
-					file: <i className="bi bi-asterisk text-danger"></i></label>
-				<input type="file" className={`form-control ${this.state.pairwiseDistanceInvalid && !this.state.pairwiseFile && "is-invalid"}`} id="upload-pairwise-file" onChange={this.updatePairwiseFile} onClick={this.clickPairwiseFile} />
+					file: (.tsv, .csv, .txt)<i className="bi bi-asterisk text-danger"></i></label>
+				<input type="file" accept=".csv, .tsv, .txt" className={`form-control ${this.state.pairwiseDistanceInvalid && !this.state.pairwiseFile && "is-invalid"}`} id="upload-pairwise-file" onChange={this.updatePairwiseFile} onClick={this.clickPairwiseFile} />
 
 				{this.state.pairwiseFile &&
 					<Fragment>
 						<label htmlFor="upload-data-file" className="form-label w-100 text-center mt-3">Upload supplementary data
-							file:</label>
-						<input type="file" className="form-control" id="upload-data-file" onClick={this.updateDataFile} />
+							file: (.tsv, .csv, .txt)</label>
+						<input type="file" accept=".csv, .tsv, .txt" className="form-control" id="upload-data-file" onClick={this.updateDataFile} />
 					</Fragment>
 				}
 

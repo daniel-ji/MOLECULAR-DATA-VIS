@@ -144,8 +144,6 @@ export class NodeInspection extends Component {
 		const newClusterTableData = [...this.state.clusterTableData];
 
 		for (const entry of newClusterTableData) {
-			console.log(entry.node);
-			console.log(this.props.selectedNode)
 			if (this.props.selectedNode === entry.node) {
 				entry.highlighted = true;
 			} else {

@@ -5,13 +5,17 @@ export const CALCULATE_ASSORT_PY = "./python/calculate_stats.py";
 export const FORM_STEPS = 4;
 export const DIAGRAMS_COUNT = 5;
 
-export const DEFAULT_DIAGRAM_WIDTH = 0.65;
+export const DEFAULT_DIAGRAM_WIDTH = 0.6;
 export const DEFAULT_SLIDER_WIDTH = 24;
 export const SLIDER_BOUNDS = [0.3, 0.7];
 
 export const INVALID_INTERVALS_TEXT = "Please enter valid intervals.";
 export const INVALID_PAIRWISE_FILE_TEXT = "Please upload and submit a valid pairwise distance file.";
 export const INVALID_DEMOGRAPHIC_FILE_TEXT = "Please upload and submit a valid demographic file.";
+
+export const DATE_NA_VALUE = "0000-00-00";
+export const NUMBER_NA_VALUE = -1;
+export const STRING_NA_VALUE = "NA";
 
 export const DEFAULT_CLUSTER_INSPECT_ICON = "bi-arrow-down-up";
 

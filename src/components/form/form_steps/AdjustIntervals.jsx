@@ -45,7 +45,7 @@ export class AdjustIntervals extends Component {
 	}
 
 	/**
-	 * Select a quantatitve demographic data category from the dropdown menu.
+	 * Select a quantitative demographic data category from the dropdown menu.
 	 */
 	selectCategory = () => {
 		if (!this.getAllIntervalsValid()) {
@@ -220,6 +220,8 @@ export class AdjustIntervals extends Component {
 	}
 
 	render() {
+		const categories = [...this.props.data.demographicData.categories.keys()];
+
 		return (
 			<div id="adjust-intervals" className="input-step">
 				<h3 className="w-100 text-center mb-5">Step 2: Adjust Quantitative Demographic Data Intervals</h3>
@@ -229,7 +231,7 @@ export class AdjustIntervals extends Component {
 				<div className={`${this.state.intervals.length === 0 && "d-none"}`}>
 					<h4 className="text-center">Quantitative Categories</h4>
 					<select id="number-category-intervals-select" className="form-select mt-3 mb-5" onChange={this.selectCategory}>{
-						[...this.props.data.demographicData.categories.keys()].map((category) => {
+						categories.map((category) => {
 							const categoryType = this.props.data.demographicData.categories.get(category).type;
 							if (categoryType !== 'number' && categoryType !== 'date') {
 								return;

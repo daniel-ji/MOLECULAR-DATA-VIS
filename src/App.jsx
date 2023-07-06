@@ -252,7 +252,6 @@ export class App extends Component {
 	}
 
 	removeNodesFromInspectionNodes = (nodeIds, callback) => {
-		console.log(nodeIds);
 		// cancel node selection, do not unhighlight any nodes
 		if (nodeIds === undefined) {
 			return;
@@ -281,7 +280,6 @@ export class App extends Component {
 			}
 		}
 
-		console.log(this.state.nodeGraph)
 		this.state.nodeGraph.selectNodeById(id);
 		this.setState({ selectedNode: id })
 	}
@@ -392,7 +390,7 @@ export class App extends Component {
 				id: link.source,
 				color: "#000000",
 				adjacentNodes: new Set([link.target]),
-				individualID: link.source.split("|")[1] ?? link.source,
+				individualID: link.source.split("_")[0] ?? link.source,
 				views: new Set(),
 				selected: false
 			});
@@ -404,7 +402,7 @@ export class App extends Component {
 				id: link.target,
 				color: "#000000",
 				adjacentNodes: new Set([link.source]),
-				individualID: link.target.split("|")[1] ?? link.target,
+				individualID: link.target.split("_")[0] ?? link.target,
 				views: new Set(),
 				selected: false
 			});
@@ -566,7 +564,7 @@ export class App extends Component {
 
 		for (const node of nodeKeys) {
 			// get sequence's corresponding individual, continue if not found
-			const correspondingIndividual = this.state.data.demographicData.data.get(node.split("|")[1]);
+			const correspondingIndividual = this.state.data.demographicData.data.get(node.split("_")[0]);
 			if (correspondingIndividual === undefined) {
 				continue;
 			}
