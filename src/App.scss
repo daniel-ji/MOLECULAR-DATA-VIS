@@ -29,6 +29,7 @@ body {
 	cursor: pointer;
 	transform: translate(-50%, 0);
 	white-space: pre-line;
+	z-index: 100;
 }
 
 .disable-select {
