@@ -13,7 +13,7 @@ import FormContainer from './components/form/FormContainer'
 
 import './App.scss'
 
-import { MAX_THRESHOLD, DEFAULT_DATA, LOG, NODE_GRAPH_CANVAS_ID, NODE_GRAPH_BASE_CONFIG, CALCULATE_ASSORT_PY, DIAGRAMS_COUNT, DEFAULT_DIAGRAM_WIDTH, DEFAULT_SLIDER_WIDTH, SLIDER_BOUNDS } from './constants';
+import { MAX_THRESHOLD, DEFAULT_DATA, LOG, NODE_GRAPH_CANVAS_ID, NODE_GRAPH_BASE_CONFIG, CALCULATE_ASSORT_PY, DIAGRAMS_COUNT, DEFAULT_DIAGRAM_WIDTH, DEFAULT_SLIDER_WIDTH, SLIDER_BOUNDS, GET_INDIVIDUAL_ID } from './constants';
 import { Graph } from '@cosmograph/cosmos'
 
 export class App extends Component {
@@ -271,7 +271,6 @@ export class App extends Component {
 	 */
 	setSelectedNode = (id) => {
 		// update graph data
-		// TODO: fix? talk about
 		for (const node of this.state.data.nodes) {
 			node.selected = false;
 
@@ -390,8 +389,7 @@ export class App extends Component {
 				id: link.source,
 				color: "#000000",
 				adjacentNodes: new Set([link.target]),
-				// TODO: auto-detect delimiter
-				individualID: link.source.split("|")[1] ?? link.source,
+				individualID: GET_INDIVIDUAL_ID(link.source),
 				views: new Set(),
 				selected: false
 			});
@@ -403,8 +401,7 @@ export class App extends Component {
 				id: link.target,
 				color: "#000000",
 				adjacentNodes: new Set([link.source]),
-				// TODO: auto-detect delimiter
-				individualID: link.target.split("|")[1] ?? link.target,
+				individualID: GET_INDIVIDUAL_ID(link.target),
 				views: new Set(),
 				selected: false
 			});
@@ -566,8 +563,7 @@ export class App extends Component {
 
 		for (const node of nodeKeys) {
 			// get sequence's corresponding individual, continue if not found
-			// TODO: auto-detect delimiter
-			const correspondingIndividual = this.state.data.demographicData.data.get(node.split("|")[1]);
+			const correspondingIndividual = this.state.data.demographicData.data.get(GET_INDIVIDUAL_ID(node));
 			if (correspondingIndividual === undefined) {
 				continue;
 			}
@@ -761,9 +757,19 @@ export class App extends Component {
 		this.setData({ stats: { clusterMedian, clusterMean, assortativity, transitivity, triangleCount, meanPairwiseDistance, medianPairwiseDistance, meanNodeDegree, medianNodeDegree } })
 	}
 
-	// TODO: update
 	resetData = () => {
-		this.setState({ data: DEFAULT_DATA, inspectionSelectionState: undefined, inspectionNodes: [] })
+		this.setState({
+			data: DEFAULT_DATA,
+			pauseGraphTimeout: undefined,
+			zipMap: undefined,
+			clusterHistogram: {
+				histogramTicks: 0,
+				maxHistogramTicks: 0
+			},
+			selectedNode: undefined,
+			inspectionSelectionState: undefined,
+			inspectionNodes: []
+		})
 	}
 
 	/**

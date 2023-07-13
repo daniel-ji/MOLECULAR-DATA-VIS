@@ -114,6 +114,20 @@ export const READ_FILE_ASYNC = async (file, asText = false) => {
 	})
 }
 
+export const GET_INDIVIDUAL_ID = (id) => {
+	if (id === undefined) return undefined;
+
+	if (id.includes("_")) {
+		return id.split("_")[0];
+	}
+
+	if (id.includes('|')) {
+		return id.split('|')[1];
+	}
+
+	return id;
+}
+
 let basetime = performance.now();
 export const LOG = (message) => {
 	if (performance.now() - basetime > 10000) {

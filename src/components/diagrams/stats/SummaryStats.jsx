@@ -92,7 +92,7 @@ export class SummaryStats extends Component {
                         <tr>
                             <th>Statistic</th>
                             <th>Global Value</th>
-                            <th>Selected Cluster Value</th>
+                            <th>Selected Nodes Value</th>
                         </tr>
                     </thead>
                     <tbody>
