@@ -67,20 +67,30 @@
 	}
 
 	#node-graph-container {
-		#zoom-to-fit {
+		#node-graph-actions {
 			position: absolute;
 			top: 2vh;
 			right: 2vh;
-			height: 35px;
-			cursor: pointer;
-		}
+			display: flex;
+			flex-direction: row;
+			align-items: center;
 
-		#download-node-graph {
-			position: absolute;
-			top: 2vh;
-			right: calc(2vh + 45px);
-			height: 35px;
-			cursor: pointer;
+			#zoom-to-fit {
+				height: 40px;
+				padding-right: 5px;
+				cursor: pointer;
+			}
+
+			#export-tsv-node-graph {
+				height: 40px;
+				padding-right: 5px;
+				cursor: pointer;
+			}
+
+			#download-node-graph {
+				height: 40px;
+				cursor: pointer;
+			}
 		}
 	}
 

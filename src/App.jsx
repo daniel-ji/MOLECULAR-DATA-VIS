@@ -390,7 +390,8 @@ export class App extends Component {
 				id: link.source,
 				color: "#000000",
 				adjacentNodes: new Set([link.target]),
-				individualID: link.source.split("_")[0] ?? link.source,
+				// TODO: auto-detect delimiter
+				individualID: link.source.split("|")[1] ?? link.source,
 				views: new Set(),
 				selected: false
 			});
@@ -402,7 +403,8 @@ export class App extends Component {
 				id: link.target,
 				color: "#000000",
 				adjacentNodes: new Set([link.source]),
-				individualID: link.target.split("_")[0] ?? link.target,
+				// TODO: auto-detect delimiter
+				individualID: link.target.split("|")[1] ?? link.target,
 				views: new Set(),
 				selected: false
 			});
@@ -564,7 +566,8 @@ export class App extends Component {
 
 		for (const node of nodeKeys) {
 			// get sequence's corresponding individual, continue if not found
-			const correspondingIndividual = this.state.data.demographicData.data.get(node.split("_")[0]);
+			// TODO: auto-detect delimiter
+			const correspondingIndividual = this.state.data.demographicData.data.get(node.split("|")[1]);
 			if (correspondingIndividual === undefined) {
 				continue;
 			}
@@ -820,6 +823,7 @@ export class App extends Component {
 					<NodesGraph
 						data={this.state.data}
 						nodeGraph={this.state.nodeGraph}
+						threshold={this.state.threshold}
 					/>
 					<SummaryStats
 						data={this.state.data}

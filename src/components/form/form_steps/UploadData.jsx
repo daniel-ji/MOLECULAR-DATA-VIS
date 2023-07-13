@@ -362,7 +362,7 @@ export class UploadData extends Component {
 					<label htmlFor="threshold-select" id="threshold-label" className="form-label w-100 text-center">Maximum Pairwise Distance Threshold Level: {this.props.thresholdValid ? parseFloat(this.props.threshold).toFixed(4) : ''}</label>
 					<div className="input-group">
 						<input type="number" className={`form-control ${!this.props.thresholdValid && 'is-invalid'}`} id="threshold-select"
-							aria-describedby="threshold-range-hint" min="0" max="0.05" step="0.0025" value={this.props.threshold} onInput={this.updateThreshold} />
+							aria-describedby="threshold-range-hint" min="0" max="1" step="0.0025" value={this.props.threshold} onInput={this.updateThreshold} />
 					</div>
 					<div className="form-text" id="threshold-range-hint">Threshold Range: 0 to {MAX_THRESHOLD}</div>
 				</div>

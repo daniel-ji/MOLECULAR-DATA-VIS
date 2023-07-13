@@ -94,7 +94,7 @@ export class ClusterZips extends Component {
 	render() {
 		return (
 			<div id="cluster-zips" className="diagram-element">
-				<h4 className="graph-title">Clusters Distribution By Zip Code (ZCTA)</h4>
+				<h4 className="graph-title">Clusters Distribution By ZCTA</h4>
 				{
 					this.props.data.zipCodeData.size === 0 ?
 						<h5 id="no-zip-data-warning" className="mt-4 w-100 text-center text-warning">

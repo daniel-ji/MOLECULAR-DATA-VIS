@@ -1,5 +1,5 @@
 export const CHUNK_SIZE = 1024 * 1024 * 10;
-export const MAX_THRESHOLD = 0.05;
+export const MAX_THRESHOLD = 1;
 export const MAX_INDIVIDUAL_CATEGORIES = 255;
 export const CALCULATE_ASSORT_PY = "./python/calculate_stats.py";
 export const FORM_STEPS = 4;

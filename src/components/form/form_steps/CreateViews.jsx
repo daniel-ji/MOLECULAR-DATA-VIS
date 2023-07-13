@@ -259,7 +259,7 @@ export class CreateViews extends Component {
 				{this.state.views.length === 0 ?
 					<p className="text-warning text-center"> No supplementary data has been uploaded.</p> :
 					<Fragment>
-						<h5 className="w-100 mb-3 text-center create-view-toggle" onClick={this.toggleAutoCreateShow}>Generate By Categories: <i className={`bi bi-chevron-${this.state.showAutoCreate ? 'up' : 'down'}`}></i></h5>
+						<h5 className="w-100 mb-3 text-center create-view-toggle" onClick={this.toggleAutoCreateShow}>Generate By Categories: <i className={`mt-1 ms-2 bi bi-chevron-${this.state.showAutoCreate ? 'up' : 'down'}`}></i></h5>
 						{this.state.showAutoCreate &&
 							<Fragment>
 								<div id="category-select-container">{this.state.categoryCheckboxes}</div>
@@ -267,7 +267,7 @@ export class CreateViews extends Component {
 							</Fragment>
 						}
 
-						<h5 className="w-100 mt-5 mb-3 text-center create-view-toggle" onClick={this.toggleManualCreateShow}>Manually Create Views: <i className={`bi bi-chevron-${this.state.showManualCreate ? 'up' : 'down'}`}></i></h5>
+						<h5 className="w-100 mt-5 mb-3 text-center create-view-toggle" onClick={this.toggleManualCreateShow}>Manually Create Views: <i className={`mt-1 ms-2 bi bi-chevron-${this.state.showManualCreate ? 'up' : 'down'}`}></i></h5>
 						{this.state.showManualCreate &&
 							<Fragment>
 								<div id="views-container">{this.state.views}</div>
