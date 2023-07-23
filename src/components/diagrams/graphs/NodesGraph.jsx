@@ -26,10 +26,18 @@ export class NodesGraph extends Component {
 			return;
 		}
 
-		let tsvData = "SOURCE\tTARGET\tDISTANCE\n";
+		let tsvData = "SequenceName\tClusterNumber\n";
 
-		for (const link of this.props.data.links) {
-			tsvData += `${link.source}\t${link.target}\t${+link.value}\n`;
+		for (let i = 0; i < this.props.data.clusterData.clusters.length; i++) {
+			const cluster = this.props.data.clusterData.clusters[i];
+			const clusterNodesArray = [...cluster.clusterNodes]
+			if (clusterNodesArray.length === 1) {
+				tsvData += `${clusterNodesArray[0]}\t-1\n`;
+			} else {
+				for (const node of clusterNodesArray) {
+					tsvData += `${node}\t${i}\n`;
+				}
+			}
 		}
 
 		const a = document.createElement('a');
@@ -45,7 +53,7 @@ export class NodesGraph extends Component {
 				<h4 className="graph-title">Molecular Cluster Graph</h4>
 				<div id="node-graph-actions">
 					<img src={zoomToFitImg} id="zoom-to-fit" title="Zoom to Fit" onClick={() => { this.props.nodeGraph.fitView() }} />
-					<img src={exportTSVImg} id="export-tsv-node-graph" title="Export Current Data as TSV" onClick={this.exportTSVGraph} />
+					<img src={exportTSVImg} id="export-tsv-node-graph" title="Export Current Clusters as TSV" onClick={this.exportTSVGraph} />
 					<img src={downloadImg} id="download-node-graph" title="Download Graph" onClick={this.downloadGraph} />
 				</div>
 				<canvas id="node-graph"></canvas>
